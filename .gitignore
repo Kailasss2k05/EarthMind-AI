@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# Environment Variables
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Python testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Build
+build/
+dist/
+*.egg-info/
+
+# Logs
+*.log
+
+# ChromaDB
+data/vectorstore/
+
+# Database
+*.db
+*.sqlite3
+
+# Node
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Redis dump
+dump.rdb
+
+test_llm.py
+test_graph.py
