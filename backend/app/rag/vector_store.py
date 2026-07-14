@@ -4,7 +4,8 @@ vector_store.py
 Step 4 of the pipeline: ChromaDB setup.
 
 ChromaDB is the vector database: it stores each chunk's text + its
-embedding + metadata (source file, page, domain), and lets us search
+embedding + metadata (source file, page, domain), a
+nd lets us search
 "which chunks are closest in meaning to this query?" very fast.
 
 Design note (matches SRS Section 3.4):
