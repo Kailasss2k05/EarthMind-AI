@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from app.api.router import api_router
 
 app = FastAPI(
     title="EarthMind AI API",
@@ -6,17 +7,11 @@ app = FastAPI(
     version="0.1.0"
 )
 
+app.include_router(api_router)
+
 
 @app.get("/")
 async def root():
     return {
         "message": "Welcome to EarthMind AI 🚀"
-    }
-
-
-@app.get("/health")
-async def health():
-    return {
-        "status": "healthy",
-        "service": "EarthMind AI Backend"
     }
