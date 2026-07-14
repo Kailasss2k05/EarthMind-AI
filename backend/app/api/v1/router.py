@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from app.api.routes import health
+from app.api.routes import query
 from app.websocket.routes import ws_router
 
 # Versioned router: all routes under /api/v1
@@ -7,9 +8,11 @@ from app.websocket.routes import ws_router
 # and include it in the root router (app/api/router.py).
 v1_router = APIRouter(prefix="/api/v1")
 
-# Register all v1 route modules here.
-# Future routes (e.g., chat, agents) should be added below in the same pattern.
+# Health check — infrastructure connectivity status.
 v1_router.include_router(health.router, tags=["Health"])
+
+# Query — single public entry point for multi-agent LangGraph execution.
+v1_router.include_router(query.router, tags=["Query"])
 
 # WebSocket endpoint: /api/v1/ws
 # LangGraph will be wired into this router in a future iteration.

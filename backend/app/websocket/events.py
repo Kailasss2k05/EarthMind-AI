@@ -38,7 +38,7 @@ async def broadcast_agent_started(agent_name: str) -> None:
         "agent": agent_name,
         "timestamp": _now(),
     }
-    logger.info("[Event] agent_started → %s", agent_name)
+    logger.info("[Event] agent_started -> %s", agent_name)
     await manager.broadcast(event)
 
 
@@ -52,7 +52,7 @@ async def broadcast_agent_completed(agent_name: str) -> None:
         "agent": agent_name,
         "timestamp": _now(),
     }
-    logger.info("[Event] agent_completed → %s", agent_name)
+    logger.info("[Event] agent_completed -> %s", agent_name)
     await manager.broadcast(event)
 
 
@@ -67,5 +67,5 @@ async def broadcast_agent_failed(agent_name: str, reason: str) -> None:
         "reason": reason,
         "timestamp": _now(),
     }
-    logger.error("[Event] agent_failed → %s | reason: %s", agent_name, reason)
+    logger.error("[Event] agent_failed -> %s | reason: %s", agent_name, reason)
     await manager.broadcast(event)

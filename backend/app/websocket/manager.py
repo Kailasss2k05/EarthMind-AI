@@ -17,6 +17,8 @@ class ConnectionManager:
     def __init__(self) -> None:
         # Holds all currently active WebSocket connections
         self.active_connections: list[WebSocket] = []
+        # Reference to the main event loop, set during startup lifespan
+        self.loop = None
 
     async def connect(self, websocket: WebSocket) -> None:
         """Accept the WebSocket handshake and register the client."""
