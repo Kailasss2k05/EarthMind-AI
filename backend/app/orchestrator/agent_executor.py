@@ -20,7 +20,7 @@ Usage (in any node file):
 
 import asyncio
 from concurrent.futures import Future
-from typing import Callable, Coroutine, Any
+from typing import Callable, Coroutine
 
 from app.websocket.events import (
     broadcast_agent_started,
