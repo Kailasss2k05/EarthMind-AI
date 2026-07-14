@@ -62,7 +62,7 @@ class RequestLoggerMiddleware(BaseHTTPMiddleware):
                 duration_ms,
                 str(e),
             )
-            raise e
+            raise
 
 
 def configure_request_logger(app: FastAPI) -> None:
