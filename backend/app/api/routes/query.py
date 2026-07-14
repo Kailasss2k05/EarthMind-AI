@@ -4,14 +4,13 @@ POST /api/v1/query — Single public entry point for multi-agent execution.
 Flow
 ----
 1. Validate the incoming QueryRequest (Pydantic).
-2. Generate a UUID request_id for tracing.
-3. Log the request_id so it can be correlated with WebSocket events and logs.
-4. Invoke the compiled LangGraph pipeline:
+2. Generate a UUID request_id for tracing in logs and in the response body.
+3. Invoke the compiled LangGraph pipeline:
        graph.invoke({"query": request.query})
    LangGraph runs each agent node in order (currently: Planner).
-   Each node broadcasts WebSocket lifecycle events via execute_agent().
-5. Extract planner_output from the returned state.
-6. Return a structured QueryResponse.
+   Nodes may broadcast WebSocket lifecycle events via execute_agent().
+4. Extract planner_output from the returned state.
+5. Return a structured QueryResponse.
 
 Future agents (Research, Policy, Finance, etc.) will be added to the graph
 and their outputs surfaced here without changing the endpoint contract.
