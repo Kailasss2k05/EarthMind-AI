@@ -31,7 +31,10 @@ class ConnectionManager:
 
     def disconnect(self, websocket: WebSocket) -> None:
         """Remove a client from the active connections list."""
-        self.active_connections.remove(websocket)
+        try:
+            self.active_connections.remove(websocket)
+        except ValueError:
+            logger.warning("WebSocket disconnect called for unknown client.")
         logger.info(
             "WebSocket client disconnected. Total active: %d",
             len(self.active_connections),
