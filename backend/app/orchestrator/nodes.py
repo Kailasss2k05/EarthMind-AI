@@ -1,15 +1,12 @@
-from app.agents.planner import planner_agent
+from app.agents.planner import PlannerAgent
+
+planner = PlannerAgent()
 
 
 def planner_node(state):
-    """
-    Planner Node
-    """
 
-    query = state["query"]
+    result = planner.run(state)
 
-    planner_result = planner_agent(query)
-
-    state["planner_output"] = planner_result
+    state["planner_output"] = result
 
     return state

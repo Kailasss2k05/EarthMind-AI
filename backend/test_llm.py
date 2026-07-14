@@ -1,11 +1,15 @@
-from app.services.llm import get_llm
+from app.agents.planner import PlannerAgent
 
-llm = get_llm()
+planner = PlannerAgent()
 
-response = llm.invoke(
+state = {
 
-    "Introduce yourself."
+    "query":
 
-)
+    "Install solar panels in a college."
 
-print(response.content)
+}
+
+response = planner.run(state)
+
+print(response)

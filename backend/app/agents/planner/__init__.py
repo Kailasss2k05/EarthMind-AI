@@ -2,7 +2,9 @@ from app.services.llm import get_llm
 
 from app.prompts.planner_prompt import PLANNER_PROMPT
 
-llm = get_llm()
+from .agent import PlannerAgent
+
+planner_agent = PlannerAgent()
 
 
 def planner_agent(query: str) -> str:
@@ -13,8 +15,5 @@ def planner_agent(query: str) -> str:
     structured implementation steps.
     """
 
-    prompt = PLANNER_PROMPT.format(query=query)
-
-    response = llm.invoke(prompt)
-
-    return response.content
+    state = {"query": query}
+    return planner_agent.run(state)
