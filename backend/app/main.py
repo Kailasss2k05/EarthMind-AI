@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.api.router import api_router
+from app.api.router import root_router
 from app.core.lifespan import lifespan
 
 app = FastAPI(
@@ -9,7 +9,9 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-app.include_router(api_router)
+# Single router inclusion: root_router delegates to versioned routers (v1, v2, ...).
+# All routes are accessible under /api/v{n}/... prefixes.
+app.include_router(root_router)
 
 
 @app.get("/")
