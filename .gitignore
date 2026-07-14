@@ -56,3 +56,7 @@ dump.rdb
 
 test_llm.py
 test_graph.py
+
+# ChromaDB generated data
+backend/data/vector_store/
+
