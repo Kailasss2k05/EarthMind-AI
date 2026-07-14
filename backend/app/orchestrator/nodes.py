@@ -34,3 +34,33 @@ def policy_node(state):
 def environmental_node(state):
     state["environmental_output"] = environment.run(state)
     return state
+
+from app.agents.finance import FinanceAgent
+from app.agents.risk import RiskAgent
+from app.agents.timeline import TimelineAgent
+from app.agents.report import ReportAgent
+
+finance = FinanceAgent()
+risk = RiskAgent()
+timeline = TimelineAgent()
+report = ReportAgent()
+
+
+def finance_node(state):
+    state["finance_output"] = finance.run(state)
+    return state
+
+
+def risk_node(state):
+    state["risk_output"] = risk.run(state)
+    return state
+
+
+def timeline_node(state):
+    state["timeline_output"] = timeline.run(state)
+    return state
+
+
+def report_node(state):
+    state["report_output"] = report.run(state)
+    return state

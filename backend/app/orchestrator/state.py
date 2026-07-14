@@ -13,3 +13,11 @@ class GraphState(TypedDict):
     policy_output: Optional[str]
 
     environmental_output: Optional[str]
+
+    finance_output: Optional[str]
+
+    risk_output: Optional[str]
+
+    timeline_output: Optional[str]
+    
+    report_output: Optional[str]
