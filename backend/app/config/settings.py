@@ -59,6 +59,9 @@ class Settings:
     MAX_ITERATIONS = int(os.getenv("MAX_ITERATIONS", 10))
     TOP_K = int(os.getenv("TOP_K", 5))
 
+    #==========================
+    DATABASE_URL = os.getenv("DATABASE_URL")
+
     # ===========================
     # WebSocket
     # ===========================
