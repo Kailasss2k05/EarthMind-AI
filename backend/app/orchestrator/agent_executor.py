@@ -114,7 +114,7 @@ def execute_agent(
 
     except Exception as exc:
         # ── Step 5: Notify clients of failure, then let LangGraph handle it ──
-        _run_async(broadcast_agent_failed(agent_name, str(exc)))
+        _run_async(broadcast_agent_failed(agent_name, type(exc).__name__))
         raise
 
     return state
