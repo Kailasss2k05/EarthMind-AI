@@ -73,7 +73,7 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
         # Client closed the connection gracefully
         manager.disconnect(websocket)
 
-    except Exception as e:
+    except Exception:
         # Unexpected error — log and ensure the client is removed
-        logger.error("WebSocket error: %s", str(e))
+        logger.exception("WebSocket error")
         manager.disconnect(websocket)
