@@ -47,8 +47,12 @@ class ConnectionManager:
             len(self.active_connections),
             message,
         )
-        for connection in self.active_connections:
-            await connection.send_json(message)
+        for connection in list(self.active_connections):
+            try:
+                await connection.send_json(message)
+            except Exception as e:
+                logger.warning("Failed to send WebSocket broadcast: %s", str(e))
+                self.disconnect(connection)
 
     async def send_personal(self, message: dict, websocket: WebSocket) -> None:
         """Send a JSON message to a single specific client."""
