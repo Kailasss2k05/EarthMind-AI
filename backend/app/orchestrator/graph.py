@@ -1,26 +1,19 @@
-from langgraph.graph import StateGraph
-from langgraph.graph import START
-from langgraph.graph import END
+from langgraph.graph import StateGraph, START, END
 
 from app.orchestrator.state import GraphState
-from app.orchestrator.nodes import planner_node
+from app.orchestrator.nodes import planner_node, research_node
 
-
+# Create graph builder
 builder = StateGraph(GraphState)
 
-builder.add_node(
-    "planner",
-    planner_node
-)
+# Register nodes
+builder.add_node("planner", planner_node)
+builder.add_node("research", research_node)
 
-builder.add_edge(
-    START,
-    "planner"
-)
+# Connect nodes
+builder.add_edge(START, "planner")
+builder.add_edge("planner", "research")
+builder.add_edge("research", END)
 
-builder.add_edge(
-    "planner",
-    END
-)
-
+# Compile graph
 graph = builder.compile()

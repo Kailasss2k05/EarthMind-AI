@@ -10,3 +10,16 @@ def planner_node(state):
     state["planner_output"] = result
 
     return state
+
+from app.agents.research import ResearchAgent
+
+research = ResearchAgent()
+
+
+def research_node(state):
+
+    result = research.run(state)
+
+    state["research_output"] = result
+
+    return state

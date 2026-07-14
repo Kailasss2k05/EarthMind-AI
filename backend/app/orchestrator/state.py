@@ -1,11 +1,10 @@
 from typing import TypedDict, Optional
 
-
 class GraphState(TypedDict):
-    """
-    Shared state passed between all agents.
-    """
+    planner_output: Optional[str]
 
     query: str
 
     planner_output: Optional[str]
+
+    research_output: Optional[str]
