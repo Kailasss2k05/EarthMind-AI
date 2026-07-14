@@ -1,10 +1,12 @@
 from fastapi import FastAPI
 from app.api.router import api_router
+from app.core.lifespan import lifespan
 
 app = FastAPI(
     title="EarthMind AI API",
     description="Multi-Agent Sustainability Intelligence Platform",
-    version="0.1.0"
+    version="0.1.0",
+    lifespan=lifespan
 )
 
 app.include_router(api_router)
