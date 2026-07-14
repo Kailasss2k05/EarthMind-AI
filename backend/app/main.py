@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from app.api.router import root_router
 from app.core.lifespan import lifespan
 from app.core.exception_handlers import register_exception_handlers
-from app.core.cors import register_cors
+from app.core.cors import configure_cors
 
 app = FastAPI(
     title="EarthMind AI API",
@@ -18,7 +18,7 @@ register_exception_handlers(app)
 # Register CORS middleware.
 # Must be added before include_router so every request (including preflight OPTIONS)
 # passes through the middleware layer.
-register_cors(app)
+configure_cors(app)
 
 # Single router inclusion: root_router delegates to versioned routers (v1, v2, ...).
 # All routes are accessible under /api/v{n}/... prefixes.
