@@ -1,11 +1,23 @@
 from typing import TypedDict, Optional
 
-
 class GraphState(TypedDict):
-    """
-    Shared state passed between all agents.
-    """
 
-    query: str
+    query:str
 
-    planner_output: Optional[str]
+    planner_output:Optional[str]
+
+    research_output:Optional[str]
+
+    sdg_output:Optional[str]
+
+    policy_output: Optional[str]
+
+    environmental_output: Optional[str]
+
+    finance_output: Optional[str]
+
+    risk_output: Optional[str]
+
+    timeline_output: Optional[str]
+    
+    report_output: Optional[str]

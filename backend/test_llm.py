@@ -1,32 +1,15 @@
-from app.services.llm import get_llm
+from app.agents.planner import PlannerAgent
 
-llm = get_llm()
+planner = PlannerAgent()
 
-query = """
-Design a rainwater harvesting system
-for a government school.
-"""
+state = {
 
-prompt = f"""
-You are the Planner Agent.
+    "query":
 
-Break the project into:
+    "Install solar panels in a college."
 
-1. Goals
+}
 
-2. Required Resources
+response = planner.run(state)
 
-3. Timeline
-
-4. Stakeholders
-
-5. Risks
-
-Project:
-
-{query}
-"""
-
-response = llm.invoke(prompt)
-
-print(response.content)
+print(response)
