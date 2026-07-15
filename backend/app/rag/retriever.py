@@ -1,40 +1,29 @@
 """
 retriever.py
 ------------
-This is the "Agentic RAG foundation" piece: a single, reusable function
-that any agent (SDG agent, Policy agent, Finance agent, etc.) will call
-later to get grounded evidence for its sub-query.
+Reusable retrieval layer for all RAG agents.
 
-This is intentionally simple today - just embed the query and search
-one domain's collection. Re-ranking / multi-domain fan-out (shown in
-Figure 3.4) can be layered on top of this function later without
-changing how agents call it.
+Supports:
+- Single-domain semantic retrieval
+- Multi-domain semantic retrieval
 """
 
-from .config import DEFAULT_TOP_K
+from .config import DEFAULT_TOP_K, DOMAINS
 from .embedder import embed_texts
 from .vector_store import get_or_create_collection
 
 
 def retrieve(domain: str, query: str, top_k: int = DEFAULT_TOP_K) -> list[dict]:
     """
-    Search a domain's ChromaDB collection for chunks relevant to `query`.
-
-    This is the function an agent will call, e.g.:
-        retrieve(domain="sdg", query="renewable energy targets for SDG 7")
-
-    Returns a list of results, most relevant first:
-        [
-          {"text": "...", "source": "sdg_report.pdf", "page": 4, "distance": 0.21},
-          ...
-        ]
-    `distance` = how far apart the meanings are (lower = more relevant).
+    Search a single domain collection.
     """
     collection = get_or_create_collection(domain)
 
     if collection.count() == 0:
-        print(f"Warning: collection '{domain}' is empty. "
-              f"Run ingest.py first to populate it.")
+        print(
+            f"Warning: collection '{domain}' is empty. "
+            f"Run ingest.py first."
+        )
         return []
 
     query_embedding = embed_texts([query])[0]
@@ -45,16 +34,41 @@ def retrieve(domain: str, query: str, top_k: int = DEFAULT_TOP_K) -> list[dict]:
     )
 
     output = []
+
     documents = results["documents"][0]
     metadatas = results["metadatas"][0]
     distances = results["distances"][0]
 
     for doc, meta, dist in zip(documents, metadatas, distances):
-        output.append({
-            "text": doc,
-            "source": meta.get("source"),
-            "page": meta.get("page"),
-            "distance": dist,
-        })
+        output.append(
+            {
+                "text": doc,
+                "source": meta.get("source"),
+                "page": meta.get("page"),
+                "domain": meta.get("domain"),
+                "distance": dist,
+            }
+        )
 
     return output
+
+
+def retrieve_all(query: str, top_k: int = DEFAULT_TOP_K) -> list[dict]:
+    """
+    Search all domain collections and return the best matches.
+    """
+
+    all_results = []
+
+    for domain in DOMAINS:
+        results = retrieve(domain, query, top_k)
+
+        for r in results:
+            if r.get("domain") is None:
+                r["domain"] = domain
+
+        all_results.extend(results)
+
+    all_results.sort(key=lambda x: x["distance"])
+
+    return all_results[:top_k]

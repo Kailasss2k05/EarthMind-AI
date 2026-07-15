@@ -7,6 +7,11 @@ from app.core.logger import logger
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Capture the main event loop for thread-safe WebSocket broadcasting
+    import asyncio
+    from app.websocket.manager import manager
+    manager.loop = asyncio.get_running_loop()
+
     # Startup actions
     logger.info("Starting up EarthMind AI Backend...")
     

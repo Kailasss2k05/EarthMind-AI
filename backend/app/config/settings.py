@@ -7,6 +7,28 @@ load_dotenv()
 
 class Settings:
 
+    MODEL_PROVIDER = os.getenv(
+        "MODEL_PROVIDER",
+        "ollama"
+    )
+
+    MODEL_NAME = os.getenv(
+        "MODEL_NAME",
+        "llama3.2:3b"
+    )
+
+    TEMPERATURE = float(
+
+        os.getenv(
+
+            "TEMPERATURE",
+
+            0.3
+
+        )
+
+    )
+
     # ===========================
     # App
     # ===========================
@@ -25,8 +47,11 @@ class Settings:
     # ===========================
     MODEL_NAME = os.getenv("MODEL_NAME", "llama3.2:3b")
     OLLAMA_BASE_URL = os.getenv(
+
         "OLLAMA_BASE_URL",
+
         "http://localhost:11434"
+
     )
     TEMPERATURE = float(os.getenv("TEMPERATURE", 0.3))
 
@@ -76,6 +101,24 @@ class Settings:
         "FRONTEND_URL",
         "http://localhost:3000"
     )
+
+    # ===========================
+    # CORS
+    # ===========================
+    # Comma-separated list of allowed origins read from .env.
+    # Example .env value:
+    #   ALLOWED_ORIGINS=https://app.earthmind.ai,https://staging.earthmind.ai
+    # In development the four local origins below are used automatically.
+    _raw_origins = os.getenv(
+        "ALLOWED_ORIGINS",
+        "http://localhost:3000,"
+        "http://127.0.0.1:3000,"
+        "http://localhost:5173,"
+        "http://127.0.0.1:5173",
+    )
+    ALLOWED_ORIGINS: list[str] = [
+        origin.strip() for origin in _raw_origins.split(",") if origin.strip()
+    ]
 
 
 settings = Settings()
