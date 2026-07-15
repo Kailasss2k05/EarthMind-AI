@@ -33,3 +33,4 @@ async def health_check():
         health_status["status"] = "unhealthy"
 
     return health_status
+
