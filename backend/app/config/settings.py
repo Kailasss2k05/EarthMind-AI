@@ -102,5 +102,23 @@ class Settings:
         "http://localhost:3000"
     )
 
+    # ===========================
+    # CORS
+    # ===========================
+    # Comma-separated list of allowed origins read from .env.
+    # Example .env value:
+    #   ALLOWED_ORIGINS=https://app.earthmind.ai,https://staging.earthmind.ai
+    # In development the four local origins below are used automatically.
+    _raw_origins = os.getenv(
+        "ALLOWED_ORIGINS",
+        "http://localhost:3000,"
+        "http://127.0.0.1:3000,"
+        "http://localhost:5173,"
+        "http://127.0.0.1:5173",
+    )
+    ALLOWED_ORIGINS: list[str] = [
+        origin.strip() for origin in _raw_origins.split(",") if origin.strip()
+    ]
+
 
 settings = Settings()
