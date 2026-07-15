@@ -1,24 +1,15 @@
 from app.core.base_agent import BaseAgent
-
-from app.tools.policy import get_policy
-
 from app.prompts.policy_prompt import POLICY_PROMPT
+from app.rag.retriever import retrieve
 
 
 class PolicyAgent(BaseAgent):
 
     def build_prompt(self, state):
 
-        policy = get_policy(
-
-            state["query"]
-
-        )
+        policy_docs = retrieve(state["query"])
 
         return POLICY_PROMPT.format(
-
             query=state["query"],
-
-            policy=policy
-
+            policy=policy_docs,
         )
