@@ -19,9 +19,26 @@ Each node delegates execution to execute_agent(), which handles:
   - re-raising exceptions for LangGraph error handling
 
 def planner_node(state):
-    state["planner_output"] = planner.run(state)
-    return state
 
+    result = planner.run(state)
+
+    state["planner_output"] = result
+
+    query = state["query"].lower()
+
+    if "budget" in query or "cost" in query or "finance" in query:
+        state["next_step"] = "finance"
+
+    elif "policy" in query or "government" in query:
+        state["next_step"] = "policy"
+
+    elif "environment" in query or "carbon" in query or "climate" in query:
+        state["next_step"] = "environmental"
+
+    else:
+        state["next_step"] = "research"
+
+    return state
 
 def research_node(state):
     state["research_output"] = research.run(state)

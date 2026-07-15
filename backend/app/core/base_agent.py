@@ -1,7 +1,10 @@
 from abc import ABC, abstractmethod
 
 from app.services.llm import get_llm
+import time
+import logging
 
+logger = logging.getLogger(__name__)
 
 class BaseAgent(ABC):
     """
@@ -23,29 +26,50 @@ class BaseAgent(ABC):
 
     def run(self, state):
 
-        prompt = self.build_prompt(state)
+        agent_name = self.__class__.__name__
 
-        for attempt in range(3):
+        start = time.time()
 
-            try:
+        try:
 
-                response = self.llm.invoke(prompt)
+            prompt = self.build_prompt(state)
 
-                return response.content
+            MAX_RETRIES = 3
 
-            except Exception as e:
+            for attempt in range(MAX_RETRIES):
 
-                print(
+                try:
 
-                    f"Retry {attempt+1}",
+                    response = self.llm.invoke(prompt)
 
-                    e
+                    return response.content
 
-                )
+                except Exception:
 
-        raise Exception(
+                    if attempt == MAX_RETRIES - 1:
 
-            "Agent failed after 3 retries"
+                        raise
+            state["agent_status"][agent_name] = "SUCCESS"
 
-        )
+            logger.info(f"{agent_name} completed")
+
+            return response.content
+
+        except Exception as e:
+
+            state["agent_status"][agent_name] = "FAILED"
+
+            state["errors"][agent_name] = str(e)
+
+            logger.exception(e)
+
+            raise
+
+        finally:
+
+            logger.info(
+
+                f"{agent_name} took {time.time()-start:.2f}s"
+
+            )
 
