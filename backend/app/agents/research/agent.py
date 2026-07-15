@@ -9,7 +9,7 @@ class ResearchAgent(BaseAgent):
 
     def build_prompt(self, state):
 
-        evidence = retrieve(state["query"])
+        evidence = retrieve("research", state["query"])
 
         return RESEARCH_PROMPT.format(
 
