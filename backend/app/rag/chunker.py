@@ -20,34 +20,65 @@ Why overlap?
 from .config import CHUNK_SIZE, CHUNK_OVERLAP
 
 
-def chunk_text(text: str, chunk_size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) -> list[str]:
-    """
-    Split a single string of text into overlapping chunks.
+from .config import CHUNK_SIZE, CHUNK_OVERLAP
 
-    Example with chunk_size=10, overlap=3 on "ABCDEFGHIJKLMNOP":
-        chunk 1: "ABCDEFGHIJ"
-        chunk 2: "HIJKLMNOPQ"   (starts 3 chars before chunk 1 ended)
-        ...
+
+def chunk_text(
+    text: str,
+    chunk_size: int = CHUNK_SIZE,
+    overlap: int = CHUNK_OVERLAP,
+) -> list[str]:
     """
+    Split text into semantically cleaner chunks.
+
+    Strategy:
+    - Prefer paragraph boundaries.
+    - Merge very small chunks.
+    - Split oversized paragraphs with overlap.
+    """
+
     text = text.strip()
     if not text:
         return []
 
-    if len(text) <= chunk_size:
-        return [text]
+    paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
 
     chunks = []
-    start = 0
-    step = chunk_size - overlap
+    current_chunk = ""
 
-    while start < len(text):
-        end = start + chunk_size
-        chunk = text[start:end].strip()
-        if chunk:
-            chunks.append(chunk)
-        start += step
+    for paragraph in paragraphs:
+        if len(current_chunk) + len(paragraph) + 2 <= chunk_size:
+            current_chunk += ("\n\n" if current_chunk else "") + paragraph
+        else:
+            if current_chunk:
+                chunks.append(current_chunk)
 
-    return chunks
+            if len(paragraph) <= chunk_size:
+                current_chunk = paragraph
+            else:
+                start = 0
+                step = chunk_size - overlap
+
+                while start < len(paragraph):
+                    piece = paragraph[start:start + chunk_size].strip()
+                    if piece:
+                        chunks.append(piece)
+                    start += step
+
+                current_chunk = ""
+
+    if current_chunk:
+        chunks.append(current_chunk)
+
+    # Merge tiny trailing chunks
+    merged = []
+    for chunk in chunks:
+        if merged and len(chunk) < 100:
+            merged[-1] += "\n\n" + chunk
+        else:
+            merged.append(chunk)
+
+    return merged
 
 
 def chunk_records(page_records: list[dict]) -> list[dict]:
