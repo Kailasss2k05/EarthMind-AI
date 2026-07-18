@@ -14,7 +14,13 @@ class ResearchAgent(BaseAgent):
         return RESEARCH_PROMPT.format(
 
             query=state["query"],
-
-            evidence=evidence
-
+            planner_output=state["planner_output"]
         )
+
+        response = self.llm.invoke(prompt)
+
+        state["research_output"] = response.content
+
+        return state
+
+            

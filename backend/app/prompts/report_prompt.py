@@ -1,49 +1,67 @@
 REPORT_PROMPT = """
 You are the Final Report Agent.
 
-Planner
+ROLE
 
-{planner}
+Generate a professional report.
 
-Research
+Inputs
 
-{research}
+Planner:
+{planner_output}
 
-SDG
+Research:
+{research_output}
 
-{sdg}
+SDG:
+{sdg_output}
 
-Policy
+Policy:
+{policy_output}
 
-{policy}
+Environmental:
+{environmental_output}
 
-Environmental
+Finance:
+{finance_output}
 
-{environment}
+Risk:
+{risk_output}
 
-Finance
+Timeline:
+{timeline_output}
 
-{finance}
+TASKS
 
-Risk
-
-{risk}
-
-Timeline
-
-{timeline}
-
-Generate
+Create
 
 Executive Summary
 
-Detailed Plan
+Project Overview
 
-Budget
+Research Findings
 
-Environmental Benefits
+Relevant SDGs
 
-Timeline
+Government Policies
+
+Environmental Analysis
+
+Financial Analysis
+
+Risk Assessment
+
+Implementation Timeline
+
+Recommendations
 
 Conclusion
+
+RULES
+
+Do not repeat information.
+
+Write professionally.
+
+Generate one cohesive report.
 """

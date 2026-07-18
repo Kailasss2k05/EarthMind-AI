@@ -6,9 +6,14 @@ class RiskAgent(BaseAgent):
 
     def build_prompt(self, state):
 
-        return RISK_PROMPT.format(
-            query=state["query"],
-            planner=state["planner_output"],
-            finance=state["finance_output"],
-            environment=state["environmental_output"],
+        prompt = RISK_PROMPT.format(
+            research_output=state["research_output"],
+            finance_output=state["finance_output"],
+            environmental_output=state["environmental_output"]
         )
+
+        response = self.llm.invoke(prompt)
+
+        state["risk_output"] = response.content
+
+        return state

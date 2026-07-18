@@ -9,7 +9,15 @@ class PolicyAgent(BaseAgent):
 
         policy_docs = retrieve("policy", state["query"])
 
-        return POLICY_PROMPT.format(
+
+        prompt = POLICY_PROMPT.format(
             query=state["query"],
-            policy=policy_docs,
+            research_output=state["research_output"],
+            sdg_output=state["sdg_output"]
         )
+
+        response = self.llm.invoke(prompt)
+
+        state["policy_output"] = response.content
+
+        return state

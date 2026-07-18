@@ -7,9 +7,14 @@ class FinanceAgent(BaseAgent):
 
     def build_prompt(self, state):
 
-        budget = estimate_budget(state["query"])
-
-        return FINANCE_PROMPT.format(
+        prompt = FINANCE_PROMPT.format(
             query=state["query"],
-            budget=budget,
+            policy_output=state["policy_output"],
+            environmental_output=state["environmental_output"]
         )
+
+        response = self.llm.invoke(prompt)
+
+        state["finance_output"] = response.content
+
+        return state

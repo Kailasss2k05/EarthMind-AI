@@ -3,6 +3,7 @@ from app.core.base_agent import BaseAgent
 from app.tools.carbon import carbon_estimate
 
 from app.prompts.environmental_prompt import ENVIRONMENTAL_PROMPT
+from backend.app.prompts.finance_prompt import FINANCE_PROMPT
 
 
 class EnvironmentalAgent(BaseAgent):
@@ -14,11 +15,15 @@ class EnvironmentalAgent(BaseAgent):
             state["query"]
 
         )
-
-        return ENVIRONMENTAL_PROMPT.format(
-
+        prompt = ENVIRONMENTAL_PROMPT.format(
             query=state["query"],
-
-            metrics=metrics
-
+            research_output=state["research_output"]
         )
+
+        response = self.llm.invoke(prompt)
+
+        state["environmental_output"] = response.content
+
+        return state
+
+        
