@@ -5,6 +5,7 @@ from app.prompts.planner_prompt import PLANNER_PROMPT
 from app.prompts.planner_prompt import PLANNER_PROMPT
 
 
+import json
 
 
 class PlannerAgent(BaseAgent):
@@ -17,7 +18,11 @@ class PlannerAgent(BaseAgent):
 
         response = self.llm.invoke(prompt)
 
-        state["planner_output"] = response.content
+        planner = json.loads(response.content)
+
+        state["planner_output"] = planner
+
+        state["required_agents"] = planner["required_agents"]
 
         return state
 

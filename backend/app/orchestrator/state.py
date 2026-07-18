@@ -1,4 +1,4 @@
-from typing import TypedDict, Optional, Dict, Any
+from typing import TypedDict, List, Dict, Optional
 
 class GraphState(TypedDict):
     query: str
@@ -13,8 +13,4 @@ class GraphState(TypedDict):
     timeline_output: Optional[str]
     report_output: Optional[str]
 
-    next_step: Optional[str]
-    retry_count: int
-
-    agent_status: Dict[str, str]
-    errors: Dict[str, str]
+    required_agents: List[str]
