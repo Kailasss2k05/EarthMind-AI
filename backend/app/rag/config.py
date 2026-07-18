@@ -44,7 +44,8 @@ DOMAINS = [
 CHUNK_SIZE = 1000      # characters per chunk (~150-200 words)
 CHUNK_OVERLAP = 150    # characters shared between consecutive chunks,
                         # so we don't lose context at the cut point
-
+# Maximum semantic distance allowed for retrieval
+MAX_DISTANCE = 1.2
 # -----------------------------------------------------------------
 # EMBEDDING MODEL
 # -----------------------------------------------------------------

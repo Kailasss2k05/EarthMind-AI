@@ -6,9 +6,11 @@ Reusable retrieval layer for all RAG agents.
 Supports:
 - Single-domain semantic retrieval
 - Multi-domain semantic retrieval
+- Query normalization
+- Distance-based result filtering
 """
 
-from .config import DEFAULT_TOP_K, DOMAINS
+from .config import DEFAULT_TOP_K, DOMAINS, MAX_DISTANCE
 from .embedder import embed_texts
 from .vector_store import get_or_create_collection
 
@@ -17,6 +19,10 @@ def retrieve(domain: str, query: str, top_k: int = DEFAULT_TOP_K) -> list[dict]:
     """
     Search a single domain collection.
     """
+
+    # Normalize query
+    query = query.strip().lower()
+
     collection = get_or_create_collection(domain)
 
     if collection.count() == 0:
@@ -40,6 +46,11 @@ def retrieve(domain: str, query: str, top_k: int = DEFAULT_TOP_K) -> list[dict]:
     distances = results["distances"][0]
 
     for doc, meta, dist in zip(documents, metadatas, distances):
+
+        # Skip poor matches
+        if dist > MAX_DISTANCE:
+            continue
+
         output.append(
             {
                 "text": doc,
@@ -58,9 +69,12 @@ def retrieve_all(query: str, top_k: int = DEFAULT_TOP_K) -> list[dict]:
     Search all domain collections and return the best matches.
     """
 
+    query = query.strip().lower()
+
     all_results = []
 
     for domain in DOMAINS:
+
         results = retrieve(domain, query, top_k)
 
         for r in results:
