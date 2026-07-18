@@ -6,14 +6,8 @@ class TimelineAgent(BaseAgent):
 
     def build_prompt(self, state):
 
-        prompt = TIMELINE_PROMPT.format(
-            planner_output=state["planner_output"],
-            finance_output=state["finance_output"],
-            risk_output=state["risk_output"]
+        return TIMELINE_PROMPT.format(
+            query=state["query"],
+            finance_output=state.get("finance_output", ""),
+            risk_output=state.get("risk_output", "")
         )
-
-        response = self.llm.invoke(prompt)
-
-        state["timeline_output"] = response.content
-
-        return state

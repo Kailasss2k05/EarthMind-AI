@@ -27,9 +27,9 @@ from app.orchestrator.routing import (
 
 builder = StateGraph(GraphState)
 
-# -----------------------
+# ----------------------------
 # Register Nodes
-# -----------------------
+# ----------------------------
 
 builder.add_node("planner", planner_node)
 builder.add_node("research", research_node)
@@ -41,15 +41,15 @@ builder.add_node("risk", risk_node)
 builder.add_node("timeline", timeline_node)
 builder.add_node("report", report_node)
 
-# -----------------------
+# ----------------------------
 # Start
-# -----------------------
+# ----------------------------
 
 builder.add_edge(START, "planner")
 
-# -----------------------
-# Planner Routing
-# -----------------------
+# ----------------------------
+# Planner
+# ----------------------------
 
 builder.add_conditional_edges(
     "planner",
@@ -66,9 +66,9 @@ builder.add_conditional_edges(
     },
 )
 
-# -----------------------
-# Research Routing
-# -----------------------
+# ----------------------------
+# Research
+# ----------------------------
 
 builder.add_conditional_edges(
     "research",
@@ -84,9 +84,9 @@ builder.add_conditional_edges(
     },
 )
 
-# -----------------------
-# SDG Routing
-# -----------------------
+# ----------------------------
+# SDG
+# ----------------------------
 
 builder.add_conditional_edges(
     "sdg",
@@ -101,9 +101,9 @@ builder.add_conditional_edges(
     },
 )
 
-# -----------------------
-# Policy Routing
-# -----------------------
+# ----------------------------
+# Policy
+# ----------------------------
 
 builder.add_conditional_edges(
     "policy",
@@ -117,9 +117,9 @@ builder.add_conditional_edges(
     },
 )
 
-# -----------------------
-# Environmental Routing
-# -----------------------
+# ----------------------------
+# Environmental
+# ----------------------------
 
 builder.add_conditional_edges(
     "environmental",
@@ -132,9 +132,9 @@ builder.add_conditional_edges(
     },
 )
 
-# -----------------------
-# Finance Routing
-# -----------------------
+# ----------------------------
+# Finance
+# ----------------------------
 
 builder.add_conditional_edges(
     "finance",
@@ -146,9 +146,9 @@ builder.add_conditional_edges(
     },
 )
 
-# -----------------------
-# Risk Routing
-# -----------------------
+# ----------------------------
+# Risk
+# ----------------------------
 
 builder.add_conditional_edges(
     "risk",
@@ -159,9 +159,9 @@ builder.add_conditional_edges(
     },
 )
 
-# -----------------------
-# Timeline Routing
-# -----------------------
+# ----------------------------
+# Timeline
+# ----------------------------
 
 builder.add_conditional_edges(
     "timeline",
@@ -171,9 +171,9 @@ builder.add_conditional_edges(
     },
 )
 
-# -----------------------
+# ----------------------------
 # End
-# -----------------------
+# ----------------------------
 
 builder.add_edge("report", END)
 

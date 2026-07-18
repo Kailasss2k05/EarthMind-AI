@@ -1,9 +1,15 @@
-from typing import TypedDict, List, Dict, Optional
+from typing import TypedDict, Optional, Dict, List
+
 
 class GraphState(TypedDict):
+
+    # User Query
     query: str
 
-    planner_output: Optional[str]
+    # Planner
+    planner_output: Optional[Dict]
+
+    # Agent Outputs
     research_output: Optional[str]
     sdg_output: Optional[str]
     policy_output: Optional[str]
@@ -13,4 +19,10 @@ class GraphState(TypedDict):
     timeline_output: Optional[str]
     report_output: Optional[str]
 
+    # Planner Routing
     required_agents: List[str]
+    execution_order: List[str]
+
+    # Runtime
+    agent_status: Dict[str, str]
+    errors: Dict[str, str]

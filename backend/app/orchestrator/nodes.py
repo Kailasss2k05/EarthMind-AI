@@ -1,12 +1,34 @@
+<<<<<<< HEAD
 """
 LangGraph node definitions for EarthMind AI.
+=======
+import json
 
-Each node delegates execution to execute_agent(), which handles:
-  - reading the query from state
-  - broadcasting lifecycle events (started / completed / failed)
-  - writing the result back to state
-  - re-raising exceptions for LangGraph error handling
+from app.agents.planner import PlannerAgent
+from app.agents.research import ResearchAgent
+from app.agents.sdg import SDGAgent
+from app.agents.policy import PolicyAgent
+from app.agents.environmental import EnvironmentalAgent
+from app.agents.finance import FinanceAgent
+from app.agents.risk import RiskAgent
+from app.agents.timeline import TimelineAgent
+from app.agents.report import ReportAgent
+from app.orchestrator.dependencies import resolve_dependencies
 
+
+planner = PlannerAgent()
+research = ResearchAgent()
+sdg = SDGAgent()
+policy = PolicyAgent()
+environmental = EnvironmentalAgent()
+finance = FinanceAgent()
+risk = RiskAgent()
+timeline = TimelineAgent()
+report = ReportAgent()
+>>>>>>> 944fcf0 (improved planner logic)
+
+
+<<<<<<< HEAD
 To add a new agent node:
     1. Import its agent class.
     2. Instantiate it as a module-level singleton below.
@@ -40,6 +62,58 @@ risk = RiskAgent()
 timeline = TimelineAgent()
 report = ReportAgent()
 
+=======
+def planner_node(state):
+    """
+    Planner generates a JSON execution plan.
+    """
+
+    result = planner.run(state)
+
+    try:
+        planner_json = json.loads(result)
+        print("Planner Output:")
+        print(planner_json)
+    except json.JSONDecodeError:
+        raise ValueError(
+            "Planner Agent did not return valid JSON."
+        )
+
+    state["planner_output"] = planner_json
+
+    state["required_agents"] = planner_json.get(
+        "required_agents",
+        [],
+    )
+
+    required = planner_json.get("required_agents", [])
+
+    state["required_agents"] = required
+    state["execution_order"] = resolve_dependencies(required)
+
+    return state
+
+
+def research_node(state):
+    state["research_output"] = research.run(state)
+    return state
+
+
+def sdg_node(state):
+    state["sdg_output"] = sdg.run(state)
+    return state
+
+
+def policy_node(state):
+    state["policy_output"] = policy.run(state)
+    return state
+
+
+def environmental_node(state):
+    state["environmental_output"] = environmental.run(state)
+    return state
+
+>>>>>>> 944fcf0 (improved planner logic)
 
 # ---------------------------------------------------------------------------
 # Node functions
@@ -52,6 +126,7 @@ report = ReportAgent()
 # dict containing the query string.
 # ---------------------------------------------------------------------------
 
+<<<<<<< HEAD
 def planner_node(state: dict) -> dict:
     """Planner Node — breaks the user query into a structured implementation plan.
     Sets state['next_step'] to route to the correct specialist agent branch.
@@ -155,3 +230,19 @@ def report_node(state: dict) -> dict:
         state=state,
         output_key="report_output",
     )
+=======
+
+def risk_node(state):
+    state["risk_output"] = risk.run(state)
+    return state
+
+
+def timeline_node(state):
+    state["timeline_output"] = timeline.run(state)
+    return state
+
+
+def report_node(state):
+    state["report_output"] = report.run(state)
+    return state
+>>>>>>> 944fcf0 (improved planner logic)

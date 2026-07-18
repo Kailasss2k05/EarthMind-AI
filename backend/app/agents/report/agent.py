@@ -6,19 +6,50 @@ class ReportAgent(BaseAgent):
 
     def build_prompt(self, state):
 
-        prompt = REPORT_PROMPT.format(
-            planner_output=state["planner_output"],
-            research_output=state["research_output"],
-            sdg_output=state["sdg_output"],
-            policy_output=state["policy_output"],
-            environmental_output=state["environmental_output"],
-            finance_output=state["finance_output"],
-            risk_output=state["risk_output"],
-            timeline_output=state["timeline_output"]
-        )
+        return REPORT_PROMPT.format(
+    query=state.get("query", ""),
 
-        response = self.llm.invoke(prompt)
+    planner_output=state.get("planner_output", ""),
 
-        state["report_output"] = response.content
+    research_output=f"""
+----- START RESEARCH -----
+{state.get("research_output","")}
+----- END RESEARCH -----
+""",
 
-        return state
+    sdg_output=f"""
+----- START SDG -----
+{state.get("sdg_output","")}
+----- END SDG -----
+""",
+
+    policy_output=f"""
+----- START POLICY -----
+{state.get("policy_output","")}
+----- END POLICY -----
+""",
+
+    environmental_output=f"""
+----- START ENVIRONMENT -----
+{state.get("environmental_output","")}
+----- END ENVIRONMENT -----
+""",
+
+    finance_output=f"""
+----- START FINANCE -----
+{state.get("finance_output","")}
+----- END FINANCE -----
+""",
+
+    risk_output=f"""
+----- START RISK -----
+{state.get("risk_output","")}
+----- END RISK -----
+""",
+
+    timeline_output=f"""
+----- START TIMELINE -----
+{state.get("timeline_output","")}
+----- END TIMELINE -----
+"""
+)

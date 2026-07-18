@@ -1,12 +1,9 @@
 PLANNER_PROMPT = """
-You are the Planner Agent.
+You are the Planner Agent of EarthMind AI.
 
-User Query:
-{query}
+Analyze the user's query and determine which agents should execute.
 
-Your job is to decide which specialized AI agents are required.
-
-Available Agents:
+Available agents:
 
 - research
 - sdg
@@ -16,17 +13,22 @@ Available Agents:
 - risk
 - timeline
 
-Respond ONLY in JSON.
+Respond ONLY with valid JSON.
 
 Example:
 
-{
-    "objective":"Solar irrigation",
-    "required_agents":[
-        "research",
-        "policy",
-        "finance",
-        "timeline"
-    ]
-}
+{{
+  "objective": "Install rooftop solar panels",
+  "required_agents": [
+    "research",
+    "policy",
+    "finance",
+    "risk",
+    "timeline"
+  ],
+}}
+
+User Query:
+
+{query}
 """

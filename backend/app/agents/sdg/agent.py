@@ -7,9 +7,6 @@ class SDGAgent(BaseAgent):
     def build_prompt(self, state):
 
         return SDG_PROMPT.format(
-
             query=state["query"],
-
-            research=state["research_output"]
-
+            research_output=state["research_output"]
         )

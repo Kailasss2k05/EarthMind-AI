@@ -1,131 +1,49 @@
-from app.orchestrator.state import GraphState
+def _next_agent(state, current_agent):
+    execution_order = state.get("execution_order", [])
 
+    if current_agent not in execution_order:
+        return "report"
 
-def route_after_planner(state: GraphState):
+    current_index = execution_order.index(current_agent)
 
-    agents = state["required_agents"]
-
-    if "research" in agents:
-        return "research"
-
-    if "sdg" in agents:
-        return "sdg"
-
-    if "policy" in agents:
-        return "policy"
-
-    if "environmental" in agents:
-        return "environmental"
-
-    if "finance" in agents:
-        return "finance"
-
-    if "risk" in agents:
-        return "risk"
-
-    if "timeline" in agents:
-        return "timeline"
+    if current_index + 1 < len(execution_order):
+        return execution_order[current_index + 1]
 
     return "report"
 
-def route_after_research(state: GraphState):
 
-    agents = state["required_agents"]
+def route_after_planner(state):
+    execution_order = state.get("execution_order", [])
 
-    if "sdg" in agents:
-        return "sdg"
+    if not execution_order:
+        return "report"
 
-    if "policy" in agents:
-        return "policy"
+    return execution_order[0]
 
-    if "environmental" in agents:
-        return "environmental"
 
-    if "finance" in agents:
-        return "finance"
+def route_after_research(state):
+    return _next_agent(state, "research")
 
-    if "risk" in agents:
-        return "risk"
 
-    if "timeline" in agents:
-        return "timeline"
+def route_after_sdg(state):
+    return _next_agent(state, "sdg")
 
-    return "report"
 
-def route_after_sdg(state: GraphState):
+def route_after_policy(state):
+    return _next_agent(state, "policy")
 
-    agents = state["required_agents"]
 
-    if "policy" in agents:
-        return "policy"
+def route_after_environmental(state):
+    return _next_agent(state, "environmental")
 
-    if "environmental" in agents:
-        return "environmental"
 
-    if "finance" in agents:
-        return "finance"
+def route_after_finance(state):
+    return _next_agent(state, "finance")
 
-    if "risk" in agents:
-        return "risk"
 
-    if "timeline" in agents:
-        return "timeline"
+def route_after_risk(state):
+    return _next_agent(state, "risk")
 
-    return "report"
 
-def route_after_policy(state: GraphState):
-
-    agents = state["required_agents"]
-
-    if "environmental" in agents:
-        return "environmental"
-
-    if "finance" in agents:
-        return "finance"
-
-    if "risk" in agents:
-        return "risk"
-
-    if "timeline" in agents:
-        return "timeline"
-
-    return "report"
-
-def route_after_environmental(state: GraphState):
-
-    agents = state["required_agents"]
-
-    if "finance" in agents:
-        return "finance"
-
-    if "risk" in agents:
-        return "risk"
-
-    if "timeline" in agents:
-        return "timeline"
-
-    return "report"
-
-def route_after_finance(state: GraphState):
-
-    agents = state["required_agents"]
-
-    if "risk" in agents:
-        return "risk"
-
-    if "timeline" in agents:
-        return "timeline"
-
-    return "report"
-
-def route_after_risk(state: GraphState):
-
-    agents = state["required_agents"]
-
-    if "timeline" in agents:
-        return "timeline"
-
-    return "report"
-
-def route_after_timeline(state: GraphState):
-    return "report"
+def route_after_timeline(state):
+    return _next_agent(state, "timeline")

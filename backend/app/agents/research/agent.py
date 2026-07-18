@@ -1,26 +1,19 @@
 from app.core.base_agent import BaseAgent
-
 from app.prompts.research_prompt import RESEARCH_PROMPT
-
-from app.rag.retriever import retrieve
 
 
 class ResearchAgent(BaseAgent):
 
     def build_prompt(self, state):
 
+<<<<<<< HEAD
         evidence = retrieve("research", state["query"])
 
         return RESEARCH_PROMPT.format(
 
+=======
+        return RESEARCH_PROMPT.format(
+>>>>>>> 944fcf0 (improved planner logic)
             query=state["query"],
-            planner_output=state["planner_output"]
+            planner_output=state.get("planner_output", "")
         )
-
-        response = self.llm.invoke(prompt)
-
-        state["research_output"] = response.content
-
-        return state
-
-            

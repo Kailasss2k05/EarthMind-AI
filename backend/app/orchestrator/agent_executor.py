@@ -1,23 +1,5 @@
-"""
-agent_executor.py — Reusable agent execution helper.
 
-Eliminates the boilerplate try/except + broadcast pattern that would
-otherwise be copy-pasted into every LangGraph node.
-
-Single Responsibility: run one agent function with full lifecycle broadcasting.
-
-Usage (in any node file):
-    from app.orchestrator.agent_executor import execute_agent
-
-    def research_node(state):
-        return execute_agent(
-            agent_name="Research",
-            agent_function=research_agent,
-            state=state,
-            output_key="research_output",
-        )
-"""
-
+import json
 import asyncio
 from concurrent.futures import Future
 from typing import Callable, Coroutine
@@ -106,8 +88,27 @@ def execute_agent(
         # ── Step 2: Execute the agent's business logic (caller-supplied) ─────
         result = agent_function(query)
 
-        # ── Step 3: Persist the result into the shared state dict ────────────
-        state[output_key] = result
+# Planner returns JSON
+        if output_key == "planner_output":
+
+            planner = json.loads(result)
+
+            state["planner_output"] = planner
+
+            state["required_agents"] = planner.get(
+                "required_agents",
+                [],
+            )
+
+            state["execution_order"] = planner.get(
+                "execution_order",
+                [],
+            )
+
+        # All other agents return normal text
+        else:
+
+            state[output_key] = result
 
         # ── Step 4: Notify clients of successful completion ──────────────────
         _run_async(broadcast_agent_completed(agent_name))
