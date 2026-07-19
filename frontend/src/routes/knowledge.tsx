@@ -1,3 +1,16 @@
+/**
+ * TODO: ENDPOINT MISSING (partial)
+ * The stat cards and collections list use static data.
+ * No /api/v1/knowledge or ChromaDB browse endpoint exists yet.
+ *
+ * WHAT IS CONNECTED:
+ *   - GET /api/v1/health → shows real ChromaDB connectivity status
+ *
+ * To fully connect this page:
+ *   GET /api/v1/knowledge/stats  →  { totalDocs, totalChunks, collections }
+ *   GET /api/v1/knowledge/documents  →  { items: KnowledgeDoc[] }
+ *   POST /api/v1/knowledge/upload  →  upload and index a new document
+ */
 import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import {

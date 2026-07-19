@@ -1,5 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
+import { toast } from "sonner";
 import {
   useCallback,
   useEffect,
@@ -26,6 +27,7 @@ import {
   Layers,
   Leaf,
   LineChart,
+  Loader2,
   MapPin,
   Recycle,
   Search,
@@ -58,6 +60,8 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
+import { submitQuery } from "@/services/query.service";
+import { EarthMindApiError } from "@/services/api";
 
 export const Route = createFileRoute("/plan")({
   head: () => ({
@@ -136,6 +140,11 @@ const sdgOptions = [
   { code: 15, label: "Life on Land" },
 ];
 
+/**
+ * TODO: ENDPOINT MISSING — No /api/v1/history endpoint exists in the backend.
+ * These are static placeholders. Replace with a real API call when
+ * GET /api/v1/history is implemented.
+ */
 const recentQueries = [
   {
     title: "Decarbonize a mid-size manufacturing plant by 2030",
@@ -200,6 +209,7 @@ const MAX_CHARS = 4000;
 // ─────────────────────────────────────────────────────────────────────────────
 
 function PlanPage() {
+  const navigate = useNavigate();
   const [prompt, setPrompt] = useState("");
   const [attachments, setAttachments] = useState<
     { id: string; name: string; kind: "pdf" | "image" | "csv"; size: number }[]
@@ -213,6 +223,10 @@ function PlanPage() {
   const [city, setCity] = useState<string>("");
   const [model, setModel] = useState<string>("watsonx-granite-3.1");
   const [advancedOpen, setAdvancedOpen] = useState(false);
+
+  // ── API state ──────────────────────────────────────────────────────────────
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -224,7 +238,7 @@ function PlanPage() {
     el.style.height = `${Math.min(el.scrollHeight, 420)}px`;
   }, [prompt]);
 
-  const canGenerate = prompt.trim().length > 0;
+  const canGenerate = prompt.trim().length > 0 && !isSubmitting;
 
   const handleFiles = useCallback((files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -261,6 +275,38 @@ function PlanPage() {
     if (ratio > 0.75) return "text-[color:var(--warning)]";
     return "text-muted-foreground";
   }, [prompt.length]);
+
+  // ── Submit handler — calls POST /api/v1/query ──────────────────────────────
+  const handleGenerate = async () => {
+    if (!canGenerate) return;
+
+    setIsSubmitting(true);
+    try {
+      const result = await submitQuery(prompt.trim());
+
+      toast.success("Pipeline started!", {
+        description: `Request ID: ${result.request_id.slice(0, 8)}…`,
+      });
+
+      // Navigate to execution page to watch live agent progress via WebSocket
+      await navigate({ to: "/execution" });
+    } catch (err) {
+      if (err instanceof EarthMindApiError) {
+        toast.error("Backend error", { description: err.message });
+      } else if (err instanceof TypeError) {
+        toast.error("Cannot reach the backend", {
+          description:
+            "Make sure the FastAPI server is running on http://localhost:8000",
+        });
+      } else {
+        toast.error("Unexpected error", {
+          description: "Please try again.",
+        });
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="relative mx-auto max-w-[1400px] px-2 pb-24 pt-6">
@@ -335,10 +381,7 @@ function PlanPage() {
                 onChange={(e) =>
                   setPrompt(e.target.value.slice(0, MAX_CHARS))
                 }
-                placeholder={`Describe your sustainability challenge...
-
-Example:
-Reduce flooding in urban areas while improving public transportation and minimizing carbon emissions.`}
+                placeholder={`Describe your sustainability challenge...\n\nExample:\nReduce flooding in urban areas while improving public transportation and minimizing carbon emissions.`}
                 rows={5}
                 className="min-h-[160px] w-full resize-none bg-transparent px-2 pt-1 text-[15px] leading-relaxed text-foreground placeholder:whitespace-pre-line placeholder:text-muted-foreground/70 focus:outline-none"
               />
@@ -654,7 +697,7 @@ Reduce flooding in urban areas while improving public transportation and minimiz
             </Collapsible>
           </motion.section>
 
-          {/* Primary action */}
+          {/* Primary action — connected to POST /api/v1/query */}
           <motion.section
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
@@ -668,7 +711,9 @@ Reduce flooding in urban areas while improving public transportation and minimiz
             />
             <Button
               type="button"
+              id="generate-plan-btn"
               disabled={!canGenerate}
+              onClick={handleGenerate}
               className={cn(
                 "group relative h-14 w-full overflow-hidden rounded-2xl px-6 text-base font-medium text-white shadow-[0_20px_60px_-20px_oklch(0.42_0.22_285/0.6)] transition",
                 "bg-gradient-to-r from-[oklch(0.42_0.22_285)] via-[oklch(0.55_0.24_288)] to-[oklch(0.65_0.22_290)]",
@@ -677,9 +722,18 @@ Reduce flooding in urban areas while improving public transportation and minimiz
               )}
             >
               <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-              <Sparkles className="mr-2 h-4 w-4" />
-              Generate Sustainability Plan
-              <ArrowUp className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:-translate-y-0.5" />
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Submitting to pipeline…
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Generate Sustainability Plan
+                  <ArrowUp className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:-translate-y-0.5" />
+                </>
+              )}
             </Button>
             <p className="mt-3 text-center text-[11px] text-muted-foreground">
               9 agents will collaborate over your brief. Estimated runtime ·{" "}
@@ -687,7 +741,7 @@ Reduce flooding in urban areas while improving public transportation and minimiz
             </p>
           </motion.section>
 
-          {/* Recent queries */}
+          {/* Recent queries — static placeholder (no history endpoint yet) */}
           <motion.section
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
@@ -710,6 +764,7 @@ Reduce flooding in urban areas while improving public transportation and minimiz
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.44 + i * 0.06 }}
                   whileHover={{ y: -3 }}
+                  onClick={() => setPrompt(q.title)}
                   className="group flex h-full flex-col justify-between rounded-2xl border border-border/60 bg-white/70 p-4 text-left backdrop-blur-sm transition hover:border-primary/30 hover:shadow-[0_18px_40px_-20px_oklch(0.42_0.22_285/0.35)] dark:bg-white/[0.04]"
                 >
                   <p className="line-clamp-2 text-sm font-medium text-foreground">

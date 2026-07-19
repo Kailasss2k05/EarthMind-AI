@@ -1,3 +1,16 @@
+/**
+ * TODO: ENDPOINT MISSING
+ * This page currently renders static mock data.
+ * A real history endpoint does NOT yet exist in the backend.
+ *
+ * To connect this page to real data, the backend needs:
+ *   GET /api/v1/history  →  { items: HistoryItem[] }
+ *
+ * Once that endpoint is added:
+ *   1. Add a HistoryItem interface to services/types.ts
+ *   2. Add getHistory() to services/history.service.ts
+ *   3. Replace the `items` array below with a useQuery() call
+ */
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import {

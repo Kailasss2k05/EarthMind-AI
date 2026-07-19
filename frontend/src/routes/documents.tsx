@@ -1,3 +1,18 @@
+/**
+ * TODO: ENDPOINT MISSING
+ * This page currently renders a hardcoded list of documents.
+ * No file upload or document listing endpoint exists in the backend yet.
+ *
+ * To connect this page to real data, the backend needs:
+ *   GET  /api/v1/documents              →  { items: Document[] }
+ *   POST /api/v1/documents/upload       →  multipart/form-data file upload
+ *   DELETE /api/v1/documents/{doc_id}   →  delete a document
+ *
+ * Once those endpoints exist:
+ *   1. Add Document interface to services/types.ts
+ *   2. Add listDocuments() / uploadDocument() to services/document.service.ts
+ *   3. Replace the `docs` array below with a useQuery() call
+ */
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { motion } from "framer-motion";

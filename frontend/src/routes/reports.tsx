@@ -1,3 +1,16 @@
+/**
+ * TODO: ENDPOINT MISSING
+ * This page currently renders static mock data from a hardcoded report.
+ * A real reports endpoint does NOT yet exist in the backend.
+ *
+ * To connect this page to real data, the backend needs:
+ *   GET /api/v1/reports/{request_id}  →  { sections: ReportSection[], metadata: ReportMeta }
+ *
+ * Once that endpoint is added:
+ *   1. Add report types to services/types.ts
+ *   2. Add getReport(requestId) to services/report.service.ts
+ *   3. Read the request_id from route search params and fetch the report
+ */
 import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import {
