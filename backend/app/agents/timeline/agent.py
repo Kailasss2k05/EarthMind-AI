@@ -12,4 +12,8 @@ class TimelineAgent(BaseAgent):
         return TIMELINE_PROMPT.format(
     finance_output=json.dumps(outputs.get("finance", {}), indent=2),
     risk_output=json.dumps(outputs.get("risk", {}), indent=2),
+    shared_missing_information=json.dumps(
+    state.get("missing_information", []),
+    indent=2
+)
 )

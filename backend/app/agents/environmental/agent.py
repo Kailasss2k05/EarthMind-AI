@@ -13,4 +13,8 @@ class EnvironmentalAgent(BaseAgent):
             query=state.get("query", ""),
             research_output=json.dumps(outputs.get("research", {}), indent=2),
             policy_output=json.dumps(outputs.get("policy", {}), indent=2),
+            shared_missing_information=json.dumps(
+    state.get("missing_information", []),
+    indent=2
+)
         )

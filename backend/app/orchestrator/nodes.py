@@ -29,6 +29,7 @@ report = ReportAgent()
 >>>>>>> 944fcf0 (improved planner logic)
 =======
 from app.services.llm import get_llm
+from backend.app.orchestrator.helpers import update_agent_status, update_missing_information
 
 llm = get_llm()
 
@@ -95,27 +96,57 @@ def planner_node(state):
     state["required_agents"] = required
 
     state["execution_order"] = resolve_dependencies(required)
+    from app.orchestrator.helpers import ALL_AGENTS
+
+    for agent in ALL_AGENTS:
+        if agent not in state["execution_order"]:
+            state["agent_status"][agent] = "skipped"
 
     return state
 
 
 def research_node(state):
     state["outputs"]["research"] = research.run(state)
+    update_missing_information(state, state["outputs"]["research"])
+    update_agent_status(
+        state,
+        "research",
+        state["outputs"]["research"]
+    )
+
     return state
 
 
 def sdg_node(state):
     state["outputs"]["sdg"] = sdg.run(state)
+    update_missing_information(state, state["outputs"]["sdg"])
+    update_agent_status(
+        state,
+        "sdg",
+        state["outputs"]["sdg"]
+    )
     return state
 
 
 def policy_node(state):
     state["outputs"]["policy"] = policy.run(state)
+    update_missing_information(state, state["outputs"]["policy"])
+    update_agent_status(
+        state,
+        "policy",
+        state["outputs"]["policy"]
+    )
     return state
 
 
 def environmental_node(state):
     state["outputs"]["environmental"] = environmental.run(state)
+    update_missing_information(state, state["outputs"]["environmental"])
+    update_agent_status(
+        state,
+        "environmental",
+        state["outputs"]["environmental"]
+    )
     return state
 
 >>>>>>> 944fcf0 (improved planner logic)
@@ -158,7 +189,16 @@ def planner_node(state: dict) -> dict:
 =======
 def finance_node(state):
     state["outputs"]["finance"] = finance.run(state)
+<<<<<<< HEAD
 >>>>>>> 7efdc55 (standardised agent outputs)
+=======
+    update_missing_information(state, state["outputs"]["finance"])
+    update_agent_status(
+        state,
+        "finance",
+        state["outputs"]["finance"]
+    )
+>>>>>>> f6bdd3a (added agent status tracking)
     return state
 
 
@@ -244,11 +284,23 @@ def report_node(state: dict) -> dict:
 
 def risk_node(state):
     state["outputs"]["risk"] = risk.run(state)
+    update_missing_information(state, state["outputs"]["risk"])
+    update_agent_status(
+        state,
+        "risk",
+        state["outputs"]["risk"]
+    )
     return state
 
 
 def timeline_node(state):
     state["outputs"]["timeline"] = timeline.run(state)
+    update_missing_information(state, state["outputs"]["timeline"])
+    update_agent_status(
+        state,
+        "timeline",
+        state["outputs"]["timeline"]
+    )
     return state
 
 

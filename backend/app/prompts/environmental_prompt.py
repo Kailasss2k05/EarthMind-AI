@@ -16,6 +16,12 @@ Research Agent Output:
 Policy Agent Output:
 {policy_output}
 
+Already Missing Information
+
+{shared_missing_information}
+
+Do NOT repeat items already listed.
+Only add NEW missing information.
 
 TASKS
 

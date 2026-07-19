@@ -13,3 +13,6 @@ class GraphState(TypedDict):
 
     agent_status: Dict[str, str]
     errors: Dict[str, str]
+    agent_status: Dict[str, str]
+
+    missing_information: List[str]

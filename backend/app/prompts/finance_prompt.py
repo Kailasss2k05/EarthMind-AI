@@ -16,6 +16,13 @@ Policy Agent Output:
 Environmental Agent Output:
 {environmental_output}
 
+Already Missing Information
+
+{shared_missing_information}
+
+Do NOT repeat items already listed.
+Only add NEW missing information.
+
 TASKS
 
 1. Identify cost components.

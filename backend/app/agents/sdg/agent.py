@@ -1,7 +1,7 @@
 from app.core.base_agent import BaseAgent
 from app.prompts.sdg_prompt import SDG_PROMPT
 from app.core.utils import get_agent_data
-
+import json
 
 class SDGAgent(BaseAgent):
 
@@ -13,5 +13,9 @@ class SDGAgent(BaseAgent):
 
             query=state["query"],
 
-            research_output=outputs.get("research", {})
+            research_output=outputs.get("research", {}),
+            shared_missing_information=json.dumps(
+    state.get("missing_information", []),
+    indent=2
+)
         )

@@ -63,6 +63,17 @@ TIMELINE
 
 {timeline_output}
 
+Missing Information
+
+{shared_missing_information}
+
+Agent Status
+
+{agent_status}
+
+If an agent status is "failed" or "skipped",
+mention that its section is unavailable.
+
 --------------------------------------
 
 OUTPUT FORMAT

@@ -6,7 +6,7 @@ import json
 class ReportAgent(BaseAgent):
 
     returns_json = False
-    
+
     def build_prompt(self, state):
 
         outputs = state.get("outputs", {})
@@ -22,4 +22,13 @@ class ReportAgent(BaseAgent):
             finance_output=json.dumps(outputs.get("finance", {}), indent=2),
             risk_output=json.dumps(outputs.get("risk", {}), indent=2),
             timeline_output=json.dumps(outputs.get("timeline", {}), indent=2),
+            shared_missing_information=json.dumps(
+    state.get("missing_information", []),
+    indent=2
+),
+agent_status=json.dumps(
+    state.get("agent_status", {}),
+    indent=2
+)
+
         )

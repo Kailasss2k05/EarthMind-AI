@@ -24,6 +24,15 @@ class PolicyAgent(BaseAgent):
             sdg_output=json.dumps(
                 outputs.get("sdg", {}),
                 indent=2
+<<<<<<< HEAD
             )
         )
 >>>>>>> 7efdc55 (standardised agent outputs)
+=======
+            ),
+            shared_missing_information=json.dumps(
+            state.get("missing_information", []),
+            indent=2
+        )
+        )
+>>>>>>> f6bdd3a (added agent status tracking)

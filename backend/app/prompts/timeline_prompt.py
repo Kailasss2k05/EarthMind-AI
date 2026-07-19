@@ -13,6 +13,12 @@ Finance Agent Output:
 Risk Agent Output:
 {risk_output}
 
+Already Missing Information
+
+{shared_missing_information}
+Do NOT repeat items already listed.
+Only add NEW missing information.
+
 TASKS
 
 1. Suggest project phases.
