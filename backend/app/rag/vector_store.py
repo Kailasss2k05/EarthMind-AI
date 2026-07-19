@@ -1,16 +1,21 @@
 """
 vector_store.py
 ----------------
-Step 4 of the pipeline: ChromaDB setup.
+ChromaDB vector store utilities.
+
+Each knowledge domain gets its own collection.
+Large insertions are automatically split into batches.
 """
 
 import chromadb
+from chromadb.utils.batch_utils import create_batches
+
 from .config import VECTOR_STORE_DIR
 
 
-def get_chroma_client() -> chromadb.ClientAPI:
+def get_chroma_client():
     """
-    Create or open the persistent ChromaDB database.
+    Create/Open persistent ChromaDB database.
     """
     VECTOR_STORE_DIR.mkdir(parents=True, exist_ok=True)
     return chromadb.PersistentClient(path=str(VECTOR_STORE_DIR))
@@ -18,48 +23,109 @@ def get_chroma_client() -> chromadb.ClientAPI:
 
 def get_or_create_collection(domain: str):
     """
-    Return the ChromaDB collection for the given domain.
+    Return (or create) a collection for a domain.
     """
     client = get_chroma_client()
+
     return client.get_or_create_collection(
         name=domain,
         metadata={"domain": domain},
     )
-
-
-def add_chunks_to_collection(domain: str, chunks: list[dict], embeddings: list[list[float]]):
+def list_documents(domain: str) -> list[str]:
     """
-    Store chunks, embeddings, and metadata in ChromaDB.
+    Return a sorted list of unique document names in a collection.
     """
+    collection = get_or_create_collection(domain)
+
+    data = collection.get(include=["metadatas"])
+
+    docs = {
+        metadata["filename"]
+        for metadata in data["metadatas"]
+        if metadata and "filename" in metadata
+    }
+
+    return sorted(docs)
+def delete_document(domain: str, filename: str):
+    """
+    Delete all chunks belonging to one PDF.
+    """
+
+    collection = get_or_create_collection(domain)
+
+    collection.delete(
+        where={"filename": filename}
+    )
+
+    print(f"Deleted '{filename}' from '{domain}' collection.")
+    
+def is_pdf_indexed(domain: str, filename: str) -> bool:
+    """
+    Check whether a PDF has already been indexed.
+    """
+
+    collection = get_or_create_collection(domain)
+
+    results = collection.get(
+        where={"filename": filename},
+        limit=1,
+    )
+
+    return len(results["ids"]) > 0
+
+def add_chunks_to_collection(
+    domain: str,
+    chunks: list[dict],
+    embeddings: list[list[float]],
+):
+    """
+    Store document chunks in ChromaDB using automatic batching.
+    """
+
     if not chunks:
         return
 
     collection = get_or_create_collection(domain)
 
     ids = [
-        f"{domain}-{c['source']}-p{c['page']}-c{c['chunk_index']}"
-        for c in chunks
+        f"{domain}-{chunk['source']}-p{chunk['page']}-c{chunk['chunk_index']}"
+        for chunk in chunks
     ]
 
-    documents = [c["text"] for c in chunks]
+    documents = [chunk["text"] for chunk in chunks]
 
-    metadatas = []
+    metadatas = [
+        {
+            "source": chunk["source"],
+            "filename": chunk["source"],
+            "page": chunk["page"],
+            "domain": domain,
+            "chunk_index": chunk["chunk_index"],
+            "chunk_length": len(chunk["text"]),
+        }
+        for chunk in chunks
+    ]
 
-    for c in chunks:
-        metadatas.append(
-            {
-                "source": c["source"],
-                "filename": c["source"],
-                "page": c["page"],
-                "domain": domain,
-                "chunk_index": c["chunk_index"],
-                "chunk_length": len(c["text"]),
-            }
-        )
+    client = get_chroma_client()
 
-    collection.upsert(
+    batches = create_batches(
+        api=client,
         ids=ids,
-        embeddings=embeddings,
         documents=documents,
+        embeddings=embeddings,
         metadatas=metadatas,
     )
+
+    print(f"Saving {len(ids)} chunks in {len(batches)} batch(es)...")
+
+    for batch in batches:
+        batch_ids, batch_embeddings, batch_metadatas, batch_documents = batch
+
+        collection.upsert(
+            ids=batch_ids,
+            embeddings=batch_embeddings,
+            documents=batch_documents,
+            metadatas=batch_metadatas,
+        )
+
+    print("✓ Storage completed.")
