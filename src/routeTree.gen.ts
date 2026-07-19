@@ -13,6 +13,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as PlanRouteImport } from './routes/plan'
+import { Route as ExecutionRouteImport } from './routes/execution'
 import { Route as DataSourcesRouteImport } from './routes/data-sources'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AgentsRouteImport } from './routes/agents'
@@ -36,6 +37,11 @@ const ReportsRoute = ReportsRouteImport.update({
 const PlanRoute = PlanRouteImport.update({
   id: '/plan',
   path: '/plan',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExecutionRoute = ExecutionRouteImport.update({
+  id: '/execution',
+  path: '/execution',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DataSourcesRoute = DataSourcesRouteImport.update({
@@ -64,6 +70,7 @@ export interface FileRoutesByFullPath {
   '/agents': typeof AgentsRoute
   '/analytics': typeof AnalyticsRoute
   '/data-sources': typeof DataSourcesRoute
+  '/execution': typeof ExecutionRoute
   '/plan': typeof PlanRoute
   '/reports': typeof ReportsRoute
   '/settings': typeof SettingsRoute
@@ -74,6 +81,7 @@ export interface FileRoutesByTo {
   '/agents': typeof AgentsRoute
   '/analytics': typeof AnalyticsRoute
   '/data-sources': typeof DataSourcesRoute
+  '/execution': typeof ExecutionRoute
   '/plan': typeof PlanRoute
   '/reports': typeof ReportsRoute
   '/settings': typeof SettingsRoute
@@ -85,6 +93,7 @@ export interface FileRoutesById {
   '/agents': typeof AgentsRoute
   '/analytics': typeof AnalyticsRoute
   '/data-sources': typeof DataSourcesRoute
+  '/execution': typeof ExecutionRoute
   '/plan': typeof PlanRoute
   '/reports': typeof ReportsRoute
   '/settings': typeof SettingsRoute
@@ -97,6 +106,7 @@ export interface FileRouteTypes {
     | '/agents'
     | '/analytics'
     | '/data-sources'
+    | '/execution'
     | '/plan'
     | '/reports'
     | '/settings'
@@ -107,6 +117,7 @@ export interface FileRouteTypes {
     | '/agents'
     | '/analytics'
     | '/data-sources'
+    | '/execution'
     | '/plan'
     | '/reports'
     | '/settings'
@@ -117,6 +128,7 @@ export interface FileRouteTypes {
     | '/agents'
     | '/analytics'
     | '/data-sources'
+    | '/execution'
     | '/plan'
     | '/reports'
     | '/settings'
@@ -128,6 +140,7 @@ export interface RootRouteChildren {
   AgentsRoute: typeof AgentsRoute
   AnalyticsRoute: typeof AnalyticsRoute
   DataSourcesRoute: typeof DataSourcesRoute
+  ExecutionRoute: typeof ExecutionRoute
   PlanRoute: typeof PlanRoute
   ReportsRoute: typeof ReportsRoute
   SettingsRoute: typeof SettingsRoute
@@ -162,6 +175,13 @@ declare module '@tanstack/react-router' {
       path: '/plan'
       fullPath: '/plan'
       preLoaderRoute: typeof PlanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/execution': {
+      id: '/execution'
+      path: '/execution'
+      fullPath: '/execution'
+      preLoaderRoute: typeof ExecutionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/data-sources': {
@@ -200,6 +220,7 @@ const rootRouteChildren: RootRouteChildren = {
   AgentsRoute: AgentsRoute,
   AnalyticsRoute: AnalyticsRoute,
   DataSourcesRoute: DataSourcesRoute,
+  ExecutionRoute: ExecutionRoute,
   PlanRoute: PlanRoute,
   ReportsRoute: ReportsRoute,
   SettingsRoute: SettingsRoute,
