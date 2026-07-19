@@ -31,7 +31,34 @@ def get_or_create_collection(domain: str):
         name=domain,
         metadata={"domain": domain},
     )
+def list_documents(domain: str) -> list[str]:
+    """
+    Return a sorted list of unique document names in a collection.
+    """
+    collection = get_or_create_collection(domain)
 
+    data = collection.get(include=["metadatas"])
+
+    docs = {
+        metadata["filename"]
+        for metadata in data["metadatas"]
+        if metadata and "filename" in metadata
+    }
+
+    return sorted(docs)
+def delete_document(domain: str, filename: str):
+    """
+    Delete all chunks belonging to one PDF.
+    """
+
+    collection = get_or_create_collection(domain)
+
+    collection.delete(
+        where={"filename": filename}
+    )
+
+    print(f"Deleted '{filename}' from '{domain}' collection.")
+    
 def is_pdf_indexed(domain: str, filename: str) -> bool:
     """
     Check whether a PDF has already been indexed.
@@ -45,7 +72,7 @@ def is_pdf_indexed(domain: str, filename: str) -> bool:
     )
 
     return len(results["ids"]) > 0
-    
+
 def add_chunks_to_collection(
     domain: str,
     chunks: list[dict],
