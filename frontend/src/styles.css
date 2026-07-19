@@ -263,3 +263,149 @@
   }
 }
 
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* Print stylesheet — triggered by the "Export PDF" button                     */
+/* document.body gets .printing-report while window.print() is active         */
+/* ─────────────────────────────────────────────────────────────────────────── */
+@media print {
+
+  /* A4 page setup with named counter for Page X of Y */
+  @page {
+    size: A4 portrait;
+    margin: 18mm 16mm 22mm 16mm;
+    @bottom-center {
+      content: "EarthMind AI  ·  Page " counter(page) " of " counter(pages);
+      font-family: system-ui, sans-serif;
+      font-size: 7pt;
+      color: #94a3b8;
+    }
+  }
+
+  /* First page (cover) — no running footer */
+  @page :first {
+    @bottom-center { content: none; }
+  }
+
+  /* ── Visibility: show only the report, hide everything else ── */
+  body.printing-report * {
+    visibility: hidden;
+  }
+
+  body.printing-report [data-report-viewer],
+  body.printing-report [data-report-viewer] * {
+    visibility: visible;
+  }
+
+  body.printing-report [data-report-viewer] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    background: white;
+    color: black;
+  }
+
+  /* ── Hide all app chrome ── */
+  body.printing-report [data-sidebar],
+  body.printing-report nav,
+  body.printing-report header,
+  body.printing-report [data-sonner-toaster],
+  body.printing-report [data-report-viewer] header {
+    display: none !important;
+  }
+
+  /* ── Suppress framer-motion transforms ── */
+  [data-report-viewer] {
+    transform: none !important;
+    opacity: 1 !important;
+  }
+
+  /* ── Cover page: force A4 height and exact page block ── */
+  [data-report-viewer] [aria-label="Cover page"] {
+    background: #0f172a !important;
+    color: white !important;
+    height: 248mm !important; /* reduced to 248mm to guarantee no page 2 overflow */
+    min-height: 248mm !important;
+    max-height: 248mm !important;
+    margin-bottom: 0 !important;
+    box-sizing: border-box !important;
+    border: none !important;
+    border-radius: 0 !important;
+    overflow: hidden !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ── Explicitly span full width for double-span cards in print ── */
+  body.printing-report [data-report-viewer] #pdf-exec-summary,
+  body.printing-report [data-report-viewer] #pdf-risk,
+  body.printing-report [data-report-viewer] #pdf-execution-summary,
+  body.printing-report [data-report-viewer] .md\:col-span-2 {
+    grid-column: span 2 / span 2 !important;
+  }
+
+  /* ── Force References cards grid to single column in print ── */
+  body.printing-report [data-report-viewer] #pdf-references [role="list"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Section cards: prevent internal page breaks ── */
+  [data-report-viewer] section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* ── Grid: single column in print for cleaner flow ── */
+  [data-report-viewer] .md\:grid-cols-2 {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* ── Reset glassmorphism styles not supported in print ── */
+  [data-report-viewer] .glass {
+    background: white !important;
+    border: 1px solid #e2e8f0 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+  }
+
+  /* ── Ensure gradients print with colour ── */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ── Typography adjustments for print (Enforce minimum 11pt) ── */
+  [data-report-viewer] h1 { font-size: 32pt; }
+  [data-report-viewer] h2 { font-size: 22pt; }
+  [data-report-viewer] h3 { font-size: 13pt; }
+  [data-report-viewer] p,
+  [data-report-viewer] li,
+  [data-report-viewer] td,
+  [data-report-viewer] span:not(.font-numeric) { font-size: 11pt !important; line-height: 1.55; }
+  [data-report-viewer] .font-numeric { font-size: 11pt !important; }
+
+  /* ── Stacking context: hide fixed footer/watermark on first page ── */
+  [data-report-viewer] [aria-label="Cover page"] {
+    position: relative;
+    z-index: 100 !important;
+    background: #0f172a !important;
+  }
+
+  body.printing-report .fixed.bottom-0 {
+    z-index: 10 !important;
+  }
+
+  /* ── Page number counters for HTML print footer ── */
+  .print-page-counter::after {
+    content: counter(page);
+  }
+  .print-pages-total::after {
+    content: counter(pages);
+  }
+
+  /* ── Animation reset ── */
+  [data-report-viewer] * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -940,6 +940,8 @@ function PlanPage() {
           <ReportViewer
             plannerOutput={plannerOutput}
             queryText={queryText}
+            elapsedMs={elapsedMs}
+            agentStatuses={agentStatuses}
           />
         )}
       </AnimatePresence>
