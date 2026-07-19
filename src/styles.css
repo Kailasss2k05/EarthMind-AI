@@ -47,9 +47,14 @@
   --color-violet-deep: var(--violet-deep);
   --color-violet-electric: var(--violet-electric);
   --color-violet-soft: var(--violet-soft);
-  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Playfair Display", ui-serif, Georgia, serif;
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
 }
+
 
 :root {
   --radius: 1rem;
@@ -86,6 +91,11 @@
   --violet-deep: oklch(0.42 0.22 285);      /* #6D28D9 */
   --violet-electric: oklch(0.65 0.22 290);  /* #8B5CF6 */
   --violet-soft: oklch(0.85 0.08 290);      /* #C4B5FD */
+
+  /* Semantic status */
+  --success: oklch(0.72 0.17 162);          /* #10B981 */
+  --warning: oklch(0.78 0.16 68);           /* #F59E0B */
+  --error: oklch(0.65 0.24 22);             /* #EF4444 */
 
   --chart-1: oklch(0.42 0.22 285);
   --chart-2: oklch(0.65 0.22 290);
@@ -158,6 +168,10 @@
   --input: oklch(1 0 0 / 12%);
   --ring: oklch(0.7 0.22 290);
 
+  --success: oklch(0.72 0.17 162);
+  --warning: oklch(0.78 0.16 68);
+  --error: oklch(0.68 0.24 22);
+
   --violet-deep: oklch(0.55 0.24 285);
   --violet-electric: oklch(0.7 0.22 290);
   --violet-soft: oklch(0.85 0.08 290);
@@ -207,6 +221,29 @@
   background-size: 40px 40px;
 }
 
+@utility font-numeric {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+@keyframes aurora-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-4%, 3%, 0) scale(1.08); }
+}
+@keyframes aurora-drift-2 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1.05); }
+  50% { transform: translate3d(5%, -4%, 0) scale(1); }
+}
+@keyframes pulse-ring {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
 @layer base {
   * {
     border-color: var(--color-border);
@@ -219,11 +256,10 @@
     font-feature-settings: "cv11", "ss01", "ss03";
     -webkit-font-smoothing: antialiased;
   }
-  h1,
-  h2,
-  h3,
-  h4 {
-    letter-spacing: -0.025em;
-    font-weight: 600;
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+    font-weight: 500;
   }
 }
+

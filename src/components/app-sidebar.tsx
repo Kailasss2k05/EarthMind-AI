@@ -6,6 +6,7 @@ import {
   FileBarChart,
   Database,
   Settings,
+  Sparkles,
 } from "lucide-react";
 import logoUrl from "@/assets/earthmind-logo.png";
 
@@ -25,6 +26,7 @@ import {
 
 const navItems = [
   { title: "Overview", url: "/", icon: LayoutDashboard },
+  { title: "New Plan", url: "/plan", icon: Sparkles, primary: true },
   { title: "Agents", url: "/agents", icon: Bot },
   { title: "Analytics", url: "/analytics", icon: LineChart },
   { title: "Reports", url: "/reports", icon: FileBarChart },
