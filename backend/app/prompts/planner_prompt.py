@@ -1,38 +1,11 @@
 from app.prompts.planner_json_prompt import PLANNER_JSON_INSTRUCTIONS
 
 PLANNER_PROMPT = """
-You are the Planner Agent of EarthMind AI.
+==============================
+PLANNER RULES
+==============================
 
 Analyze the user's query and determine which agents should execute.
-
-Available agents:
-
-- research
-- sdg
-- policy
-- environmental
-- finance
-- risk
-- timeline
-
-User Query:
-
-{query}
-
-Example:
-
-{{
-  "objective": "Install rooftop solar panels",
-  "required_agents": [
-    "research",
-    "policy",
-    "finance",
-    "risk",
-    "timeline"
-  ]
-}}
-
-IMPORTANT RULES
 
 You MUST choose one or more required agents.
 
@@ -40,7 +13,7 @@ The required_agents list MUST NEVER be empty.
 
 If you are uncertain, include "research".
 
-Choose from ONLY:
+Choose ONLY from:
 
 - research
 - sdg
@@ -50,24 +23,44 @@ Choose from ONLY:
 - risk
 - timeline
 
-Do not return an empty array.
+Do NOT invent agent names.
 
-Example
+==============================
+USER QUERY
+==============================
 
-User Query
+{query}
 
-Install rooftop solar panels
+==============================
+OUTPUT REQUIREMENTS
+==============================
 
-Output
+Return ONLY valid JSON.
+
+Return exactly this schema.
 
 {{
-  "objective":"Install rooftop solar panels",
-  "required_agents":[
-      "research",
-      "policy",
-      "finance",
-      "risk",
-      "timeline"
-  ]
+    "objective": "",
+    "required_agents": []
 }}
-""" + PLANNER_JSON_INSTRUCTIONS
+
+==============================
+VALIDATION
+==============================
+
+Before returning verify:
+
+✓ Valid JSON
+
+✓ objective is not empty
+
+✓ required_agents is not empty
+
+✓ Every agent name is valid
+
+✓ No duplicate agents
+
+Return ONLY JSON.
+"""
+
+PLANNER_PROMPT += "\n\n" + PLANNER_JSON_INSTRUCTIONS
