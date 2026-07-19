@@ -52,6 +52,10 @@ Timeline Output
 
 {timeline_output}
 
+Overall Confidence
+
+{overall_confidence}
+
 Shared Missing Information
 
 {shared_missing_information}
@@ -158,7 +162,40 @@ Recommendations
 
 Missing Information
 
+ReferencesAlways print
+
+Status
+
+Confidence Score
+
+Summary
+
+Findings
+
+Recommendations
+
+Missing Information
+
 References
+
+Use the confidence_score field from the agent's JSON output.
+
+Display confidence in the format:
+
+0.91 (Very High)
+0.78 (High)
+0.55 (Medium)
+0.30 (Low)
+
+Interpret confidence as:
+
+0.90–1.00 → Very High
+
+0.70–0.89 → High
+
+0.40–0.69 → Medium
+
+0.00–0.39 → Low
 
 using ONLY that agent's JSON.
 
@@ -188,10 +225,21 @@ Do not fabricate any output.
 
 If status == skipped
 
-Write:
+Display:
+
+Status
+
+Skipped
+
+Confidence Score
+
+N/A
+
+Summary
 
 This agent was skipped by the Planner.
 
+Do not display findings, recommendations, references, or missing information for skipped agents.
 --------------------------------------------------
 
 # EXECUTIVE SUMMARY
@@ -199,6 +247,8 @@ This agent was skipped by the Planner.
 Include:
 
 Planner Objective
+
+Overall Confidence ({overall_confidence}/1.00)
 
 Executed Agents
 
@@ -211,7 +261,6 @@ Incomplete Agents
 Failed Agents
 
 One short paragraph summarizing the project.
-
 --------------------------------------------------
 
 # EXECUTION SUMMARY
@@ -245,6 +294,9 @@ Otherwise list every error.
 
 ## Planner Objective
 
+## Overall Confidence
+
+
 ## Executed Agents
 
 ## Skipped Agents
@@ -254,6 +306,10 @@ Otherwise list every error.
 ---
 
 # Research Findings
+
+### Status
+
+### Confidence Score
 
 ### Summary
 
@@ -269,6 +325,10 @@ Otherwise list every error.
 
 # SDG Alignment
 
+### Status
+
+### Confidence Score
+
 ### Summary
 
 ### Findings
@@ -282,6 +342,10 @@ Otherwise list every error.
 ---
 
 # Policy Analysis
+
+### Status
+
+### Confidence Score
 
 ### Summary
 
@@ -297,6 +361,10 @@ Otherwise list every error.
 
 # Environmental Assessment
 
+### Status
+
+### Confidence Score
+
 ### Summary
 
 ### Findings
@@ -310,6 +378,10 @@ Otherwise list every error.
 ---
 
 # Financial Assessment
+
+### Status
+
+### Confidence Score
 
 ### Summary
 
@@ -325,6 +397,10 @@ Otherwise list every error.
 
 # Risk Assessment
 
+### Status
+
+### Confidence Score
+
 ### Summary
 
 ### Findings
@@ -338,6 +414,10 @@ Otherwise list every error.
 ---
 
 # Timeline
+
+### Status
+
+### Confidence Score
 
 ### Summary
 
@@ -392,4 +472,8 @@ Never omit a section.
 Never reorder the sections.
 
 Every section must follow the same structure.
+
+Use the confidence_score from each agent output exactly as provided.
+
+Do not estimate or modify confidence values.
 """

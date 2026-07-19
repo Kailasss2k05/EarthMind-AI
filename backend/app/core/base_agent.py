@@ -2,8 +2,11 @@ import json
 import logging
 import re
 from abc import ABC, abstractmethod
+
 from json_repair import repair_json
 
+# Import confidence calculator
+from app.core.utils import calculate_confidence
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +59,14 @@ class BaseAgent(ABC):
 
             json_text = repair_json(json_text)
 
-            return json.loads(json_text)
+            result = json.loads(json_text)
+
+            # ----------------------------
+            # Calculate confidence in Python
+            # ----------------------------
+            result["confidence_score"] = calculate_confidence(result)
+
+            return result
 
         except json.JSONDecodeError as e:
 
@@ -69,6 +79,7 @@ class BaseAgent(ABC):
             return {
                 "agent": self.__class__.__name__.replace("Agent", "").lower(),
                 "status": "failed",
+                "confidence_score": 0.0,
                 "summary": "Agent returned invalid JSON.",
                 "findings": [],
                 "recommendations": [],
@@ -84,6 +95,7 @@ class BaseAgent(ABC):
             return {
                 "agent": self.__class__.__name__.replace("Agent", "").lower(),
                 "status": "failed",
+                "confidence_score": 0.0,
                 "summary": "Agent execution failed.",
                 "findings": [],
                 "recommendations": [],

@@ -11,6 +11,21 @@ class ReportAgent(BaseAgent):
 
         outputs = state.get("outputs", {})
 
+        scores = []
+
+        for output in state["outputs"].values():
+
+            if isinstance(output, dict):
+
+                score = output.get("confidence_score")
+
+                if isinstance(score, (int, float)):
+                    scores.append(score)
+
+        overall = round(sum(scores) / len(scores), 2) if scores else 0.0
+
+        state["overall_confidence"] = overall
+
         return REPORT_PROMPT.format(
             query=state.get("query", ""),
             planner_output=json.dumps(state.get("planner_output", {}), indent=2),
@@ -21,6 +36,7 @@ class ReportAgent(BaseAgent):
             environmental_output=json.dumps(outputs.get("environmental", {}), indent=2),
             finance_output=json.dumps(outputs.get("finance", {}), indent=2),
             risk_output=json.dumps(outputs.get("risk", {}), indent=2),
+            overall_confidence=state.get("overall_confidence", 0.0),
             timeline_output=json.dumps(outputs.get("timeline", {}), indent=2),
             shared_missing_information=json.dumps(
     state.get("missing_information", []),

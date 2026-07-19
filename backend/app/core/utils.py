@@ -127,3 +127,46 @@ def ensure_list(value):
         return value
 
     return [str(value)]
+
+def calculate_confidence(result: dict) -> float | None:
+    """
+    Calculate a deterministic confidence score for an agent output.
+
+    Returns:
+        float between 0.0 and 1.0
+        None for skipped agents
+    """
+
+    status = result.get("status", "").lower()
+
+    if status == "skipped":
+        return None
+
+    if status == "failed":
+        return 0.0
+
+    score = 0.50  # Base confidence
+
+    findings = result.get("findings", [])
+    recommendations = result.get("recommendations", [])
+    references = result.get("references", [])
+    missing = result.get("missing_information", [])
+
+    # Reward useful information
+    score += min(len(findings), 5) * 0.06
+    score += min(len(recommendations), 5) * 0.04
+    score += min(len(references), 5) * 0.03
+
+    # Penalize missing information
+    score -= min(len(missing), 10) * 0.05
+
+    # Status adjustment
+    if status == "success":
+        score += 0.15
+    elif status == "incomplete":
+        score -= 0.05
+
+    # Clamp to valid range
+    score = max(0.0, min(1.0, score))
+
+    return round(score, 2)

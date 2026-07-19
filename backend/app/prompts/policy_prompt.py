@@ -91,6 +91,26 @@ internal execution or tool failure.
 
 Never use any other status.
 
+Confidence Score Rules
+
+Return a confidence_score between 0.0 and 1.0.
+
+Use:
+
+0.90–1.00
+Complete information
+Reliable references
+Clear conclusions
+
+0.70–0.89
+Minor information missing
+
+0.40–0.69
+Several important details missing
+
+0.00–0.39
+Very limited evidence
+
 ==============================
 OUTPUT REQUIREMENTS
 ==============================
