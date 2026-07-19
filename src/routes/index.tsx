@@ -104,7 +104,16 @@ function OverviewPage() {
 
         <h1 className="max-w-4xl text-balance font-display text-5xl leading-[1.02] tracking-[-0.03em] sm:text-6xl md:text-7xl">
           Build{" "}
-          <span className="italic bg-clip-text text-transparent bg-[image:var(--gradient-primary)]">
+          <span
+            className="italic"
+            style={{
+              backgroundImage: "var(--gradient-primary)",
+              WebkitBackgroundClip: "text",
+              backgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              color: "transparent",
+            }}
+          >
             Sustainable
           </span>{" "}
           Communities with AI

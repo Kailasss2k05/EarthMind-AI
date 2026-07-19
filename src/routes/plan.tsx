@@ -84,7 +84,16 @@ function PlanPage() {
         </div>
         <h1 className="max-w-2xl text-balance font-display text-4xl leading-[1.05] tracking-[-0.02em] sm:text-5xl md:text-6xl">
           What should EarthMind{" "}
-          <span className="italic bg-clip-text text-transparent bg-[image:var(--gradient-primary)]">
+          <span
+            className="italic"
+            style={{
+              backgroundImage: "var(--gradient-primary)",
+              WebkitBackgroundClip: "text",
+              backgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              color: "transparent",
+            }}
+          >
             solve
           </span>{" "}
           today?
