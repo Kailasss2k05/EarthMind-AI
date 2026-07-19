@@ -1,75 +1,93 @@
-from abc import ABC, abstractmethod
-
-from app.services.llm import get_llm
-import time
+import json
 import logging
+import re
+from abc import ABC, abstractmethod
+from json_repair import repair_json
+
 
 logger = logging.getLogger(__name__)
 
+
 class BaseAgent(ABC):
-    """
-    Parent class for all agents.
-    """
 
-    def __init__(self):
+    # ReportAgent overrides this to False
+    returns_json = True
 
-        self.llm = get_llm()
+    def __init__(self, llm):
+        self.llm = llm
 
     @abstractmethod
     def build_prompt(self, state):
-
-        """
-        Every agent must implement
-        its own prompt.
-        """
         pass
 
     def run(self, state):
 
-        agent_name = self.__class__.__name__
-
-        start = time.time()
+        prompt = self.build_prompt(state)
 
         try:
+            response = self.llm.invoke(prompt)
+            content = response.content.strip()
 
-            prompt = self.build_prompt(state)
+            # ReportAgent returns Markdown
+            if not self.returns_json:
+                return content
 
-            MAX_RETRIES = 3
+            # Debug (remove later)
+            print(f"\n===== {self.__class__.__name__} RAW OUTPUT =====")
+            print(content)
+            print("==============================================\n")
 
-            for attempt in range(MAX_RETRIES):
+            # Remove markdown fences
+            content = re.sub(r"^```json\s*", "", content, flags=re.IGNORECASE)
+            content = re.sub(r"^```\s*", "", content)
+            content = re.sub(r"\s*```$", "", content)
 
-                try:
+            # Extract first JSON object
+            match = re.search(r"\{.*\}", content, re.DOTALL)
 
-                    response = self.llm.invoke(prompt)
+            if not match:
+                raise json.JSONDecodeError(
+                    "No JSON object found",
+                    content,
+                    0,
+                )
 
-                    return response.content
+            json_text = match.group(0)
 
-                except Exception:
+            json_text = repair_json(json_text)
 
-                    if attempt == MAX_RETRIES - 1:
+            return json.loads(json_text)
 
-                        raise
-            state["agent_status"][agent_name] = "SUCCESS"
+        except json.JSONDecodeError as e:
 
-            logger.info(f"{agent_name} completed")
+            logger.error(
+                "%s returned invalid JSON.\n\nJSON:\n%s\n",
+                self.__class__.__name__,
+                content,
+            )
 
-            return response.content
+            return {
+                "agent": self.__class__.__name__.replace("Agent", "").lower(),
+                "status": "failed",
+                "summary": "Agent returned invalid JSON.",
+                "findings": [],
+                "recommendations": [],
+                "missing_information": [],
+                "references": [],
+                "error": str(e),
+            }
 
         except Exception as e:
 
-            state["agent_status"][agent_name] = "FAILED"
+            logger.exception("%s failed.", self.__class__.__name__)
 
-            state["errors"][agent_name] = str(e)
-
-            logger.exception(e)
-
-            raise
-
-        finally:
-
-            logger.info(
-
-                f"{agent_name} took {time.time()-start:.2f}s"
-
-            )
-
+            return {
+                "agent": self.__class__.__name__.replace("Agent", "").lower(),
+                "status": "failed",
+                "summary": "Agent execution failed.",
+                "findings": [],
+                "recommendations": [],
+                "missing_information": [],
+                "references": [],
+                "error": str(e),
+            }
