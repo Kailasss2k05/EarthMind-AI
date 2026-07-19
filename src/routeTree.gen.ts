@@ -16,6 +16,7 @@ import { Route as PlanRouteImport } from './routes/plan'
 import { Route as KnowledgeRouteImport } from './routes/knowledge'
 import { Route as HistoryRouteImport } from './routes/history'
 import { Route as ExecutionRouteImport } from './routes/execution'
+import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as DataSourcesRouteImport } from './routes/data-sources'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AgentsRouteImport } from './routes/agents'
@@ -56,6 +57,11 @@ const ExecutionRoute = ExecutionRouteImport.update({
   path: '/execution',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DocumentsRoute = DocumentsRouteImport.update({
+  id: '/documents',
+  path: '/documents',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DataSourcesRoute = DataSourcesRouteImport.update({
   id: '/data-sources',
   path: '/data-sources',
@@ -82,6 +88,7 @@ export interface FileRoutesByFullPath {
   '/agents': typeof AgentsRoute
   '/analytics': typeof AnalyticsRoute
   '/data-sources': typeof DataSourcesRoute
+  '/documents': typeof DocumentsRoute
   '/execution': typeof ExecutionRoute
   '/history': typeof HistoryRoute
   '/knowledge': typeof KnowledgeRoute
@@ -95,6 +102,7 @@ export interface FileRoutesByTo {
   '/agents': typeof AgentsRoute
   '/analytics': typeof AnalyticsRoute
   '/data-sources': typeof DataSourcesRoute
+  '/documents': typeof DocumentsRoute
   '/execution': typeof ExecutionRoute
   '/history': typeof HistoryRoute
   '/knowledge': typeof KnowledgeRoute
@@ -109,6 +117,7 @@ export interface FileRoutesById {
   '/agents': typeof AgentsRoute
   '/analytics': typeof AnalyticsRoute
   '/data-sources': typeof DataSourcesRoute
+  '/documents': typeof DocumentsRoute
   '/execution': typeof ExecutionRoute
   '/history': typeof HistoryRoute
   '/knowledge': typeof KnowledgeRoute
@@ -124,6 +133,7 @@ export interface FileRouteTypes {
     | '/agents'
     | '/analytics'
     | '/data-sources'
+    | '/documents'
     | '/execution'
     | '/history'
     | '/knowledge'
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
     | '/agents'
     | '/analytics'
     | '/data-sources'
+    | '/documents'
     | '/execution'
     | '/history'
     | '/knowledge'
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '/agents'
     | '/analytics'
     | '/data-sources'
+    | '/documents'
     | '/execution'
     | '/history'
     | '/knowledge'
@@ -164,6 +176,7 @@ export interface RootRouteChildren {
   AgentsRoute: typeof AgentsRoute
   AnalyticsRoute: typeof AnalyticsRoute
   DataSourcesRoute: typeof DataSourcesRoute
+  DocumentsRoute: typeof DocumentsRoute
   ExecutionRoute: typeof ExecutionRoute
   HistoryRoute: typeof HistoryRoute
   KnowledgeRoute: typeof KnowledgeRoute
@@ -224,6 +237,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ExecutionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/documents': {
+      id: '/documents'
+      path: '/documents'
+      fullPath: '/documents'
+      preLoaderRoute: typeof DocumentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/data-sources': {
       id: '/data-sources'
       path: '/data-sources'
@@ -260,6 +280,7 @@ const rootRouteChildren: RootRouteChildren = {
   AgentsRoute: AgentsRoute,
   AnalyticsRoute: AnalyticsRoute,
   DataSourcesRoute: DataSourcesRoute,
+  DocumentsRoute: DocumentsRoute,
   ExecutionRoute: ExecutionRoute,
   HistoryRoute: HistoryRoute,
   KnowledgeRoute: KnowledgeRoute,
