@@ -1,7 +1,7 @@
 """
 test_retrieval.py
 ------------------
-A small command-line tool to test semantic retrieval.
+A small command-line tool to test hybrid retrieval.
 
 Supports:
 - Single-domain retrieval
@@ -13,7 +13,7 @@ from .retriever import retrieve, retrieve_all
 
 
 def main():
-    print("=== Semantic Retrieval Test ===")
+    print("=== Hybrid Retrieval Test ===")
     print(f"Available domains: {', '.join(DOMAINS)}")
     print("Type 'all' to search across every domain.")
     print("(Ctrl+C to quit)\n")
@@ -48,9 +48,12 @@ def main():
                 f"\n[{i}] "
                 f"[{result.get('domain', 'N/A')}] "
                 f"{result['source']} "
-                f"(page {result['page']}, distance {result['distance']:.3f})"
+                f"(page {result['page']})"
             )
 
+            print(f"    Distance      : {result['distance']:.3f}")
+            print(f"    Keyword Score : {result['keyword_score']}")
+            print(f"    Hybrid Score  : {result['hybrid_score']:.3f}")
             print(f"    {preview}...")
 
         print()
