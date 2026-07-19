@@ -1,6 +1,6 @@
 from app.prompts.json_prompt import JSON_INSTRUCTIONS
 
-COMMON_AGENT_PROMPT = f"""
+COMMON_AGENT_PROMPT = """
 ==============================
 GENERAL RULES
 ==============================
@@ -182,5 +182,4 @@ Before returning verify:
 
 Return ONLY JSON.
 
-{{JSON_INSTRUCTIONS}}
-"""
+""" + JSON_INSTRUCTIONS

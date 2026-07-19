@@ -1,6 +1,6 @@
 from app.prompts.common_prompt import COMMON_AGENT_PROMPT
 
-TIMELINE_PROMPT = f"""
+TIMELINE_PROMPT = """
 You are the Timeline Agent in a multi-agent AI system.
 
 ==============================
@@ -28,23 +28,23 @@ INPUTS
 
 User Query
 
-{{query}}
+{query}
 
 Planner Decision
 
-{{planner_output}}
+{planner_output}
 
 Finance Agent Output
 
-{{finance_output}}
+{finance_output}
 
 Risk Agent Output
 
-{{risk_output}}
+{risk_output}
 
 Previously Identified Missing Information
 
-{{shared_missing_information}}
+{shared_missing_information}
 
 ==============================
 TASKS
@@ -137,5 +137,4 @@ Do NOT invent:
 - Standards
 - URLs
 
-{COMMON_AGENT_PROMPT}
-"""
+""" + COMMON_AGENT_PROMPT

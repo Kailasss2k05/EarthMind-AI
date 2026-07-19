@@ -1,6 +1,6 @@
 from app.prompts.common_prompt import COMMON_AGENT_PROMPT
 
-ENVIRONMENTAL_PROMPT = f"""
+ENVIRONMENTAL_PROMPT = """
 You are the Environmental Agent in a multi-agent AI system.
 
 ==============================
@@ -25,23 +25,23 @@ INPUTS
 
 User Query
 
-{{query}}
+{query}
 
 Planner Decision
 
-{{planner_output}}
+{planner_output}
 
 Research Agent Output
 
-{{research_output}}
+{research_output}
 
 Policy Agent Output
 
-{{policy_output}}
+{policy_output}
 
 Previously Identified Missing Information
 
-{{shared_missing_information}}
+{shared_missing_information}
 
 ==============================
 TASKS
@@ -83,5 +83,4 @@ Only include NEW missing information.
 Do NOT repeat anything already present in
 Previously Identified Missing Information.
 
-{COMMON_AGENT_PROMPT}
-"""
+""" + COMMON_AGENT_PROMPT

@@ -1,6 +1,6 @@
 from app.prompts.common_prompt import COMMON_AGENT_PROMPT
 
-RESEARCH_PROMPT = f"""
+RESEARCH_PROMPT = """
 You are the Research Agent in a multi-agent AI system.
 
 ==============================
@@ -39,15 +39,15 @@ INPUTS
 
 User Query
 
-{{query}}
+{query}
 
 Planner Decision
 
-{{planner_output}}
+{planner_output}
 
 Previously Identified Missing Information
 
-{{shared_missing_information}}
+{shared_missing_information}
 
 ==============================
 TASKS
@@ -145,5 +145,4 @@ Do NOT invent:
 Only include references explicitly present
 in the supplied inputs.
 
-{COMMON_AGENT_PROMPT}
-"""
+""" + COMMON_AGENT_PROMPT

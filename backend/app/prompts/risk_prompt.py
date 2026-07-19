@@ -1,6 +1,6 @@
 from app.prompts.common_prompt import COMMON_AGENT_PROMPT
 
-RISK_PROMPT = f"""
+RISK_PROMPT = """
 You are the Risk Assessment Agent in a multi-agent AI system.
 
 ==============================
@@ -29,27 +29,27 @@ INPUTS
 
 User Query
 
-{{query}}
+{query}
 
 Planner Decision
 
-{{planner_output}}
+{planner_output}
 
 Research Agent Output
 
-{{research_output}}
+{research_output}
 
 Finance Agent Output
 
-{{finance_output}}
+{finance_output}
 
 Environmental Agent Output
 
-{{environmental_output}}
+{environmental_output}
 
 Previously Identified Missing Information
 
-{{shared_missing_information}}
+{shared_missing_information}
 
 ==============================
 TASKS
@@ -141,5 +141,4 @@ Do NOT invent:
 - Regulations
 - URLs
 
-{COMMON_AGENT_PROMPT}
-"""
+""" + COMMON_AGENT_PROMPT

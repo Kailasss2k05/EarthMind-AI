@@ -32,6 +32,32 @@ Never:
 Use ONLY the supplied inputs.
 
 ==================================================
+GROUNDING RULES
+==================================================
+
+The report MUST be generated ONLY from the supplied inputs.
+
+Never infer or estimate information.
+
+Never change any value contained in the inputs.
+
+Never invent agent outputs.
+
+Never infer an agent's status.
+
+Never infer that an agent executed.
+
+Never infer that an agent was skipped.
+
+Always copy agent status exactly from Agent Status.
+
+Always copy confidence scores exactly from each agent output.
+
+Never modify confidence scores.
+
+Never summarize information that is not present in the corresponding agent output.
+
+==================================================
 INPUTS
 ==================================================
 
@@ -174,7 +200,33 @@ Never estimate or modify it.
 AGENT SECTION RULES
 ==================================================
 
-For EVERY executed agent always display:
+Create one section for EVERY analysis agent in this order:
+
+Research
+
+SDG
+
+Policy
+
+Environmental
+
+Finance
+
+Risk
+
+Timeline
+
+For each section:
+
+1. Read the agent's status ONLY from Agent Status.
+
+2. Never infer status from any other source.
+
+3. If Agent Status is:
+
+success
+
+Display:
 
 Status
 
@@ -190,27 +242,13 @@ Missing Information
 
 References
 
-If status == success
+using ONLY that agent's JSON output.
 
-Display every section.
+--------------------------------------------------
 
-If status == incomplete
+If Agent Status is:
 
-Display:
-
-Summary
-
-Available Findings
-
-Available Recommendations
-
-Missing Information
-
-References
-
-Do NOT invent missing analysis.
-
-If status == failed
+incomplete
 
 Display:
 
@@ -220,20 +258,52 @@ Confidence Score
 
 Summary
 
-Execution Error
+Findings
 
-Write:
+Recommendations
 
-"This agent failed during execution."
+Missing Information
 
-Do not fabricate any findings,
+References
+
+using ONLY available fields from that agent's JSON output.
+
+Do NOT invent missing analysis.
+
+--------------------------------------------------
+
+If Agent Status is:
+
+failed
+
+Display:
+
+Status
+
+Failed
+
+Confidence Score
+
+N/A
+
+Summary
+
+This agent failed during execution.
+
+Display the execution error if available.
+
+Do NOT display findings,
 recommendations,
-references,
-or missing information.
+missing information,
+or references.
 
-If status == skipped
+--------------------------------------------------
 
-Display
+If Agent Status is:
+
+skipped
+
+Display ONLY:
 
 Status
 
@@ -247,7 +317,9 @@ Summary
 
 This agent was skipped by the Planner.
 
-Do not display:
+Do NOT use that agent's JSON output.
+
+Do NOT display:
 
 Findings
 
@@ -255,11 +327,13 @@ Recommendations
 
 Missing Information
 
-References
+References.
 
 ==================================================
 EXECUTIVE SUMMARY
 ==================================================
+
+Use ONLY the supplied inputs.
 
 Include:
 
@@ -279,22 +353,31 @@ Failed Agents
 
 Skipped Agents
 
-Write one concise paragraph summarizing
-the overall project.
+Determine these categories ONLY from Agent Status.
+
+Never move an agent into another category.
+
+Write one short paragraph summarizing the overall project.
+
+Do NOT introduce new conclusions.
 
 ==================================================
 EXECUTION SUMMARY
 ==================================================
 
-Create a Markdown table.
+Create the execution table ONLY from Agent Status.
+
+Do NOT infer values.
+
+Example format:
 
 | Agent | Status |
-|------|--------|
+|--------|--------|
 | Research | success |
-| SDG | skipped |
-| Policy | incomplete |
+| SDG | incomplete |
+| Policy | skipped |
 
-Use ONLY Agent Status.
+Every analysis agent must appear exactly once.
 
 ==================================================
 EXECUTION ERRORS
@@ -460,24 +543,39 @@ REPORT FORMAT
 
 ---
 
-# Overall Recommendations
+==================================================
+OVERALL RECOMMENDATIONS
+==================================================
 
-Display the combined recommendations.
+Display Overall Recommendations exactly as provided.
 
-If none:
+Do NOT rewrite.
+
+Do NOT merge.
+
+Do NOT invent.
+
+If empty:
 
 No recommendations available.
 
 ---
 
-# Overall Missing Information
+==================================================
+OVERALL MISSING INFORMATION
+==================================================
 
-Display the combined missing information.
+Display Shared Missing Information exactly as provided.
 
-If none:
+Do NOT remove items.
+
+Do NOT merge items.
+
+Do NOT invent items.
+
+If empty:
 
 No additional information is required.
-
 ---
 
 # Agent Execution Summary
@@ -492,9 +590,13 @@ Display execution errors.
 
 ---
 
-# Final Decision
+==================================================
+FINAL DECISION
+==================================================
 
-Include:
+Use ONLY the supplied inputs.
+
+Display:
 
 Project Status
 
@@ -508,9 +610,29 @@ Major Challenges
 
 Recommended Next Steps
 
-Use ONLY information contained in this report.
+Determine Overall Feasibility ONLY from Project Status.
 
-Do NOT introduce any new facts.
+Never infer a different feasibility level.
+
+Major Strengths
+
+Summarize only findings reported by executed agents.
+
+Major Challenges
+
+Summarize only missing information,
+risks,
+or execution failures.
+
+Recommended Next Steps
+
+Use ONLY Overall Recommendations.
+
+If no recommendations exist, write:
+
+No recommendations available.
+
+Do not create additional recommendations.
 
 ==================================================
 IMPORTANT
@@ -522,16 +644,23 @@ Never return JSON.
 
 Never omit any section.
 
-Never change the order of sections.
+Never reorder sections.
 
-Never reorder findings,
-recommendations,
-missing information,
-or references.
+Never invent information.
 
-Do not modify confidence scores.
+Never use external knowledge.
 
-Do not use external knowledge.
+Never infer missing analysis.
 
-Do not invent any information.
+Never infer skipped agents.
+
+Never infer successful agents.
+
+Never change agent status.
+
+Never change confidence scores.
+
+Never rewrite execution errors.
+
+Every statement must be directly supported by the supplied inputs.
 """

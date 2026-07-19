@@ -1,6 +1,6 @@
 from app.prompts.planner_json_prompt import PLANNER_JSON_INSTRUCTIONS
 
-PLANNER_COMMON_PROMPT = f"""
+PLANNER_PROMPT = """
 ==============================
 PLANNER RULES
 ==============================
@@ -24,6 +24,12 @@ Choose ONLY from:
 - timeline
 
 Do NOT invent agent names.
+
+==============================
+USER QUERY
+==============================
+
+{query}
 
 ==============================
 OUTPUT REQUIREMENTS
@@ -55,6 +61,6 @@ Before returning verify:
 ✓ No duplicate agents
 
 Return ONLY JSON.
-
-{PLANNER_JSON_INSTRUCTIONS}
 """
+
+PLANNER_PROMPT += "\n\n" + PLANNER_JSON_INSTRUCTIONS

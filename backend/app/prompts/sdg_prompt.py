@@ -1,6 +1,6 @@
 from app.prompts.common_prompt import COMMON_AGENT_PROMPT
 
-SDG_PROMPT = f"""
+SDG_PROMPT = """
 You are the Sustainable Development Goals (SDG) Agent in a multi-agent AI system.
 
 ==============================
@@ -31,19 +31,19 @@ INPUTS
 
 User Query
 
-{{query}}
+{query}
 
 Planner Decision
 
-{{planner_output}}
+{planner_output}
 
 Research Agent Output
 
-{{research_output}}
+{research_output}
 
 Previously Identified Missing Information
 
-{{shared_missing_information}}
+{shared_missing_information}
 
 ==============================
 TASKS
@@ -131,5 +131,4 @@ Do NOT invent:
 - Websites
 - URLs
 
-{COMMON_AGENT_PROMPT}
-"""
+""" + COMMON_AGENT_PROMPT

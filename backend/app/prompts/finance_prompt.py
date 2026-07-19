@@ -1,6 +1,6 @@
 from app.prompts.common_prompt import COMMON_AGENT_PROMPT
 
-FINANCE_PROMPT = f"""
+FINANCE_PROMPT = """
 You are the Finance Agent in a multi-agent AI system.
 
 ==============================
@@ -26,23 +26,23 @@ INPUTS
 
 User Query
 
-{{query}}
+{query}
 
 Planner Decision
 
-{{planner_output}}
+{planner_output}
 
 Policy Agent Output
 
-{{policy_output}}
+{policy_output}
 
 Environmental Agent Output
 
-{{environmental_output}}
+{environmental_output}
 
 Previously Identified Missing Information
 
-{{shared_missing_information}}
+{shared_missing_information}
 
 ==============================
 TASKS
@@ -113,5 +113,4 @@ Examples include:
 - Budget allocation
 - Operational cost
 
-{COMMON_AGENT_PROMPT}
-"""
+""" + COMMON_AGENT_PROMPT
