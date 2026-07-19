@@ -168,6 +168,10 @@
   --input: oklch(1 0 0 / 12%);
   --ring: oklch(0.7 0.22 290);
 
+  --success: oklch(0.72 0.17 162);
+  --warning: oklch(0.78 0.16 68);
+  --error: oklch(0.68 0.24 22);
+
   --violet-deep: oklch(0.55 0.24 285);
   --violet-electric: oklch(0.7 0.22 290);
   --violet-soft: oklch(0.85 0.08 290);
