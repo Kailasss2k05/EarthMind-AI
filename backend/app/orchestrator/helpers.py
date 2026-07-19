@@ -29,3 +29,14 @@ ALL_AGENTS = [
     "risk",
     "timeline",
 ]
+def update_error(state, agent_name, output):
+    """
+    Store agent errors in the shared state.
+    """
+
+    if output.get("status") == "failed":
+
+        state.setdefault("errors", {})[agent_name] = output.get(
+            "error",
+            "Unknown error"
+        )

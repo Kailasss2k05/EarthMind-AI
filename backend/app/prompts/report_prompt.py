@@ -74,6 +74,14 @@ Agent Status
 If an agent status is "failed" or "skipped",
 mention that its section is unavailable.
 
+Execution Errors
+
+{errors}
+
+If any agent failed,
+mention the failure in the report.
+Do not fabricate missing sections.
+
 --------------------------------------
 
 OUTPUT FORMAT

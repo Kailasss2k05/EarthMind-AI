@@ -29,6 +29,10 @@ class ReportAgent(BaseAgent):
 agent_status=json.dumps(
     state.get("agent_status", {}),
     indent=2
+),
+errors=json.dumps(
+    state.get("errors", {}),
+    indent=2
 )
 
         )

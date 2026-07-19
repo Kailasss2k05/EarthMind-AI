@@ -29,7 +29,7 @@ report = ReportAgent()
 >>>>>>> 944fcf0 (improved planner logic)
 =======
 from app.services.llm import get_llm
-from backend.app.orchestrator.helpers import update_agent_status, update_missing_information
+from backend.app.orchestrator.helpers import update_agent_status, update_error, update_missing_information
 
 llm = get_llm()
 
@@ -113,6 +113,11 @@ def research_node(state):
         "research",
         state["outputs"]["research"]
     )
+    update_error(
+        state,
+        "research",
+        state["outputs"]["research"]
+    )
 
     return state
 
@@ -121,6 +126,11 @@ def sdg_node(state):
     state["outputs"]["sdg"] = sdg.run(state)
     update_missing_information(state, state["outputs"]["sdg"])
     update_agent_status(
+        state,
+        "sdg",
+        state["outputs"]["sdg"]
+    )
+    update_error(
         state,
         "sdg",
         state["outputs"]["sdg"]
@@ -136,6 +146,11 @@ def policy_node(state):
         "policy",
         state["outputs"]["policy"]
     )
+    update_error(
+        state,
+        "policy",
+        state["outputs"]["policy"]
+    )
     return state
 
 
@@ -143,6 +158,11 @@ def environmental_node(state):
     state["outputs"]["environmental"] = environmental.run(state)
     update_missing_information(state, state["outputs"]["environmental"])
     update_agent_status(
+        state,
+        "environmental",
+        state["outputs"]["environmental"]
+    )
+    update_error(
         state,
         "environmental",
         state["outputs"]["environmental"]
@@ -198,7 +218,15 @@ def finance_node(state):
         "finance",
         state["outputs"]["finance"]
     )
+<<<<<<< HEAD
 >>>>>>> f6bdd3a (added agent status tracking)
+=======
+    update_error(
+        state,
+        "finance",
+        state["outputs"]["finance"]
+    )
+>>>>>>> 1bc4a2f (added agent error propagation)
     return state
 
 
@@ -290,6 +318,11 @@ def risk_node(state):
         "risk",
         state["outputs"]["risk"]
     )
+    update_error(
+        state,
+        "risk",
+        state["outputs"]["risk"]
+    )
     return state
 
 
@@ -297,6 +330,11 @@ def timeline_node(state):
     state["outputs"]["timeline"] = timeline.run(state)
     update_missing_information(state, state["outputs"]["timeline"])
     update_agent_status(
+        state,
+        "timeline",
+        state["outputs"]["timeline"]
+    )
+    update_error(
         state,
         "timeline",
         state["outputs"]["timeline"]
