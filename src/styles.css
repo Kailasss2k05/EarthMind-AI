@@ -47,9 +47,12 @@
   --color-violet-deep: var(--violet-deep);
   --color-violet-electric: var(--violet-electric);
   --color-violet-soft: var(--violet-soft);
-  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Playfair Display", ui-serif, Georgia, serif;
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-}
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
 
 :root {
   --radius: 1rem;
