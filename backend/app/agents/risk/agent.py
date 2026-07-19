@@ -10,6 +10,7 @@ class RiskAgent(BaseAgent):
         outputs = state["outputs"]
 
         return RISK_PROMPT.format(
+             query=state.get("query", ""),
             planner_output=json.dumps(
         state.get("planner_output", {}),
         indent=2

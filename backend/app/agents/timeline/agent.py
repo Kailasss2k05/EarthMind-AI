@@ -10,6 +10,7 @@ class TimelineAgent(BaseAgent):
         outputs = state["outputs"]
 
         return TIMELINE_PROMPT.format(
+            query=state.get("query", ""),
             planner_output=json.dumps(
         state.get("planner_output", {}),
         indent=2

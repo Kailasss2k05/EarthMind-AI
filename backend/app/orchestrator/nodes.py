@@ -29,7 +29,7 @@ report = ReportAgent()
 >>>>>>> 944fcf0 (improved planner logic)
 =======
 from app.services.llm import get_llm
-from backend.app.orchestrator.helpers import update_agent_status, update_error, update_missing_information
+from app.orchestrator.helpers import update_agent_status, update_error, update_missing_information
 
 llm = get_llm()
 
