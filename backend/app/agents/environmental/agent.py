@@ -1,13 +1,16 @@
 from app.core.base_agent import BaseAgent
 from app.prompts.environmental_prompt import ENVIRONMENTAL_PROMPT
-
+from app.core.utils import get_agent_data
+import json
 
 class EnvironmentalAgent(BaseAgent):
 
     def build_prompt(self, state):
 
+        outputs = state["outputs"]
+
         return ENVIRONMENTAL_PROMPT.format(
             query=state.get("query", ""),
-            research_output=state.get("research_output", ""),
-            policy_output=state.get("policy_output", "")
+            research_output=json.dumps(outputs.get("research", {}), indent=2),
+            policy_output=json.dumps(outputs.get("policy", {}), indent=2),
         )

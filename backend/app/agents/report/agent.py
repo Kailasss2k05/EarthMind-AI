@@ -1,55 +1,25 @@
 from app.core.base_agent import BaseAgent
 from app.prompts.report_prompt import REPORT_PROMPT
+import json
 
 
 class ReportAgent(BaseAgent):
 
+    returns_json = False
+    
     def build_prompt(self, state):
 
+        outputs = state.get("outputs", {})
+
         return REPORT_PROMPT.format(
-    query=state.get("query", ""),
+            query=state.get("query", ""),
+            planner_output=json.dumps(state.get("planner_output", {}), indent=2),
 
-    planner_output=state.get("planner_output", ""),
-
-    research_output=f"""
------ START RESEARCH -----
-{state.get("research_output","")}
------ END RESEARCH -----
-""",
-
-    sdg_output=f"""
------ START SDG -----
-{state.get("sdg_output","")}
------ END SDG -----
-""",
-
-    policy_output=f"""
------ START POLICY -----
-{state.get("policy_output","")}
------ END POLICY -----
-""",
-
-    environmental_output=f"""
------ START ENVIRONMENT -----
-{state.get("environmental_output","")}
------ END ENVIRONMENT -----
-""",
-
-    finance_output=f"""
------ START FINANCE -----
-{state.get("finance_output","")}
------ END FINANCE -----
-""",
-
-    risk_output=f"""
------ START RISK -----
-{state.get("risk_output","")}
------ END RISK -----
-""",
-
-    timeline_output=f"""
------ START TIMELINE -----
-{state.get("timeline_output","")}
------ END TIMELINE -----
-"""
-)
+            research_output=json.dumps(outputs.get("research", {}), indent=2),
+            sdg_output=json.dumps(outputs.get("sdg", {}), indent=2),
+            policy_output=json.dumps(outputs.get("policy", {}), indent=2),
+            environmental_output=json.dumps(outputs.get("environmental", {}), indent=2),
+            finance_output=json.dumps(outputs.get("finance", {}), indent=2),
+            risk_output=json.dumps(outputs.get("risk", {}), indent=2),
+            timeline_output=json.dumps(outputs.get("timeline", {}), indent=2),
+        )

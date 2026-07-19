@@ -1,3 +1,5 @@
+from app.prompts.planner_json_prompt import PLANNER_JSON_INSTRUCTIONS
+
 PLANNER_PROMPT = """
 You are the Planner Agent of EarthMind AI.
 
@@ -13,7 +15,9 @@ Available agents:
 - risk
 - timeline
 
-Respond ONLY with valid JSON.
+User Query:
+
+{query}
 
 Example:
 
@@ -25,10 +29,6 @@ Example:
     "finance",
     "risk",
     "timeline"
-  ],
+  ]
 }}
-
-User Query:
-
-{query}
-"""
+""" + PLANNER_JSON_INSTRUCTIONS

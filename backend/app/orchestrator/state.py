@@ -1,28 +1,15 @@
-from typing import TypedDict, Optional, Dict, List
+from typing import TypedDict, Dict, List, Any
 
 
 class GraphState(TypedDict):
-
-    # User Query
     query: str
 
-    # Planner
-    planner_output: Optional[Dict]
+    planner_output: dict
 
-    # Agent Outputs
-    research_output: Optional[str]
-    sdg_output: Optional[str]
-    policy_output: Optional[str]
-    environmental_output: Optional[str]
-    finance_output: Optional[str]
-    risk_output: Optional[str]
-    timeline_output: Optional[str]
-    report_output: Optional[str]
+    outputs: Dict[str, Any]
 
-    # Planner Routing
     required_agents: List[str]
     execution_order: List[str]
 
-    # Runtime
     agent_status: Dict[str, str]
     errors: Dict[str, str]
