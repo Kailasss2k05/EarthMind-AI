@@ -95,47 +95,57 @@ Do not fabricate missing sections.
 
 OUTPUT FORMAT
 
-# Final Report
+Create a professional Markdown report.
 
-## Executive Summary
+Include the following sections:
 
-Summarize the overall objective.
+# Executive Summary
 
-## Research
+Summarize the Planner's objective.
 
-Use ONLY the Research Agent summary and findings.
+# Research Findings
 
-## SDGs
+Use ONLY the Research Agent output.
 
-Use ONLY the SDG Agent summary and findings.
+# SDG Alignment
 
-## Government Policies
+Use ONLY the SDG Agent output.
 
-Use ONLY the Policy Agent summary and findings.
+# Policy Analysis
 
-## Environmental Assessment
+Use ONLY the Policy Agent output.
 
-Use ONLY the Environmental Agent summary and findings.
+# Environmental Assessment
 
-## Financial Assessment
+Use ONLY the Environmental Agent output.
 
-Use ONLY the Finance Agent summary and findings.
+# Financial Assessment
 
-## Risk Assessment
+Use ONLY the Finance Agent output.
 
-Use ONLY the Risk Agent summary and findings.
+# Risk Assessment
 
-## Timeline
+Use ONLY the Risk Agent output.
 
-Use ONLY the Timeline Agent summary and findings.
+# Timeline
 
-## Recommendations
+Use ONLY the Timeline Agent output.
 
-Combine ONLY the recommendations from the previous agents.
+# Missing Information
 
-## Missing Information
+Use the shared missing information.
 
-Combine ONLY the missing_information fields from every agent.
+# Agent Execution Summary
+
+Use the agent status.
+
+# Execution Errors
+
+Use the errors dictionary.
+
+# Conclusion
+
+Summarize the overall findings.
 
 --------------------------------------
 
@@ -158,4 +168,19 @@ RULES
 8. Return ONLY Markdown.
 
 9. Do NOT return JSON.
+
+Never invent information.
+
+If an output is empty,
+write
+
+"Not Available"
+
+instead.
+
+If an agent status is "failed",
+explain that the analysis could not be completed.
+
+If an agent status is "skipped",
+explain that the Planner determined the agent was not required.
 """ 
