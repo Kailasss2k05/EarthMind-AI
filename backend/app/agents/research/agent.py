@@ -8,14 +8,7 @@ class ResearchAgent(BaseAgent):
 
     def build_prompt(self, state):
 
-<<<<<<< HEAD
-        evidence = retrieve("research", state["query"])
-
         return RESEARCH_PROMPT.format(
-
-=======
-        return RESEARCH_PROMPT.format(
->>>>>>> 944fcf0 (improved planner logic)
             query=state["query"],
             planner_output=json.dumps(
         state.get("planner_output", {}),
