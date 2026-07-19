@@ -18,9 +18,9 @@ export const Route = createFileRoute("/agents")({
 });
 
 const statusStyles: Record<string, string> = {
-  active: "bg-[oklch(0.68_0.14_148)]/15 text-[oklch(0.42_0.09_158)]",
+  active: "bg-[oklch(0.65 0.22 290)]/15 text-[oklch(0.42 0.22 285)]",
   idle: "bg-muted text-muted-foreground",
-  training: "bg-[oklch(0.82_0.15_85)]/25 text-[oklch(0.5_0.14_65)]",
+  training: "bg-[oklch(0.85 0.08 290)]/25 text-[oklch(0.55 0.15 290)]",
 };
 
 function AgentsPage() {
@@ -31,7 +31,7 @@ function AgentsPage() {
         title="Your council of specialists."
         description="Each agent runs as a graph of tools with memory in PostgreSQL, cache in Redis and knowledge in ChromaDB — orchestrated across watsonx.ai and Ollama."
         actions={
-          <Button className="rounded-full bg-gradient-to-r from-[oklch(0.42_0.09_158)] to-[oklch(0.55_0.13_158)] text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.42_0.09_158/0.7)]">
+          <Button className="rounded-full bg-gradient-to-r from-[oklch(0.42 0.22 285)] to-[oklch(0.55 0.24 285)] text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.42 0.22 285/0.7)]">
             <Sparkles className="mr-1.5 h-4 w-4" />
             Deploy agent
           </Button>
@@ -105,12 +105,12 @@ function AgentsPage() {
       </div>
 
       <Panel title="Orchestration graph" description="LangGraph view · click a node to inspect its state">
-        <div className="relative h-80 overflow-hidden rounded-2xl border border-border/50 bg-gradient-to-br from-primary/5 via-transparent to-[oklch(0.62_0.13_220)]/8">
+        <div className="relative h-80 overflow-hidden rounded-2xl border border-border/50 bg-gradient-to-br from-primary/5 via-transparent to-[oklch(0.62 0.18 275)]/8">
           <svg className="absolute inset-0 h-full w-full" viewBox="0 0 800 320" preserveAspectRatio="none">
             <defs>
               <linearGradient id="edge" x1="0" x2="1">
-                <stop offset="0%" stopColor="oklch(0.55 0.13 158)" stopOpacity="0.5" />
-                <stop offset="100%" stopColor="oklch(0.62 0.13 220)" stopOpacity="0.5" />
+                <stop offset="0%" stopColor="oklch(0.55 0.24 285)" stopOpacity="0.5" />
+                <stop offset="100%" stopColor="oklch(0.62 0.18 275)" stopOpacity="0.5" />
               </linearGradient>
             </defs>
             {[
@@ -153,14 +153,14 @@ function AgentsPage() {
               className="absolute -translate-x-1/2 -translate-y-1/2"
               style={{ left: `${(n.x / 800) * 100}%`, top: `${(n.y / 320) * 100}%` }}
             >
-              <div className="glass flex items-center gap-2 rounded-full px-3 py-1.5 text-xs shadow-[0_8px_24px_-8px_oklch(0.42_0.09_158/0.4)]">
+              <div className="glass flex items-center gap-2 rounded-full px-3 py-1.5 text-xs shadow-[0_8px_24px_-8px_oklch(0.42 0.22 285/0.4)]">
                 <span
                   className={`h-2 w-2 rounded-full ${
                     n.accent === "leaf"
-                      ? "bg-[oklch(0.68_0.14_148)]"
+                      ? "bg-[oklch(0.65 0.22 290)]"
                       : n.accent === "ocean"
-                      ? "bg-[oklch(0.62_0.13_220)]"
-                      : "bg-[oklch(0.82_0.15_85)]"
+                      ? "bg-[oklch(0.62 0.18 275)]"
+                      : "bg-[oklch(0.85 0.08 290)]"
                   }`}
                 />
                 {n.label}

@@ -72,9 +72,9 @@ function AnalyticsPage() {
                 <Line
                   type="monotone"
                   dataKey="intensity"
-                  stroke="oklch(0.62 0.13 220)"
+                  stroke="oklch(0.62 0.18 275)"
                   strokeWidth={2.5}
-                  dot={{ fill: "oklch(0.62 0.13 220)", r: 3 }}
+                  dot={{ fill: "oklch(0.62 0.18 275)", r: 3 }}
                   activeDot={{ r: 5 }}
                 />
               </LineChart>
@@ -97,8 +97,8 @@ function AnalyticsPage() {
                     fontSize: 12,
                   }}
                 />
-                <Bar dataKey="recycled" stackId="a" fill="oklch(0.55 0.13 158)" radius={[0, 0, 0, 0]} />
-                <Bar dataKey="composted" stackId="a" fill="oklch(0.82 0.15 85)" radius={[0, 0, 0, 0]} />
+                <Bar dataKey="recycled" stackId="a" fill="oklch(0.55 0.24 285)" radius={[0, 0, 0, 0]} />
+                <Bar dataKey="composted" stackId="a" fill="oklch(0.85 0.08 290)" radius={[0, 0, 0, 0]} />
                 <Bar dataKey="landfill" stackId="a" fill="oklch(0.65 0.05 260)" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -137,8 +137,8 @@ function AnalyticsPage() {
                 s.tone === "destructive"
                   ? "border-destructive/30 bg-destructive/5"
                   : s.tone === "leaf"
-                  ? "border-[oklch(0.68_0.14_148)]/40 bg-[oklch(0.68_0.14_148)]/8"
-                  : "border-[oklch(0.62_0.13_220)]/40 bg-[oklch(0.62_0.13_220)]/8"
+                  ? "border-[oklch(0.65 0.22 290)]/40 bg-[oklch(0.65 0.22 290)]/8"
+                  : "border-[oklch(0.62 0.18 275)]/40 bg-[oklch(0.62 0.18 275)]/8"
               }`}
             >
               <p className="text-xs uppercase tracking-widest text-muted-foreground">

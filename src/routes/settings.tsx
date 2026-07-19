@@ -51,7 +51,7 @@ function SettingsPage() {
         </div>
         <Separator className="my-6" />
         <div className="flex justify-end">
-          <Button className="rounded-full bg-gradient-to-r from-[oklch(0.42_0.09_158)] to-[oklch(0.55_0.13_158)] text-primary-foreground">
+          <Button className="rounded-full bg-gradient-to-r from-[oklch(0.42 0.22 285)] to-[oklch(0.55 0.24 285)] text-primary-foreground">
             Save changes
           </Button>
         </div>

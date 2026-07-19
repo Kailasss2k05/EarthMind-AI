@@ -45,9 +45,9 @@ const severityIcon = {
 };
 
 const severityTone = {
-  warning: "text-[oklch(0.6_0.16_60)] bg-[oklch(0.82_0.15_85)]/20",
-  info: "text-[oklch(0.42_0.13_220)] bg-[oklch(0.62_0.13_220)]/15",
-  success: "text-[oklch(0.42_0.09_158)] bg-[oklch(0.68_0.14_148)]/15",
+  warning: "text-[oklch(0.6 0.18 290)] bg-[oklch(0.85 0.08 290)]/20",
+  info: "text-[oklch(0.45 0.20 275)] bg-[oklch(0.62 0.18 275)]/15",
+  success: "text-[oklch(0.42 0.22 285)] bg-[oklch(0.65 0.22 290)]/15",
 };
 
 function DashboardPage() {
@@ -62,7 +62,7 @@ function DashboardPage() {
             <Button variant="outline" className="rounded-full">
               Export snapshot
             </Button>
-            <Button className="rounded-full bg-gradient-to-r from-[oklch(0.42_0.09_158)] to-[oklch(0.55_0.13_158)] text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.42_0.09_158/0.7)]">
+            <Button className="rounded-full bg-gradient-to-r from-[oklch(0.42 0.22 285)] to-[oklch(0.55 0.24 285)] text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.42 0.22 285/0.7)]">
               <Sparkles className="mr-1.5 h-4 w-4" />
               Ask EarthMind
             </Button>
@@ -117,9 +117,9 @@ function DashboardPage() {
           action={
             <div className="flex gap-1.5 text-xs">
               {[
-                { k: "scope1", label: "Scope 1", color: "oklch(0.55 0.13 158)" },
-                { k: "scope2", label: "Scope 2", color: "oklch(0.62 0.13 220)" },
-                { k: "scope3", label: "Scope 3", color: "oklch(0.82 0.15 85)" },
+                { k: "scope1", label: "Scope 1", color: "oklch(0.55 0.24 285)" },
+                { k: "scope2", label: "Scope 2", color: "oklch(0.62 0.18 275)" },
+                { k: "scope3", label: "Scope 3", color: "oklch(0.85 0.08 290)" },
               ].map((s) => (
                 <span
                   key={s.k}
@@ -140,16 +140,16 @@ function DashboardPage() {
               <AreaChart data={emissionsSeries} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="oklch(0.55 0.13 158)" stopOpacity={0.5} />
-                    <stop offset="95%" stopColor="oklch(0.55 0.13 158)" stopOpacity={0} />
+                    <stop offset="5%" stopColor="oklch(0.55 0.24 285)" stopOpacity={0.5} />
+                    <stop offset="95%" stopColor="oklch(0.55 0.24 285)" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="oklch(0.62 0.13 220)" stopOpacity={0.5} />
-                    <stop offset="95%" stopColor="oklch(0.62 0.13 220)" stopOpacity={0} />
+                    <stop offset="5%" stopColor="oklch(0.62 0.18 275)" stopOpacity={0.5} />
+                    <stop offset="95%" stopColor="oklch(0.62 0.18 275)" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="g3" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="oklch(0.82 0.15 85)" stopOpacity={0.55} />
-                    <stop offset="95%" stopColor="oklch(0.82 0.15 85)" stopOpacity={0} />
+                    <stop offset="5%" stopColor="oklch(0.85 0.08 290)" stopOpacity={0.55} />
+                    <stop offset="95%" stopColor="oklch(0.85 0.08 290)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.9 0.01 150 / 0.5)" vertical={false} />
@@ -163,9 +163,9 @@ function DashboardPage() {
                     fontSize: 12,
                   }}
                 />
-                <Area type="monotone" dataKey="scope3" stackId="1" stroke="oklch(0.82 0.15 85)" fill="url(#g3)" strokeWidth={2} />
-                <Area type="monotone" dataKey="scope2" stackId="1" stroke="oklch(0.62 0.13 220)" fill="url(#g2)" strokeWidth={2} />
-                <Area type="monotone" dataKey="scope1" stackId="1" stroke="oklch(0.55 0.13 158)" fill="url(#g1)" strokeWidth={2} />
+                <Area type="monotone" dataKey="scope3" stackId="1" stroke="oklch(0.85 0.08 290)" fill="url(#g3)" strokeWidth={2} />
+                <Area type="monotone" dataKey="scope2" stackId="1" stroke="oklch(0.62 0.18 275)" fill="url(#g2)" strokeWidth={2} />
+                <Area type="monotone" dataKey="scope1" stackId="1" stroke="oklch(0.55 0.24 285)" fill="url(#g1)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -279,11 +279,11 @@ function DashboardPage() {
                     transition={{ duration: 0.9, delay: 0.1 * i, ease: [0.22, 1, 0.36, 1] }}
                     className={
                       row.tone === "leaf"
-                        ? "h-full bg-gradient-to-r from-[oklch(0.42_0.09_158)] to-[oklch(0.68_0.14_148)]"
+                        ? "h-full bg-gradient-to-r from-[oklch(0.42 0.22 285)] to-[oklch(0.65 0.22 290)]"
                         : row.tone === "ocean"
-                        ? "h-full bg-gradient-to-r from-[oklch(0.42_0.13_220)] to-[oklch(0.62_0.13_220)]"
+                        ? "h-full bg-gradient-to-r from-[oklch(0.45 0.20 275)] to-[oklch(0.62 0.18 275)]"
                         : row.tone === "solar"
-                        ? "h-full bg-gradient-to-r from-[oklch(0.6_0.16_60)] to-[oklch(0.82_0.15_85)]"
+                        ? "h-full bg-gradient-to-r from-[oklch(0.6 0.18 290)] to-[oklch(0.85 0.08 290)]"
                         : "h-full bg-muted-foreground/40"
                     }
                   />
@@ -300,7 +300,7 @@ function DashboardPage() {
               </span>
             </span>
           </div>
-          <Badge className="mt-4 rounded-full bg-[oklch(0.68_0.14_148)]/15 text-[oklch(0.42_0.09_158)] hover:bg-[oklch(0.68_0.14_148)]/20">
+          <Badge className="mt-4 rounded-full bg-[oklch(0.65 0.22 290)]/15 text-[oklch(0.42 0.22 285)] hover:bg-[oklch(0.65 0.22 290)]/20">
             SBTi validated
           </Badge>
         </Panel>

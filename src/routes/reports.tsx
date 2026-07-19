@@ -17,9 +17,9 @@ export const Route = createFileRoute("/reports")({
 });
 
 const statusStyle: Record<string, string> = {
-  Draft: "bg-[oklch(0.82_0.15_85)]/20 text-[oklch(0.5_0.14_65)]",
-  "In Review": "bg-[oklch(0.62_0.13_220)]/15 text-[oklch(0.42_0.13_220)]",
-  Published: "bg-[oklch(0.68_0.14_148)]/15 text-[oklch(0.42_0.09_158)]",
+  Draft: "bg-[oklch(0.85 0.08 290)]/20 text-[oklch(0.55 0.15 290)]",
+  "In Review": "bg-[oklch(0.62 0.18 275)]/15 text-[oklch(0.45 0.20 275)]",
+  Published: "bg-[oklch(0.65 0.22 290)]/15 text-[oklch(0.42 0.22 285)]",
 };
 
 function ReportsPage() {
@@ -30,7 +30,7 @@ function ReportsPage() {
         title="Every framework, one narrative."
         description="Reports draft themselves from your live data, cross-checked against the latest regulations by Policy Scout."
         actions={
-          <Button className="rounded-full bg-gradient-to-r from-[oklch(0.42_0.09_158)] to-[oklch(0.55_0.13_158)] text-primary-foreground">
+          <Button className="rounded-full bg-gradient-to-r from-[oklch(0.42 0.22 285)] to-[oklch(0.55 0.24 285)] text-primary-foreground">
             <Plus className="mr-1.5 h-4 w-4" /> New report
           </Button>
         }

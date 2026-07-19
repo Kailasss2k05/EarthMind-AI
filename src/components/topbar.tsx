@@ -24,12 +24,12 @@ export function Topbar() {
         </Button>
         <Button
           size="sm"
-          className="hidden rounded-full bg-gradient-to-r from-[oklch(0.42_0.09_158)] to-[oklch(0.55_0.13_158)] text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0.42_0.09_158/0.6)] sm:inline-flex"
+          className="hidden rounded-full bg-gradient-to-r from-[oklch(0.42 0.22 285)] to-[oklch(0.55 0.24 285)] text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0.42 0.22 285/0.6)] sm:inline-flex"
         >
           New workflow
         </Button>
         <Avatar className="h-9 w-9 border border-border/60">
-          <AvatarFallback className="bg-gradient-to-br from-[oklch(0.62_0.13_220)] to-[oklch(0.42_0.09_158)] text-xs font-semibold text-white">
+          <AvatarFallback className="bg-gradient-to-br from-[oklch(0.62 0.18 275)] to-[oklch(0.42 0.22 285)] text-xs font-semibold text-white">
             AE
           </AvatarFallback>
         </Avatar>
