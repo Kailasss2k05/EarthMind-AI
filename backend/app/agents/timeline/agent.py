@@ -10,6 +10,10 @@ class TimelineAgent(BaseAgent):
         outputs = state["outputs"]
 
         return TIMELINE_PROMPT.format(
+            planner_output=json.dumps(
+        state.get("planner_output", {}),
+        indent=2
+    ),
     finance_output=json.dumps(outputs.get("finance", {}), indent=2),
     risk_output=json.dumps(outputs.get("risk", {}), indent=2),
     shared_missing_information=json.dumps(

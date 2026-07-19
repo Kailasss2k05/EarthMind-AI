@@ -10,6 +10,10 @@ Evaluate environmental sustainability.
 Query:
 {query}
 
+Planner Decision
+
+{planner_output}
+
 Research Agent Output:
 {research_output}
 

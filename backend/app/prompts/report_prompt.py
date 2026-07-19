@@ -31,9 +31,18 @@ USER QUERY
 
 {query}
 
-PLANNER
+PLANNER OBJECTIVE
 
 {planner_output}
+
+Write the Executive Summary using the Planner's objective.
+
+Include:
+
+- Planner Objective
+- Executed Agents
+- Skipped Agents
+- Final Findings
 
 RESEARCH
 

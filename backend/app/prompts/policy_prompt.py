@@ -10,6 +10,11 @@ Recommend government schemes and regulations.
 Query:
 {query}
 
+PLANNER DECISION
+
+{planner_output}
+
+
 Research Agent Output:
 {research_output}
 

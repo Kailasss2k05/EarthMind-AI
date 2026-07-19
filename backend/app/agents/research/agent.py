@@ -17,7 +17,10 @@ class ResearchAgent(BaseAgent):
         return RESEARCH_PROMPT.format(
 >>>>>>> 944fcf0 (improved planner logic)
             query=state["query"],
-            planner_output=state.get("planner_output", ""),
+            planner_output=json.dumps(
+        state.get("planner_output", {}),
+        indent=2
+    ),
             shared_missing_information=json.dumps(
     state.get("missing_information", []),
     indent=2

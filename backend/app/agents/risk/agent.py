@@ -10,6 +10,10 @@ class RiskAgent(BaseAgent):
         outputs = state["outputs"]
 
         return RISK_PROMPT.format(
+            planner_output=json.dumps(
+        state.get("planner_output", {}),
+        indent=2
+    ),
     research_output=json.dumps(outputs.get("research", {}), indent=2),
     finance_output=json.dumps(outputs.get("finance", {}), indent=2),
     environmental_output=json.dumps(outputs.get("environmental", {}), indent=2),

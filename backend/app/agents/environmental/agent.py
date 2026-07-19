@@ -11,6 +11,10 @@ class EnvironmentalAgent(BaseAgent):
 
         return ENVIRONMENTAL_PROMPT.format(
             query=state.get("query", ""),
+            planner_output=json.dumps(
+        state.get("planner_output", {}),
+        indent=2
+    ),
             research_output=json.dumps(outputs.get("research", {}), indent=2),
             policy_output=json.dumps(outputs.get("policy", {}), indent=2),
             shared_missing_information=json.dumps(

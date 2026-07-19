@@ -12,7 +12,10 @@ class SDGAgent(BaseAgent):
         return SDG_PROMPT.format(
 
             query=state["query"],
-
+            planner_output=json.dumps(
+        state.get("planner_output", {}),
+        indent=2
+    ),
             research_output=outputs.get("research", {}),
             shared_missing_information=json.dumps(
     state.get("missing_information", []),

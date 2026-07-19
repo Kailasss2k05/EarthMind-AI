@@ -7,6 +7,10 @@ ROLE
 
 Research the user's query using available knowledge.
 
+PLANNER DECISION
+
+{planner_output}
+
 Query:
 {query}
 

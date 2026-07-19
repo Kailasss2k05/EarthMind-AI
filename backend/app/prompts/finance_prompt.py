@@ -10,6 +10,11 @@ Assess financial feasibility.
 Query:
 {query}
 
+PLANNER DECISION
+
+{planner_output}
+
+
 Policy Agent Output:
 {policy_output}
 
@@ -23,6 +28,7 @@ Already Missing Information
 Do NOT repeat items already listed.
 Only add NEW missing information.
 
+Base your financial analysis on the Planner's objective and the outputs provided above.
 TASKS
 
 1. Identify cost components.

@@ -13,10 +13,17 @@ class PolicyAgent(BaseAgent):
         return POLICY_PROMPT.format(
             query=state.get("query", ""),
 <<<<<<< HEAD
+<<<<<<< HEAD
             research_output=state.get("research_output", ""),
             sdg_output=state.get("sdg_output", "")
         )
 =======
+=======
+            planner_output=json.dumps(
+        state.get("planner_output", {}),
+        indent=2
+    ),
+>>>>>>> ce3322f (IMPLEMENTED planner aware collab)
             research_output=json.dumps(
                 outputs.get("research", {}),
                 indent=2

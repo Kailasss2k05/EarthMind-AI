@@ -7,6 +7,10 @@ ROLE
 
 Create a project timeline.
 
+Planner Decision
+
+{planner_output}
+
 Finance Agent Output:
 {finance_output}
 

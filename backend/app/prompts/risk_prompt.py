@@ -7,6 +7,10 @@ ROLE
 
 Assess project risks.
 
+Planner Decision
+
+{planner_output}
+
 Research Agent Output:
 {research_output}
 

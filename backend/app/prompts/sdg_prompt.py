@@ -7,8 +7,13 @@ ROLE
 
 Map the project to the United Nations Sustainable Development Goals.
 
+
 Query:
 {query}
+
+Planner Decision
+
+{planner_output}
 
 Research Agent Output:
 {research_output}
