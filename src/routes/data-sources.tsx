@@ -57,8 +57,8 @@ function DataSourcesPage() {
                 <Badge
                   className={`rounded-full ${
                     healthy
-                      ? "bg-[oklch(0.68_0.14_148)]/15 text-[oklch(0.42_0.09_158)]"
-                      : "bg-[oklch(0.82_0.15_85)]/25 text-[oklch(0.5_0.14_65)]"
+                      ? "bg-[oklch(0.65 0.22 290)]/15 text-[oklch(0.42 0.22 285)]"
+                      : "bg-[oklch(0.85 0.08 290)]/25 text-[oklch(0.55 0.15 290)]"
                   } hover:opacity-90`}
                 >
                   {s.health}% healthy
@@ -82,7 +82,7 @@ function DataSourcesPage() {
 
               <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-muted">
                 <div
-                  className="h-full bg-gradient-to-r from-[oklch(0.42_0.09_158)] to-[oklch(0.68_0.14_148)]"
+                  className="h-full bg-gradient-to-r from-[oklch(0.42 0.22 285)] to-[oklch(0.65 0.22 290)]"
                   style={{ width: `${s.health}%` }}
                 />
               </div>

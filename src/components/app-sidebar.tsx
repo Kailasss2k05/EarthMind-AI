@@ -44,7 +44,7 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r border-sidebar-border/60">
       <SidebarHeader className="px-3 py-5">
         <Link to="/" className="flex items-center gap-2.5">
-          <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[oklch(0.68_0.14_148)] to-[oklch(0.62_0.13_220)] shadow-[0_8px_24px_-8px_oklch(0.42_0.09_158/0.6)]">
+          <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[oklch(0.65 0.22 290)] to-[oklch(0.62 0.18 275)] shadow-[0_8px_24px_-8px_oklch(0.42 0.22 285/0.6)]">
             <Leaf className="h-4.5 w-4.5 text-white" strokeWidth={2.5} />
             <Sparkles className="absolute -right-0.5 -top-0.5 h-3 w-3 text-[oklch(0.85_0.16_85)]" />
           </div>
@@ -100,7 +100,7 @@ export function AppSidebar() {
         {!collapsed && (
           <div className="mt-3 rounded-2xl border border-border/50 bg-gradient-to-br from-primary/8 to-transparent p-3">
             <div className="flex items-center gap-2 text-xs font-medium">
-              <span className="h-2 w-2 rounded-full bg-[oklch(0.68_0.14_148)] shadow-[0_0_12px_oklch(0.68_0.14_148)]" />
+              <span className="h-2 w-2 rounded-full bg-[oklch(0.65 0.22 290)] shadow-[0_0_12px_oklch(0.65 0.22 290)]" />
               All agents nominal
             </div>
             <p className="mt-1 text-[11px] text-muted-foreground">

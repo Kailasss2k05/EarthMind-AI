@@ -61,10 +61,10 @@ export function StatCard({
 }) {
   const positive = (delta ?? 0) >= 0;
   const accentMap: Record<string, string> = {
-    leaf: "from-[oklch(0.68_0.14_148)]/25 to-transparent text-[oklch(0.42_0.09_158)]",
-    ocean: "from-[oklch(0.62_0.13_220)]/25 to-transparent text-[oklch(0.42_0.13_220)]",
-    solar: "from-[oklch(0.82_0.15_85)]/30 to-transparent text-[oklch(0.5_0.14_65)]",
-    violet: "from-[oklch(0.65_0.18_300)]/25 to-transparent text-[oklch(0.5_0.18_300)]",
+    leaf: "from-[oklch(0.65 0.22 290)]/25 to-transparent text-[oklch(0.42 0.22 285)]",
+    ocean: "from-[oklch(0.62 0.18 275)]/25 to-transparent text-[oklch(0.45 0.20 275)]",
+    solar: "from-[oklch(0.85 0.08 290)]/30 to-transparent text-[oklch(0.55 0.15 290)]",
+    violet: "from-[oklch(0.68 0.20 290)]/25 to-transparent text-[oklch(0.5_0.18_300)]",
   };
 
   return (
@@ -100,7 +100,7 @@ export function StatCard({
             className={cn(
               "inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 font-medium",
               positive
-                ? "bg-[oklch(0.68_0.14_148)]/15 text-[oklch(0.42_0.09_158)]"
+                ? "bg-[oklch(0.65 0.22 290)]/15 text-[oklch(0.42 0.22 285)]"
                 : "bg-destructive/10 text-destructive",
             )}
           >
