@@ -1,16 +1,16 @@
 """
 ingest.py
 ---------
-THE MAIN SCRIPT. Run this file to build the whole knowledge base.
+Automatic PDF ingestion pipeline for EarthMind AI.
 
-What it does, step by step, for every domain folder in data/raw/:
-  1. Load all PDFs in that folder and extract their text  (pdf_loader.py)
-  2. Split that text into overlapping chunks                (chunker.py)
-  3. Turn each chunk into an embedding vector               (embedder.py)
-  4. Save chunks + embeddings into that domain's ChromaDB
-     collection                                             (vector_store.py)
+Pipeline:
+1. Scan all domain folders
+2. Load PDFs
+3. Split into chunks
+4. Generate embeddings
+5. Store in ChromaDB
 
-Run it from the backend/ folder like this:
+Run:
     python -m app.rag.ingest
 """
 
@@ -18,45 +18,93 @@ from .config import DOMAINS, RAW_DATA_DIR
 from .pdf_loader import load_all_pdfs_in_folder
 from .chunker import chunk_records
 from .embedder import embed_texts
-from .vector_store import add_chunks_to_collection, get_or_create_collection
+from .vector_store import (
+    add_chunks_to_collection,
+    get_or_create_collection,
+)
 
 
 def ingest_domain(domain: str):
-    print(f"\n=== Domain: {domain} ===")
+    """
+    Ingest all PDFs belonging to one domain.
+    """
+    print(f"\n{'=' * 50}")
+    print(f"Processing Domain: {domain}")
+    print(f"{'=' * 50}")
+
     folder = RAW_DATA_DIR / domain
 
     if not folder.exists():
-        print(f"  folder does not exist yet: {folder}")
+        print(f"Folder not found: {folder}")
         return
 
-    # 1. Load PDFs -> page-level text
+    # Load PDFs
     page_records = load_all_pdfs_in_folder(folder)
+
     if not page_records:
-        print(f"  Nothing to ingest for '{domain}' yet - add PDFs to {folder}")
+        print(f"No PDF content found in '{domain}'.")
         return
 
-    # 2. Chunk
-    chunks = chunk_records(page_records)
-    print(f"  {len(page_records)} pages -> {len(chunks)} chunks")
+    print(f"Loaded {len(page_records)} pages.")
 
-    # 3. Embed
+    # Chunk
+    chunks = chunk_records(page_records)
+    print(f"Generated {len(chunks)} chunks.")
+
+    # Generate embeddings
+    print("Generating embeddings...")
     texts = [c["text"] for c in chunks]
     embeddings = embed_texts(texts)
 
-    # 4. Store in ChromaDB
+    # Store
+    print("Saving to ChromaDB...")
     add_chunks_to_collection(domain, chunks, embeddings)
+
     collection = get_or_create_collection(domain)
-    print(f"  Stored. '{domain}' collection now has {collection.count()} chunks total.")
+
+    print(
+        f"Completed '{domain}' "
+        f"({collection.count()} chunks stored)"
+    )
 
 
 def main():
-    print("Starting ingestion into ChromaDB...")
-    print(f"Reading raw documents from: {RAW_DATA_DIR}")
+
+    print("=" * 60)
+    print("EarthMind AI - Automatic PDF Ingestion Pipeline")
+    print("=" * 60)
+
+    print(f"\nKnowledge Base: {RAW_DATA_DIR}\n")
+
+    total_pdfs = 0
+
+    print("Scanning document folders...\n")
+
+    for domain in DOMAINS:
+
+        folder = RAW_DATA_DIR / domain
+
+        if folder.exists():
+            pdf_count = len(list(folder.glob("*.pdf")))
+            total_pdfs += pdf_count
+            print(f"{domain:<15}: {pdf_count} PDF(s)")
+        else:
+            print(f"{domain:<15}: Folder not found")
+
+    print(f"\nTotal PDFs Found : {total_pdfs}")
+    print("\nStarting ingestion...\n")
 
     for domain in DOMAINS:
         ingest_domain(domain)
 
-    print("\nDone. Run `python -m app.rag.test_retrieval` to try a search.")
+    print("\n" + "=" * 60)
+    print("Ingestion Completed Successfully")
+    print("=" * 60)
+    print(f"Domains Processed : {len(DOMAINS)}")
+    print(f"Total PDFs        : {total_pdfs}")
+    print("\nKnowledge base updated successfully.")
+    print("\nNext step:")
+    print("python -m app.rag.test_retrieval")
 
 
 if __name__ == "__main__":
