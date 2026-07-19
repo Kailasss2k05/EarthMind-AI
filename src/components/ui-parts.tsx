@@ -64,7 +64,7 @@ export function StatCard({
     leaf: "from-[oklch(0.65 0.22 290)]/25 to-transparent text-[oklch(0.42 0.22 285)]",
     ocean: "from-[oklch(0.62 0.18 275)]/25 to-transparent text-[oklch(0.45 0.20 275)]",
     solar: "from-[oklch(0.85 0.08 290)]/30 to-transparent text-[oklch(0.55 0.15 290)]",
-    violet: "from-[oklch(0.68 0.20 290)]/25 to-transparent text-[oklch(0.5_0.18_300)]",
+    violet: "from-[oklch(0.68 0.20 290)]/25 to-transparent text-[oklch(0.55_0.20_290)]",
   };
 
   return (
