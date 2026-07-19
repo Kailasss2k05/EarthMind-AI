@@ -1,10 +1,12 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   LayoutDashboard,
-  Bot,
+  Workflow,
   LineChart,
   FileBarChart,
-  Database,
+  History,
+  BookOpen,
+  FolderOpen,
   Settings,
   Sparkles,
 } from "lucide-react";
@@ -27,10 +29,12 @@ import {
 const navItems = [
   { title: "Overview", url: "/", icon: LayoutDashboard },
   { title: "New Plan", url: "/plan", icon: Sparkles, primary: true },
-  { title: "Agents", url: "/agents", icon: Bot },
-  { title: "Analytics", url: "/analytics", icon: LineChart },
+  { title: "Agent Execution", url: "/execution", icon: Workflow },
   { title: "Reports", url: "/reports", icon: FileBarChart },
-  { title: "Data Sources", url: "/data-sources", icon: Database },
+  { title: "History", url: "/history", icon: History },
+  { title: "Knowledge Base", url: "/knowledge", icon: BookOpen },
+  { title: "Documents", url: "/documents", icon: FolderOpen },
+  { title: "Analytics", url: "/analytics", icon: LineChart },
 ];
 
 const bottomItems = [{ title: "Settings", url: "/settings", icon: Settings }];
