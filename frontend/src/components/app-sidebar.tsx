@@ -29,7 +29,6 @@ import {
 const navItems = [
   { title: "Overview", url: "/", icon: LayoutDashboard },
   { title: "New Plan", url: "/plan", icon: Sparkles, primary: true },
-  { title: "Agent Execution", url: "/execution", icon: Workflow },
   { title: "Reports", url: "/reports", icon: FileBarChart },
   { title: "History", url: "/history", icon: History },
   { title: "Knowledge Base", url: "/knowledge", icon: BookOpen },

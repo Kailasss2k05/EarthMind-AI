@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import {
@@ -41,6 +41,10 @@ import {
   Wand2,
   Waves,
   X,
+  Compass,
+  Scale,
+  Wallet,
+  CalendarClock,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -62,6 +66,14 @@ import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 import { submitQuery } from "@/services/query.service";
 import { EarthMindApiError } from "@/services/api";
+
+// Live Execution Components
+import { useAgentWebSocket } from "@/services/websocket.service";
+import { ExecutionHeader } from "@/components/execution/ExecutionHeader";
+import { ExecutionSummary } from "@/components/execution/ExecutionSummary";
+import { ExecutionTimeline } from "@/components/execution/ExecutionTimeline";
+import { ReportViewer } from "@/components/execution/ReportViewer";
+import type { AgentName, AgentStatus } from "@/services/types";
 
 export const Route = createFileRoute("/plan")({
   head: () => ({
@@ -142,8 +154,6 @@ const sdgOptions = [
 
 /**
  * TODO: ENDPOINT MISSING — No /api/v1/history endpoint exists in the backend.
- * These are static placeholders. Replace with a real API call when
- * GET /api/v1/history is implemented.
  */
 const recentQueries = [
   {
@@ -166,42 +176,53 @@ const recentQueries = [
   },
 ];
 
-const agents: {
-  name: string;
-  role: string;
-  status: "active" | "idle" | "standby";
-  icon: ComponentType<{ className?: string }>;
-}[] = [
-  { name: "Planner", role: "Decomposes goals into a strategic roadmap", status: "active", icon: Target },
-  { name: "Research", role: "Gathers evidence via RAG over ChromaDB", status: "active", icon: Search },
-  { name: "SDG", role: "Aligns actions with UN Sustainable Goals", status: "active", icon: Globe2 },
-  { name: "Policy", role: "Scans regulation, CSRD, TCFD, EU Taxonomy", status: "standby", icon: Flag },
-  { name: "Environmental", role: "Models emissions, land and water impact", status: "active", icon: Leaf },
-  { name: "Finance", role: "Estimates CAPEX, OPEX and payback windows", status: "idle", icon: Coins },
-  { name: "Risk", role: "Assesses climate, transition and reputational risk", status: "standby", icon: ShieldAlert },
-  { name: "Timeline", role: "Sequences milestones and dependencies", status: "active", icon: Clock },
-  { name: "Report", role: "Drafts audit-ready disclosures and briefs", status: "idle", icon: FileText },
-];
-
-const statusStyles: Record<
-  "active" | "idle" | "standby",
-  { dot: string; label: string; glow: string }
+const AGENT_META: Record<
+  AgentName,
+  { icon: ComponentType<{ className?: string }>; desc: string }
 > = {
-  active: {
-    dot: "bg-[color:var(--success)]",
-    glow: "shadow-[0_0_10px_var(--success)]",
-    label: "Active",
+  Planner: {
+    icon: Compass,
+    desc: "Decomposes the challenge into an executable graph",
   },
-  standby: {
-    dot: "bg-[color:var(--warning)]",
-    glow: "shadow-[0_0_10px_var(--warning)]",
-    label: "Standby",
+  Research: {
+    icon: Search,
+    desc: "Gathers evidence via RAG over the knowledge base",
   },
-  idle: {
-    dot: "bg-muted-foreground/60",
-    glow: "",
-    label: "Idle",
+  SDG: {
+    icon: Target,
+    desc: "Aligns actions with UN Sustainable Development Goals",
   },
+  Policy: {
+    icon: Scale,
+    desc: "Cross-checks municipal and international policy",
+  },
+  Environmental: {
+    icon: Leaf,
+    desc: "Models environmental impact and co-benefits",
+  },
+  Finance: {
+    icon: Wallet,
+    desc: "Estimates CAPEX, OPEX and funding pathways",
+  },
+  Risk: {
+    icon: ShieldAlert,
+    desc: "Surfaces implementation and climate risks",
+  },
+  Timeline: {
+    icon: CalendarClock,
+    desc: "Sequences milestones and dependencies",
+  },
+  Report: {
+    icon: FileText,
+    desc: "Synthesises the final plan and disclosures",
+  },
+};
+
+const STATUS_PROGRESS: Record<AgentStatus, number> = {
+  queued: 0,
+  running: 50,
+  done: 100,
+  error: 100,
 };
 
 const MAX_CHARS = 4000;
@@ -209,7 +230,6 @@ const MAX_CHARS = 4000;
 // ─────────────────────────────────────────────────────────────────────────────
 
 function PlanPage() {
-  const navigate = useNavigate();
   const [prompt, setPrompt] = useState("");
   const [attachments, setAttachments] = useState<
     { id: string; name: string; kind: "pdf" | "image" | "csv"; size: number }[]
@@ -224,8 +244,61 @@ function PlanPage() {
   const [model, setModel] = useState<string>("watsonx-granite-3.1");
   const [advancedOpen, setAdvancedOpen] = useState(false);
 
-  // ── API state ──────────────────────────────────────────────────────────────
+  // ── Unified Execution States ──────────────────────────────────────────────
+  const [isExecuting, setIsExecuting] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [plannerOutput, setPlannerOutput] = useState("");
+  const [queryText, setQueryText] = useState("");
+  const [elapsedMs, setElapsedMs] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // WebSocket event integration
+  const { agentStatuses, isConnected, reset: resetWs } = useAgentWebSocket();
+
+  // Derived metrics
+  const doneCount = useMemo(() => {
+    return agentStatuses.filter((a) => a.status === "done").length;
+  }, [agentStatuses]);
+
+  const overallProgress = useMemo(() => {
+    const total = agentStatuses.reduce(
+      (sum, a) => sum + STATUS_PROGRESS[a.status],
+      0
+    );
+    return Math.round(total / agentStatuses.length);
+  }, [agentStatuses]);
+
+  const activeAgent = useMemo(() => {
+    return agentStatuses.find((a) => a.status === "running");
+  }, [agentStatuses]);
+
+  const isCompleted = useMemo(() => {
+    return agentStatuses.length > 0 && doneCount === agentStatuses.length;
+  }, [agentStatuses, doneCount]);
+
+  // Handle active timer
+  useEffect(() => {
+    if (isExecuting) {
+      const startTime = Date.now();
+      timerRef.current = setInterval(() => {
+        setElapsedMs(Date.now() - startTime);
+      }, 100);
+    } else {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    }
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [isExecuting]);
+
+  const elapsedSecondsString = useMemo(() => {
+    return `${(elapsedMs / 1000).toFixed(1)}s`;
+  }, [elapsedMs]);
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -238,7 +311,7 @@ function PlanPage() {
     el.style.height = `${Math.min(el.scrollHeight, 420)}px`;
   }, [prompt]);
 
-  const canGenerate = prompt.trim().length > 0 && !isSubmitting;
+  const canGenerate = prompt.trim().length > 0 && !isSubmitting && !isExecuting;
 
   const handleFiles = useCallback((files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -276,20 +349,27 @@ function PlanPage() {
     return "text-muted-foreground";
   }, [prompt.length]);
 
-  // ── Submit handler — calls POST /api/v1/query ──────────────────────────────
+  // ── Submit handler — executes inline, no navigation ────────────────────────
   const handleGenerate = async () => {
     if (!canGenerate) return;
 
+    setQueryText(prompt.trim());
+    setPlannerOutput("");
+    setIsExecuting(true);
     setIsSubmitting(true);
+    setElapsedMs(0);
+    resetWs();
+
+    toast.success("Pipeline started!", {
+      description: "LangGraph orchestration runtime initialized.",
+    });
+
     try {
       const result = await submitQuery(prompt.trim());
-
-      toast.success("Pipeline started!", {
-        description: `Request ID: ${result.request_id.slice(0, 8)}…`,
+      setPlannerOutput(result.planner_output);
+      toast.success("Optimization cycle complete!", {
+        description: "Action report synthesized successfully.",
       });
-
-      // Navigate to execution page to watch live agent progress via WebSocket
-      await navigate({ to: "/execution" });
     } catch (err) {
       if (err instanceof EarthMindApiError) {
         toast.error("Backend error", { description: err.message });
@@ -305,11 +385,12 @@ function PlanPage() {
       }
     } finally {
       setIsSubmitting(false);
+      setIsExecuting(false);
     }
   };
 
   return (
-    <div className="relative mx-auto max-w-[1400px] px-2 pb-24 pt-6">
+    <div className="relative mx-auto max-w-[1400px] px-2 pb-24 pt-6 space-y-12">
       <AnimatedBackdrop />
 
       {/* Hero */}
@@ -333,6 +414,7 @@ function PlanPage() {
               backgroundClip: "text",
               WebkitTextFillColor: "transparent",
               color: "transparent",
+              display: "inline-block",
             }}
           >
             Sustainable
@@ -345,8 +427,8 @@ function PlanPage() {
         </p>
       </motion.header>
 
-      {/* Grid */}
-      <div className="mt-12 grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+      {/* Composer Grid */}
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
         {/* Main column */}
         <div className="flex flex-col gap-8">
           {/* Prompt composer */}
@@ -697,7 +779,7 @@ function PlanPage() {
             </Collapsible>
           </motion.section>
 
-          {/* Primary action — connected to POST /api/v1/query */}
+          {/* Primary action */}
           <motion.section
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
@@ -740,58 +822,6 @@ function PlanPage() {
               <span className="font-numeric">45–90s</span>
             </p>
           </motion.section>
-
-          {/* Recent queries — static placeholder (no history endpoint yet) */}
-          <motion.section
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.42 }}
-            className="space-y-3"
-          >
-            <div className="flex items-center justify-between px-1">
-              <h2 className="font-display text-lg tracking-tight">
-                Recent queries
-              </h2>
-              <button className="text-xs text-muted-foreground hover:text-foreground">
-                View all
-              </button>
-            </div>
-            <div className="grid gap-3 md:grid-cols-3">
-              {recentQueries.map((q, i) => (
-                <motion.button
-                  key={q.title}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.44 + i * 0.06 }}
-                  whileHover={{ y: -3 }}
-                  onClick={() => setPrompt(q.title)}
-                  className="group flex h-full flex-col justify-between rounded-2xl border border-border/60 bg-white/70 p-4 text-left backdrop-blur-sm transition hover:border-primary/30 hover:shadow-[0_18px_40px_-20px_oklch(0.42_0.22_285/0.35)] dark:bg-white/[0.04]"
-                >
-                  <p className="line-clamp-2 text-sm font-medium text-foreground">
-                    {q.title}
-                  </p>
-                  <p className="mt-2 line-clamp-1 text-[11px] text-muted-foreground">
-                    {q.context}
-                  </p>
-                  <div className="mt-4 flex items-center justify-between text-[11px] text-muted-foreground">
-                    <span className="inline-flex items-center gap-1.5">
-                      <Bot className="h-3.5 w-3.5 text-primary" />
-                      <span className="font-numeric">{q.agents}</span> agents
-                    </span>
-                    <span className="font-numeric">{q.updatedAt}</span>
-                  </div>
-                </motion.button>
-              ))}
-            </div>
-          </motion.section>
-
-          {/* Footer note */}
-          <p className="mt-6 text-center text-[11px] text-muted-foreground">
-            EarthMind AI uses multi-agent reasoning powered by{" "}
-            <span className="text-foreground/80">LangGraph</span>,{" "}
-            <span className="text-foreground/80">IBM watsonx.ai</span> and
-            Retrieval-Augmented Generation.
-          </p>
         </div>
 
         {/* Right rail */}
@@ -818,11 +848,12 @@ function PlanPage() {
             </div>
 
             <ul className="space-y-2">
-              {agents.map((a, i) => {
-                const s = statusStyles[a.status];
+              {Object.keys(AGENT_META).map((key, i) => {
+                const name = key as AgentName;
+                const a = AGENT_META[name];
                 return (
                   <motion.li
-                    key={a.name}
+                    key={name}
                     initial={{ opacity: 0, x: 6 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.2 + i * 0.04 }}
@@ -832,21 +863,9 @@ function PlanPage() {
                       <a.icon className="h-4 w-4" />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-medium">{a.name}</p>
-                        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
-                          <span
-                            className={cn(
-                              "h-1.5 w-1.5 rounded-full",
-                              s.dot,
-                              s.glow,
-                            )}
-                          />
-                          {s.label}
-                        </span>
-                      </div>
+                      <p className="text-sm font-medium">{name}</p>
                       <p className="line-clamp-2 text-[11px] text-muted-foreground">
-                        {a.role}
+                        {a.desc}
                       </p>
                     </div>
                   </motion.li>
@@ -881,6 +900,49 @@ function PlanPage() {
           </motion.div>
         </aside>
       </div>
+
+      {/* ── Live Execution Pipeline Section ── */}
+      <AnimatePresence>
+        {(isExecuting || plannerOutput) && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="space-y-6 pt-6 border-t border-border/50"
+          >
+            <ExecutionHeader
+              isConnected={isConnected}
+              isCompleted={!!plannerOutput}
+            />
+
+            <ExecutionSummary
+              overallProgress={overallProgress}
+              doneCount={doneCount}
+              totalCount={agentStatuses.length}
+              activeAgentName={activeAgent?.name}
+              activeAgentIcon={activeAgent ? AGENT_META[activeAgent.name].icon : undefined}
+              activeAgentDesc={activeAgent ? AGENT_META[activeAgent.name].desc : undefined}
+              elapsedTime={elapsedSecondsString}
+            />
+
+            <ExecutionTimeline
+              agentStatuses={agentStatuses}
+              plannerOutput={plannerOutput || undefined}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Final Sustainability Report Section ── */}
+      <AnimatePresence>
+        {plannerOutput && (
+          <ReportViewer
+            plannerOutput={plannerOutput}
+            queryText={queryText}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
