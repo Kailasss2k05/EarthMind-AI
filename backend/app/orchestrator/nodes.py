@@ -1,3 +1,4 @@
+
 import json
 
 from app.agents.planner import PlannerAgent
@@ -10,7 +11,6 @@ from app.agents.risk import RiskAgent
 from app.agents.timeline import TimelineAgent
 from app.agents.report import ReportAgent
 from app.orchestrator.dependencies import resolve_dependencies
-
 
 from app.services.llm import get_llm
 from app.orchestrator.helpers import update_agent_status, update_error, update_missing_information
@@ -26,7 +26,6 @@ finance = FinanceAgent(llm)
 risk = RiskAgent(llm)
 timeline = TimelineAgent(llm)
 report = ReportAgent(llm)
-
 
 def planner_node(state):
     """
@@ -117,7 +116,6 @@ def environmental_node(state):
     )
     return state
 
-
 def finance_node(state):
     state["outputs"]["finance"] = finance.run(state)
     update_missing_information(state, state["outputs"]["finance"])
@@ -132,7 +130,6 @@ def finance_node(state):
         state["outputs"]["finance"]
     )
     return state
-
 
 def risk_node(state):
     state["outputs"]["risk"] = risk.run(state)
