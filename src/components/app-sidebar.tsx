@@ -6,9 +6,8 @@ import {
   FileBarChart,
   Database,
   Settings,
-  Leaf,
-  Sparkles,
 } from "lucide-react";
+import logoUrl from "@/assets/earthmind-logo.png";
 
 import {
   Sidebar,
