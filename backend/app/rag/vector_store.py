@@ -32,7 +32,20 @@ def get_or_create_collection(domain: str):
         metadata={"domain": domain},
     )
 
+def is_pdf_indexed(domain: str, filename: str) -> bool:
+    """
+    Check whether a PDF has already been indexed.
+    """
 
+    collection = get_or_create_collection(domain)
+
+    results = collection.get(
+        where={"filename": filename},
+        limit=1,
+    )
+
+    return len(results["ids"]) > 0
+    
 def add_chunks_to_collection(
     domain: str,
     chunks: list[dict],
