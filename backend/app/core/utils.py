@@ -170,3 +170,58 @@ def calculate_confidence(result: dict) -> float | None:
     score = max(0.0, min(1.0, score))
 
     return round(score, 2)
+
+def fallback_response(agent_name: str, error: str) -> dict:
+    """
+    Standard fallback response when an agent fails.
+    """
+
+    fallback_missing = {
+        "research": [
+            "Technical specifications",
+            "Existing solutions",
+            "System architecture",
+        ],
+        "policy": [
+            "Local regulations",
+            "Permit requirements",
+            "Compliance requirements",
+        ],
+        "environmental": [
+            "Carbon reduction estimates",
+            "Environmental impact data",
+        ],
+        "finance": [
+            "Installation cost",
+            "Funding source",
+            "Maintenance cost",
+        ],
+        "risk": [
+            "Risk assessment",
+            "Mitigation strategy",
+        ],
+        "timeline": [
+            "Project phases",
+            "Milestones",
+            "Implementation sequence",
+        ],
+        "sdg": [
+            "Relevant SDGs",
+            "Sustainability indicators",
+        ],
+    }
+
+    return {
+        "agent": agent_name,
+        "status": "failed",
+        "confidence_score": 0.0,
+        "summary": (
+            f"{agent_name.capitalize()} agent could not complete its analysis "
+            "because an execution error occurred."
+        ),
+        "findings": [],
+        "recommendations": [],
+        "missing_information": fallback_missing.get(agent_name, []),
+        "references": [],
+        "error": error,
+    }

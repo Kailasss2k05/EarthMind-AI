@@ -11,7 +11,7 @@ from tenacity import (
     retry_if_exception_type,
 )
 
-from app.core.utils import calculate_confidence
+from app.core.utils import calculate_confidence,fallback_response
 
 logger = logging.getLogger(__name__)
 
@@ -94,17 +94,10 @@ class BaseAgent(ABC):
                 content,
             )
 
-            return {
-                "agent": self.__class__.__name__.replace("Agent", "").lower(),
-                "status": "failed",
-                "confidence_score": 0.0,
-                "summary": "Agent returned invalid JSON.",
-                "findings": [],
-                "recommendations": [],
-                "missing_information": [],
-                "references": [],
-                "error": str(e),
-            }
+            return fallback_response(
+    self.__class__.__name__.replace("Agent", "").lower(),
+    str(e),
+)
 
         except Exception as e:
 
@@ -113,14 +106,7 @@ class BaseAgent(ABC):
                 self.__class__.__name__,
             )
 
-            return {
-                "agent": self.__class__.__name__.replace("Agent", "").lower(),
-                "status": "failed",
-                "confidence_score": 0.0,
-                "summary": "Agent execution failed after retry attempts.",
-                "findings": [],
-                "recommendations": [],
-                "missing_information": [],
-                "references": [],
-                "error": str(e),
-            }
+            return fallback_response(
+    self.__class__.__name__.replace("Agent", "").lower(),
+    str(e),
+)
