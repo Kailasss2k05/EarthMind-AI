@@ -7,9 +7,16 @@ class PolicyAgent(BaseAgent):
 
     def build_prompt(self, state):
 
-        policy_docs = retrieve("policy", state["query"])
+        evidence = retrieve("policy", state["query"])
+
+        formatted_evidence = "\n\n".join(
+            f"Source: {doc['source']}\n"
+            f"Page: {doc['page']}\n\n"
+            f"{doc['text']}"
+            for doc in evidence
+        )
 
         return POLICY_PROMPT.format(
             query=state["query"],
-            policy=policy_docs,
+            evidence=formatted_evidence
         )
