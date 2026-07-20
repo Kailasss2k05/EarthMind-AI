@@ -59,6 +59,7 @@ async def run_query(fastapi_request: Request, request: QueryRequest) -> QueryRes
         "agent_status":        {},
         "errors":              {},
         "missing_information": [],
+        "retrieved_context":   [],
     }
 
     # ── Step 3: Run the graph in a worker thread ──────────────────────────────

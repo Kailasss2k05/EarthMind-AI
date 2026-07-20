@@ -19,3 +19,6 @@ class GraphState(TypedDict):
     agent_status: Dict[str, str]
     errors: Dict[str, str]
     missing_information: List[str]
+
+    # ── RAG context populated by ResearchAgent ────────────────────────────────
+    retrieved_context: List[dict]

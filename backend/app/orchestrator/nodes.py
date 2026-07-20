@@ -158,7 +158,48 @@ def planner_node(state: dict) -> dict:
 # ── Analysis agent nodes ──────────────────────────────────────────────────────
 
 def research_node(state: dict) -> dict:
-    return _run_agent_node(state, "research", "Research")
+    """
+    Run the Research agent.
+
+    ResearchAgent.run() returns a full state patch:
+        {
+            "outputs":          {..., "research": <agent_output>},
+            "retrieved_context": [<chunks>],
+        }
+
+    We unpack that patch here and also update agent_status, errors,
+    and missing_information — identical bookkeeping to _run_agent_node.
+    """
+    _run_async(broadcast_agent_started("Research"))
+
+    current_outputs = dict(state.get("outputs", {}))
+    current_status  = dict(state.get("agent_status", {}))
+    current_errors  = dict(state.get("errors", {}))
+    current_missing = list(state.get("missing_information", []))
+
+    try:
+        patch = _agent("research").run(state)
+        _run_async(broadcast_agent_completed("Research"))
+    except Exception as exc:
+        _run_async(broadcast_agent_failed("Research", str(exc)))
+        raise
+
+    # Extract the research output dict from the patch
+    output          = patch.get("outputs", {}).get("research", {})
+    retrieved_ctx   = patch.get("retrieved_context", [])
+
+    new_outputs = {**current_outputs, "research": output}
+    new_status  = updated_agent_status(current_status, "research", output)
+    new_errors  = updated_errors(current_errors, "research", output)
+    new_missing = merge_missing_information(current_missing, output)
+
+    return {
+        "outputs":              new_outputs,
+        "agent_status":        new_status,
+        "errors":              new_errors,
+        "missing_information": new_missing,
+        "retrieved_context":   retrieved_ctx,
+    }
 
 
 def sdg_node(state: dict) -> dict:

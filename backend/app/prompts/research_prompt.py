@@ -50,6 +50,18 @@ Previously Identified Missing Information
 {shared_missing_information}
 
 ==============================
+RETRIEVED DOCUMENT CONTEXT
+==============================
+
+The following chunks were retrieved from the internal knowledge base.
+Use them as primary source material.
+
+If a chunk is relevant to the query, extract findings from it.
+Always cite the source and page in the references field.
+
+{rag_context}
+
+==============================
 TASKS
 ==============================
 
@@ -59,9 +71,11 @@ Using ONLY the supplied information:
 
 2. Summarize the technology or concept involved.
 
-3. Identify important technical findings.
+3. Identify important technical findings, prioritising
+   findings supported by the retrieved documents above.
 
-4. Mention existing approaches or methods ONLY if explicitly supported.
+4. Mention existing approaches or methods ONLY if explicitly supported
+   by the retrieved documents or the planner output.
 
 5. Identify research information that is still missing.
 
@@ -69,6 +83,9 @@ Using ONLY the supplied information:
    Previously Identified Missing Information.
 
 7. Add ONLY NEW missing information.
+
+8. Populate the references field with every document source
+   cited in your findings (source file and page number).
 
 ==============================
 RESEARCH RULES
@@ -134,6 +151,13 @@ Previously Identified Missing Information.
 REFERENCE RULES
 ==============================
 
+Populate references using ONLY sources present
+in the Retrieved Document Context above.
+
+Each reference must follow this format exactly:
+
+"<source_filename> — page <page_number>"
+
 Do NOT invent:
 
 - Paper titles
@@ -142,7 +166,6 @@ Do NOT invent:
 - URLs
 - Citations
 
-Only include references explicitly present
-in the supplied inputs.
+If no documents were retrieved, return references as [].
 
 """ + COMMON_AGENT_PROMPT
