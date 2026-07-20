@@ -32,7 +32,7 @@ export function RiskSection({ data }: Props) {
         <Text style={S.h2}>Risk Assessment</Text>
       </View>
       <Text style={{ ...S.bodySmall, marginBottom: 12 }}>
-        Implementation &amp; climate risk register
+        Implementation & climate risk register
       </Text>
 
       {/* Table header */}

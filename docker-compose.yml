@@ -1,0 +1,139 @@
+# ==============================================================================
+# EarthMind AI — Docker Compose Infrastructure Configuration
+# ==============================================================================
+#
+# This compose file spins up the supporting database and cache services
+# along with the backend and frontend applications.
+#
+# Usage
+# -----
+#   1. Start services in the background:
+#      $ docker compose up -d
+#
+#   2. Check service status:
+#      $ docker compose ps
+#
+#   3. Stop services:
+#      $ docker compose down
+#
+# Services Included
+# -----------------
+#   - PostgreSQL (port 5432) : Relational database storing query history and metadata.
+#   - Redis (port 6379)      : High-performance caching layer.
+#   - Ollama (port 11434)    : Local LLM orchestration instance.
+#   - Backend (port 8000)    : FastAPI server running LangGraph multi-agent system.
+#   - Frontend (port 3000)   : TanStack Start / Vite React client application.
+#
+# Persistent Volumes
+# ------------------
+#   - pgdata      : Retains PostgreSQL database records.
+#   - redisdata   : Retains Redis cache state.
+#   - ollamadata  : Retains local LLM model weights.
+#   - backenddata : Retains backend runtime data (vector store and uploads).
+#
+# ==============================================================================
+
+services:
+
+  # ── PostgreSQL Relational Database ──────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: earthmind-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: earthmind
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d earthmind"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis Cache Layer ───────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: earthmind-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Ollama Local LLM Engine ─────────────────────────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    container_name: earthmind-ollama
+    restart: always
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollamadata:/root/.ollama
+    # If a GPU is available, leverage it inside docker
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  # ── EarthMind AI Backend ────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: earthmind-backend
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/earthmind
+      - REDIS_URL=redis://redis:6379
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - ENV=development
+      - DEBUG=True
+      - FRONTEND_URL=http://localhost:3000
+      - ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173
+    volumes:
+      - backenddata:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+
+  # ── EarthMind AI Frontend ───────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: earthmind-frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+    driver: local
+  redisdata:
+    driver: local
+  ollamadata:
+    driver: local
+  backenddata:
+    driver: local

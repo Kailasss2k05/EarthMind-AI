@@ -40,7 +40,7 @@ export function ExecutionSummary({ data }: Props) {
         <Text style={S.h2}>AI Execution Summary</Text>
       </View>
       <Text style={{ ...S.bodySmall, marginBottom: 12 }}>
-        System audit log &amp; multi-agent runtime analytics
+        System audit log & multi-agent runtime analytics
       </Text>
 
       {/* ── System stats ── */}
