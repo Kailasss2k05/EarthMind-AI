@@ -38,6 +38,10 @@ export interface QueryResponse {
   errors: Record<string, string>;
   /** Deduplicated list of information gaps across all agents */
   missing_information: string[];
+  /** Number of document chunks retrieved during RAG (optional) */
+  retrieved_chunks?: number;
+  /** Unique ChromaDB domain names searched during retrieval (optional) */
+  retrieved_domains?: string[];
 }
 
 // ─── REST: Health ─────────────────────────────────────────────────────────────

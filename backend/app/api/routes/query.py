@@ -73,6 +73,15 @@ async def run_query(fastapi_request: Request, request: QueryRequest) -> QueryRes
     # ── Step 4: Build and return the typed response ───────────────────────────
     outputs = result.get("outputs", {})
 
+    # Extract lightweight RAG metadata from state (not raw chunks)
+    retrieved_context = result.get("retrieved_context", [])
+    retrieved_chunks = len(retrieved_context)
+    retrieved_domains = sorted({
+        chunk.get("domain") or "unknown"
+        for chunk in retrieved_context
+        if isinstance(chunk, dict)
+    })
+
     return QueryResponse(
         request_id=request_id,
         status="completed",
@@ -83,4 +92,6 @@ async def run_query(fastapi_request: Request, request: QueryRequest) -> QueryRes
         agent_status=result.get("agent_status", {}),
         errors=result.get("errors", {}),
         missing_information=result.get("missing_information", []),
+        retrieved_chunks=retrieved_chunks,
+        retrieved_domains=retrieved_domains,
     )

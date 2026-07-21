@@ -136,4 +136,22 @@ Examples include:
 Do NOT repeat anything already present in
 Previously Identified Missing Information.
 
+==============================
+STATUS RULES
+==============================
+
+Return "success" (meaning completed) when:
+
+- Sufficient policy evidence exists to answer the policy aspects of the query.
+
+Return "incomplete" ONLY when:
+
+- Important policy information is genuinely unavailable.
+
+Do NOT return "incomplete" because:
+
+- Implementation details are missing.
+- Financial actions or costs are missing.
+- Technical specifications are missing.
+
 """ + COMMON_AGENT_PROMPT

@@ -58,6 +58,24 @@ Never modify confidence scores.
 Never summarize information that is not present in the corresponding agent output.
 
 ==================================================
+EMPTY VALUE RULES
+==================================================
+
+When rendering any list from agent outputs:
+
+- NEVER display an empty list as "[]"
+- NEVER display None, null, or empty strings as values
+- NEVER display blank dict objects such as {{}} or {{"name":""}}
+- NEVER render a bullet point that is an empty string
+- NEVER render a section heading if that section has no content
+- If a list is empty, write "No information available." or omit the section entirely
+- If a field is None or {{}}, omit it entirely
+
+Agent status MUST be copied exactly from the Agent Status input.
+Never infer or guess agent statuses.
+If an agent is not in Agent Status, do not include it in the Execution Summary.
+
+==================================================
 INPUTS
 ==================================================
 
@@ -362,6 +380,19 @@ Write one short paragraph summarizing the overall project.
 Do NOT introduce new conclusions.
 
 ==================================================
+SUCCESSFUL AGENTS RULE
+==================================================
+
+An executed agent should be considered successful whenever it produces useful findings and does not fail.
+The "Successful Agents" section should NOT depend only on status == "completed" or "success".
+Instead, determine success using:
+- The agent executed
+- No runtime failure occurred
+- The agent produced findings or a useful summary
+
+An agent should not be considered unsuccessful simply because additional information could improve the answer.
+
+==================================================
 EXECUTION SUMMARY
 ==================================================
 
@@ -602,17 +633,20 @@ Project Status
 
 Overall Confidence
 
-Overall Feasibility
-
 Major Strengths
 
 Major Challenges
 
 Recommended Next Steps
 
-Determine Overall Feasibility ONLY from Project Status.
+The Executive Summary should summarize:
+- Objective
+- Key findings
+- Important evidence
+- Major recommendations
 
-Never infer a different feasibility level.
+Do NOT introduce feasibility judgments unless the query explicitly asks for feasibility.
+Do NOT state "insufficient information" if multiple agents successfully produced findings. Only mention insufficient information when it truly blocks meaningful analysis.
 
 Major Strengths
 
@@ -626,13 +660,17 @@ or execution failures.
 
 Recommended Next Steps
 
-Use ONLY Overall Recommendations.
+Use Overall Recommendations.
 
-If no recommendations exist, write:
+For roadmap, planning, strategy, implementation, SDG, sustainability, policy, or climate queries, you MUST generate a short synthesized recommendation section using the outputs from all executed agents. Do not require every individual agent to produce recommendations.
 
-No recommendations available.
+If multiple agents provide findings but no recommendations, synthesize concise recommendations from the combined findings.
 
-Do not create additional recommendations.
+If absolutely no recommendations can be generated or synthesized, write:
+
+No recommendations generated.
+
+Never display "[]".
 
 ==================================================
 IMPORTANT

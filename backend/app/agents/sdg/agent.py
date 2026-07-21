@@ -1,6 +1,7 @@
 import json
 
 from app.core.base_agent import BaseAgent
+from app.core.utils import build_references_from_chunks, format_chunks_as_references
 from app.prompts.sdg_prompt import SDG_PROMPT
 from app.rag.retriever import retrieve
 
@@ -10,8 +11,8 @@ class SDGAgent(BaseAgent):
     def build_prompt(self, state: dict) -> str:
         outputs = state.get("outputs", {})
 
+        # Domain-specific SDG evidence from ChromaDB
         evidence = retrieve("sdg", state.get("query", ""))
-
         if evidence:
             formatted_evidence = "\n\n".join(
                 f"Source: {doc.get('source', 'Unknown')}\n"
@@ -21,6 +22,10 @@ class SDGAgent(BaseAgent):
             )
         else:
             formatted_evidence = "No relevant documents found in the knowledge base."
+
+        # Shared references from ResearchAgent retrieval
+        retrieved_context = state.get("retrieved_context", [])
+        references_context = format_chunks_as_references(retrieved_context)
 
         return SDG_PROMPT.format(
             query=state.get("query", ""),
@@ -37,4 +42,13 @@ class SDGAgent(BaseAgent):
                 indent=2,
             ),
             evidence=formatted_evidence,
+            references_context=references_context,
         )
+
+    def run(self, state: dict) -> dict:
+        """Run with post-processing: populate references from retrieved_context if empty."""
+        result = super().run(state)
+        if isinstance(result, dict) and not result.get("references"):
+            chunks = state.get("retrieved_context", [])
+            result["references"] = build_references_from_chunks(chunks)
+        return result

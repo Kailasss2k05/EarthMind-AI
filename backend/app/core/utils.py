@@ -1,4 +1,7 @@
-def get_agent_data(state, agent_name):
+from typing import Dict, List, Any, Optional
+
+
+def get_agent_data(state: dict, agent_name: str) -> Dict[str, str]:
     """
     Returns a normalized view of an agent's output.
     """
@@ -14,6 +17,41 @@ def get_agent_data(state, agent_name):
         ),
         "references": "\n".join(output.get("references", [])),
     }
+
+
+def build_references_from_chunks(chunks: List[dict]) -> List[str]:
+    """
+    Build a de-duplicated list of reference strings from retrieved RAG chunks.
+
+    Format: "<source_filename> - page <page_number>"
+
+    Used by ResearchAgent and all downstream agents to populate the
+    ``references`` field from ``state["retrieved_context"]``.
+    """
+    seen: set = set()
+    refs: List[str] = []
+    for chunk in chunks:
+        source = chunk.get("source") or "unknown"
+        page = chunk.get("page", "?")
+        ref = f"{source} - page {page}"
+        if ref not in seen:
+            seen.add(ref)
+            refs.append(ref)
+    return refs
+
+
+def format_chunks_as_references(chunks: List[dict]) -> str:
+    """
+    Format retrieved chunks into a compact reference list string
+    for injection into agent prompts.
+
+    Returns a bullet-list string, or a sentinel if no chunks exist.
+    """
+    if not chunks:
+        return "No documents retrieved from the knowledge base."
+
+    refs = build_references_from_chunks(chunks)
+    return "\n".join(f"- {r}" for r in refs)
 
 import json
 import re
@@ -153,12 +191,12 @@ def calculate_confidence(result: dict) -> float | None:
     missing = result.get("missing_information", [])
 
     # Reward useful information
-    score += min(len(findings), 5) * 0.06
-    score += min(len(recommendations), 5) * 0.04
-    score += min(len(references), 5) * 0.03
+    score += min(len(findings), 5) * 0.10
+    score += min(len(recommendations), 5) * 0.05
+    score += min(len(references), 5) * 0.05
 
     # Penalize missing information
-    score -= min(len(missing), 10) * 0.05
+    score -= min(len(missing), 10) * 0.02
 
     # Status adjustment
     if status == "success":

@@ -53,3 +53,13 @@ class QueryResponse(BaseModel):
     agent_status: Dict[str, str] = Field(default_factory=dict)
     errors: Dict[str, str] = Field(default_factory=dict)
     missing_information: List[str] = Field(default_factory=list)
+
+    # RAG metadata — lightweight summary (not raw chunks)
+    retrieved_chunks: int = Field(
+        default=0,
+        description="Number of document chunks retrieved by ResearchAgent.",
+    )
+    retrieved_domains: List[str] = Field(
+        default_factory=list,
+        description="Unique ChromaDB domain names searched during retrieval.",
+    )

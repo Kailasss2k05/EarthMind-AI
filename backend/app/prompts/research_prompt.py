@@ -88,6 +88,34 @@ Using ONLY the supplied information:
    cited in your findings (source file and page number).
 
 ==============================
+STATUS RULES
+==============================
+
+Return "success" (meaning completed) when:
+
+- The retrieved evidence sufficiently answers the user's request.
+- You have identified key findings, even if some supplementary
+  details are unavailable.
+- Most of the core technical question can be answered from the context.
+
+Return "incomplete" ONLY when:
+
+- Essential information required to answer the query is
+  genuinely unavailable, not just supplementary.
+- The retrieved context is completely empty AND the query
+  cannot be answered at all from the planner output alone.
+
+Return "failed" ONLY when:
+
+- An execution or tool error prevented analysis.
+
+Do NOT return "incomplete" because:
+
+- Some details would be nice to have.
+- Exact specifications are missing but general findings exist.
+- Financial or policy details are missing (those are other agents' jobs).
+
+==============================
 RESEARCH RULES
 ==============================
 
@@ -133,19 +161,27 @@ Do NOT recommend:
 MISSING INFORMATION RULES
 ==============================
 
-Only include NEW research information.
+Only list information that is STRICTLY NECESSARY to answer
+the user's core question.
 
-Examples include:
+Do NOT list:
 
-- Technical specifications
-- Existing solutions
-- System architecture
-- Implementation details
-- Performance metrics
-- Dataset information
+- Nice-to-have details
+- Information managed by other agents (finance, policy, etc.)
+- General background that is not required for the answer
+- Existing approaches (unless explicitly asked for)
+- Implementation details (unless explicitly asked for)
+- Financial actions
+
+Do NOT invent missing information.
+Only report missing information if the user's prompt explicitly asks
+for a specific technical detail that is entirely absent from the context.
 
 Do NOT repeat anything already present in
 Previously Identified Missing Information.
+
+If the retrieved context adequately addresses the query,
+return missing_information as [].
 
 ==============================
 REFERENCE RULES

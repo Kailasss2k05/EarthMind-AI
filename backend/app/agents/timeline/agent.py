@@ -1,6 +1,7 @@
 import json
 
 from app.core.base_agent import BaseAgent
+from app.core.utils import build_references_from_chunks
 from app.prompts.timeline_prompt import TIMELINE_PROMPT
 
 
@@ -28,3 +29,11 @@ class TimelineAgent(BaseAgent):
                 indent=2,
             ),
         )
+
+    def run(self, state: dict) -> dict:
+        """Run with post-processing: populate references from retrieved_context if empty."""
+        result = super().run(state)
+        if isinstance(result, dict) and not result.get("references"):
+            chunks = state.get("retrieved_context", [])
+            result["references"] = build_references_from_chunks(chunks)
+        return result

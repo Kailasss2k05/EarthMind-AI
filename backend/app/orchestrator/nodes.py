@@ -36,6 +36,9 @@ from app.websocket.events import (
     broadcast_agent_failed,
 )
 from app.services.llm import get_llm
+import logging
+
+logger = logging.getLogger(__name__)
 
 # ── Lazy LLM initialisation ───────────────────────────────────────────────────
 # get_llm() is called once, the first time a node executes, not at import time.
@@ -146,6 +149,12 @@ def planner_node(state: dict) -> dict:
     for agent in ALL_AGENTS:
         if agent not in execution_order:
             current_status[agent] = "skipped"
+
+    logger.info(
+        "[Planner] Selected agents: %s | Execution order: %s",
+        ", ".join(valid_required),
+        " → ".join(execution_order),
+    )
 
     return {
         "planner_output":  result,
