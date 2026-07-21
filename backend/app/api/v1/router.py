@@ -21,3 +21,7 @@ v1_router.include_router(history.router, tags=["History"])
 # WebSocket endpoint: /api/v1/ws
 # LangGraph will be wired into this router in a future iteration.
 v1_router.include_router(ws_router, tags=["WebSocket"])
+
+# Document Upload — API for adding to the knowledge base.
+from app.api.routes import documents
+v1_router.include_router(documents.router, tags=["Documents"])

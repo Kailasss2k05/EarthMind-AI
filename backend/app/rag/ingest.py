@@ -11,6 +11,8 @@ Pipeline:
 5. Store in ChromaDB
 """
 
+from pathlib import Path
+
 from .config import DOMAINS, RAW_DATA_DIR
 from .pdf_loader import load_pdf_text
 from .chunker import chunk_records
@@ -20,6 +22,58 @@ from .vector_store import (
     get_or_create_collection,
     is_pdf_indexed,
 )
+
+
+def ingest_uploaded_pdf(domain: str, pdf_path: Path) -> dict:
+    """
+    Ingest a single PDF document.
+    Returns metadata about the ingestion.
+    """
+    if is_pdf_indexed(domain, pdf_path.name):
+        return {
+            "filename": pdf_path.name,
+            "domain": domain,
+            "pages": 0,
+            "chunks": 0,
+            "collection": domain,
+            "indexed": False
+        }
+
+    pages = load_pdf_text(pdf_path)
+
+    if not pages:
+        return {
+            "filename": pdf_path.name,
+            "domain": domain,
+            "pages": 0,
+            "chunks": 0,
+            "collection": domain,
+            "indexed": False
+        }
+
+    page_records = [
+        {
+            "source": pdf_path.name,
+            "page": p["page"],
+            "text": p["text"],
+        }
+        for p in pages
+    ]
+
+    chunks = chunk_records(page_records)
+    texts = [c["text"] for c in chunks]
+    embeddings = embed_texts(texts)
+
+    add_chunks_to_collection(domain, chunks, embeddings)
+
+    return {
+        "filename": pdf_path.name,
+        "domain": domain,
+        "pages": len(page_records),
+        "chunks": len(chunks),
+        "collection": domain,
+        "indexed": True
+    }
 
 
 def ingest_domain(domain: str):
@@ -44,41 +98,17 @@ def ingest_domain(domain: str):
     skipped = 0
 
     for pdf_path in pdf_files:
-
-        if is_pdf_indexed(domain, pdf_path.name):
-            print(f"Skipping {pdf_path.name} (already indexed)")
+        print(f"\nProcessing {pdf_path.name}...")
+        result = ingest_uploaded_pdf(domain, pdf_path)
+        
+        if not result["indexed"]:
+            print(f"Skipping {pdf_path.name} (already indexed or unreadable)")
             skipped += 1
             continue
-
-        print(f"\nReading {pdf_path.name}...")
-
-        pages = load_pdf_text(pdf_path)
-
-        if not pages:
-            print("No readable text found.")
-            continue
-
-        page_records = [
-            {
-                "source": pdf_path.name,
-                "page": p["page"],
-                "text": p["text"],
-            }
-            for p in pages
-        ]
-
-        print(f"Loaded {len(page_records)} pages.")
-
-        chunks = chunk_records(page_records)
-        print(f"Generated {len(chunks)} chunks.")
-
-        print("Generating embeddings...")
-        texts = [c["text"] for c in chunks]
-        embeddings = embed_texts(texts)
-
-        print("Saving to ChromaDB...")
-        add_chunks_to_collection(domain, chunks, embeddings)
-
+            
+        print(f"Loaded {result['pages']} pages.")
+        print(f"Generated {result['chunks']} chunks.")
+        print("Saved to ChromaDB.")
         processed += 1
 
     collection = get_or_create_collection(domain)
