@@ -108,11 +108,12 @@ class ReportAgent(BaseAgent):
         overall_missing = sorted(missing_set)
 
         # ── Overall recommendations ───────────────────────────────────────────
-        rec_set: set = set()
+        overall_recommendations = []
         for output in clean_outputs.values():
             if isinstance(output, dict):
-                rec_set.update(output.get("recommendations", []) or [])
-        overall_recommendations = sorted(rec_set)
+                for rec in (output.get("recommendations", []) or []):
+                    if rec not in overall_recommendations:
+                        overall_recommendations.append(rec)
 
         # ── Format list fields for prompt ─────────────────────────────────────
         overall_recommendations_text = (

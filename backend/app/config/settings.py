@@ -105,4 +105,10 @@ class Settings:
     ]
 
 
+    # ===========================
+    # Document Upload
+    # ===========================
+    MAX_UPLOAD_SIZE_MB: int = int(os.getenv("MAX_UPLOAD_SIZE_MB", 25))
+
+
 settings = Settings()
