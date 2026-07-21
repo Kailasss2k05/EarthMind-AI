@@ -24,8 +24,24 @@ export interface QueryResponse {
   request_id: string;
   /** Always "completed" on the happy path */
   status: "completed" | string;
-  /** Structured plan produced by the Planner agent */
-  planner_output: string;
+  /** Echo of the original query */
+  query: string;
+  /** Structured plan dict produced by the Planner agent */
+  planner_output: Record<string, unknown>;
+  /** Final Markdown report produced by the Report agent */
+  report: string;
+  /** Per-agent structured outputs (excluding "report") */
+  outputs: Record<string, unknown>;
+  /** Execution status per agent: success | incomplete | failed | skipped */
+  agent_status: Record<string, string>;
+  /** Error messages for any failed agent */
+  errors: Record<string, string>;
+  /** Deduplicated list of information gaps across all agents */
+  missing_information: string[];
+  /** Number of document chunks retrieved during RAG (optional) */
+  retrieved_chunks?: number;
+  /** Unique ChromaDB domain names searched during retrieval (optional) */
+  retrieved_domains?: string[];
 }
 
 // ─── REST: Health ─────────────────────────────────────────────────────────────
@@ -35,7 +51,6 @@ export type ServiceStatus = "connected" | "disconnected";
 export interface HealthServices {
   postgres: ServiceStatus;
   redis: ServiceStatus;
-  ollama: ServiceStatus;
   chromadb: ServiceStatus;
 }
 

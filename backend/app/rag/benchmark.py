@@ -1,7 +1,17 @@
+"""
+benchmark.py
+------------
+RAG retrieval latency benchmark.
+
+Run from the backend directory:
+    python -m app.rag.benchmark
+"""
+
 import time
+
 from app.rag.retriever import retrieve_all
 
-queries = [
+QUERIES = [
     "renewable energy policy",
     "carbon emissions",
     "climate finance",
@@ -9,24 +19,28 @@ queries = [
     "SDG 13 climate action",
 ]
 
-print("=" * 70)
-print("RAG Retrieval Benchmark")
-print("=" * 70)
 
-total_time = 0
+def main():
+    print("=" * 70)
+    print("RAG Retrieval Benchmark")
+    print("=" * 70)
 
-for query in queries:
-    start = time.perf_counter()
+    total_time = 0.0
 
-    results = retrieve_all(query)
+    for query in QUERIES:
+        start = time.perf_counter()
+        results = retrieve_all(query)
+        elapsed = time.perf_counter() - start
+        total_time += elapsed
+        print(f"\nQuery   : {query}")
+        print(f"Results : {len(results)} documents")
+        print(f"Elapsed : {elapsed:.3f} s")
 
-    elapsed = time.perf_counter() - start
-    total_time += elapsed
+    average = total_time / len(QUERIES)
+    print("\n" + "=" * 70)
+    print(f"Average retrieval time: {average:.3f} s")
+    print("=" * 70)
 
-    print(f"\nQuery: {query}")
-    print(f"Retrieved {len(results)} documents in {elapsed:.3f} seconds")
 
-average = total_time / len(queries)
-
-print("\n" + "=" * 70)
-print(f"Average retrieval time: {average:.3f} seconds")
+if __name__ == "__main__":
+    main()

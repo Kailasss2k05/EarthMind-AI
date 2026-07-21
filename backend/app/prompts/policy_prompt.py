@@ -1,6 +1,17 @@
+"""
+policy_prompt.py
+----------------
+Prompt template for the Policy Agent.
+
+NOTE: This file uses regular string concatenation (not an f-string) to embed
+COMMON_AGENT_PROMPT.  Using an f-string would collapse the ``{{...}}``
+double-brace escapes inside COMMON_AGENT_PROMPT into single ``{...}`` braces,
+causing a KeyError when PolicyAgent.build_prompt() later calls .format().
+"""
+
 from app.prompts.common_prompt import COMMON_AGENT_PROMPT
 
-POLICY_PROMPT = f"""
+POLICY_PROMPT = """
 You are the Government Policy Agent in a multi-agent AI system.
 
 ==============================
@@ -28,23 +39,23 @@ INPUTS
 
 User Query
 
-{{query}}
+{query}
 
 Planner Decision
 
-{{planner_output}}
+{planner_output}
 
 Research Agent Output
 
-{{research_output}}
+{research_output}
 
 SDG Agent Output
 
-{{sdg_output}}
+{sdg_output}
 
 Previously Identified Missing Information
 
-{{shared_missing_information}}
+{shared_missing_information}
 
 ==============================
 TASKS
@@ -125,5 +136,22 @@ Examples include:
 Do NOT repeat anything already present in
 Previously Identified Missing Information.
 
-{COMMON_AGENT_PROMPT}
-"""
+==============================
+STATUS RULES
+==============================
+
+Return "success" (meaning completed) when:
+
+- Sufficient policy evidence exists to answer the policy aspects of the query.
+
+Return "incomplete" ONLY when:
+
+- Important policy information is genuinely unavailable.
+
+Do NOT return "incomplete" because:
+
+- Implementation details are missing.
+- Financial actions or costs are missing.
+- Technical specifications are missing.
+
+""" + COMMON_AGENT_PROMPT

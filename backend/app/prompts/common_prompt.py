@@ -30,8 +30,11 @@ The analysis is complete.
 
 incomplete
 
-The analysis could be partially completed but important
-information is missing.
+The analysis could not be completed because essential information is genuinely unavailable.
+
+Do NOT return incomplete just because missing_information is not empty.
+If the agent successfully produced a summary and findings from available evidence, the status MUST be success.
+Missing information should indicate possible improvements, NOT automatically fail the agent.
 
 failed
 
@@ -132,12 +135,10 @@ return
 RECOMMENDATION RULES
 ==============================
 
-Recommend actions ONLY when supported
-by the supplied inputs.
+You MUST synthesize concise, actionable recommendations based on your findings (e.g., pilot projects, technology deployment, stakeholder engagement).
+Never display an empty list `[]` if you have findings.
 
-Otherwise
-
-"recommendations": []
+Only return "recommendations": [] if you found absolutely no findings and no analysis could be performed.
 
 ==============================
 REFERENCES RULES

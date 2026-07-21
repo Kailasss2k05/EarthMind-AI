@@ -73,7 +73,7 @@ import { ExecutionHeader } from "@/components/execution/ExecutionHeader";
 import { ExecutionSummary } from "@/components/execution/ExecutionSummary";
 import { ExecutionTimeline } from "@/components/execution/ExecutionTimeline";
 import { ReportViewer } from "@/components/execution/ReportViewer";
-import type { AgentName, AgentStatus } from "@/services/types";
+import type { AgentName, AgentStatus, QueryResponse } from "@/services/types";
 
 export const Route = createFileRoute("/plan")({
   head: () => ({
@@ -250,6 +250,7 @@ function PlanPage() {
   const [plannerOutput, setPlannerOutput] = useState("");
   const [queryText, setQueryText] = useState("");
   const [elapsedMs, setElapsedMs] = useState(0);
+  const [queryResponse, setQueryResponse] = useState<QueryResponse | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // WebSocket event integration
@@ -355,6 +356,7 @@ function PlanPage() {
 
     setQueryText(prompt.trim());
     setPlannerOutput("");
+    setQueryResponse(null);
     setIsExecuting(true);
     setIsSubmitting(true);
     setElapsedMs(0);
@@ -366,7 +368,8 @@ function PlanPage() {
 
     try {
       const result = await submitQuery(prompt.trim());
-      setPlannerOutput(result.planner_output);
+      setQueryResponse(result);
+      setPlannerOutput(result.report || JSON.stringify(result.planner_output));
       toast.success("Optimization cycle complete!", {
         description: "Action report synthesized successfully.",
       });
@@ -556,7 +559,7 @@ function PlanPage() {
 
               <div className="mt-3 flex items-center justify-center gap-2 rounded-2xl border border-transparent px-3 py-2 text-xs text-muted-foreground">
                 <Upload className="h-3.5 w-3.5" />
-                Drag &amp; drop files anywhere in this area
+                Drag & drop files anywhere in this area
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
@@ -942,6 +945,7 @@ function PlanPage() {
             queryText={queryText}
             elapsedMs={elapsedMs}
             agentStatuses={agentStatuses}
+            queryResponse={queryResponse}
           />
         )}
       </AnimatePresence>

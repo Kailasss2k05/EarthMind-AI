@@ -45,6 +45,14 @@ Previously Identified Missing Information
 
 {shared_missing_information}
 
+Retrieval Evidence (from internal knowledge base)
+
+{evidence}
+
+Shared Document References
+
+{references_context}
+
 ==============================
 TASKS
 ==============================
@@ -130,5 +138,23 @@ Do NOT invent:
 - Policy documents
 - Websites
 - URLs
+
+==============================
+STATUS RULES
+==============================
+
+Return "success" (meaning completed) when:
+
+- The SDG mapping is complete and supported by retrieved evidence.
+
+Return "incomplete" ONLY when:
+
+- Essential SDG-related information is genuinely unavailable.
+
+Do NOT return "incomplete" because:
+
+- Implementation details are missing.
+- Financial actions or costs are missing.
+- Technical specifications are missing.
 
 """ + COMMON_AGENT_PROMPT

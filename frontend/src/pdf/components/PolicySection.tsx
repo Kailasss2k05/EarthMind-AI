@@ -25,7 +25,7 @@ export function PolicySection({ data }: Props) {
         <Text style={S.h2}>Policy Recommendations</Text>
       </View>
       <Text style={{ ...S.bodySmall, marginBottom: 12 }}>
-        Regulatory &amp; governance actions
+        Regulatory & governance actions
       </Text>
 
       {data.policies.map((p, idx) => (

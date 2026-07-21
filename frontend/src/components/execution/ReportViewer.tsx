@@ -27,12 +27,13 @@ import {
   Percent,
   Cpu,
   Activity,
+  Coins,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import type { AgentState } from "@/services/types";
+import type { AgentState, QueryResponse } from "@/services/types";
 import { usePdfExport } from "@/hooks/usePdfExport";
 import { buildReportData } from "@/pdf/buildReportData";
 
@@ -54,6 +55,7 @@ interface ReportViewerProps {
   queryText: string;
   elapsedMs?: number;
   agentStatuses?: AgentState[];
+  queryResponse?: QueryResponse | null;
 }
 
 // ─── SDG official UN color palette ──────────────────────────────────────────
@@ -186,6 +188,7 @@ export function ReportViewer({
   queryText,
   elapsedMs = 0,
   agentStatuses,
+  queryResponse,
 }: ReportViewerProps) {
   const reportRef = useRef<HTMLDivElement>(null);
   const generatedAt = useRef(new Date());
@@ -203,33 +206,6 @@ export function ReportViewer({
     return `EMAI-${yyyy}${mm}${dd}-${hh}${min}${ss}`;
   }, []);
 
-  // ── Parse sections from backend plannerOutput ───────────────────────────
-  const sections = useMemo(() => {
-    const parse = (header: string, fallback: string): string => {
-      if (!plannerOutput) return fallback;
-      const rx = new RegExp(
-        `(?:^|\\n)\\s*#{1,3}\\s*${header}[:\\s]*\\n+([\\s\\S]*?)(?=\\n\\s*#{1,3}\\s|$)`,
-        "i",
-      );
-      const m = plannerOutput.match(rx);
-      return m?.[1]?.trim() || fallback;
-    };
-    return {
-      objectives: parse(
-        "Objectives?",
-        "Reduce flood exposure and urban carbon footprint by 40%, restore biodiversity corridors across the metropolitan district, and achieve CSRD ESRS E1 compliance by 2027.",
-      ),
-      stakeholders: parse(
-        "Stakeholders?",
-        "Municipal Water Authority, Urban Planning Directorate, Neighborhood Resilience Councils, Transit Authority, and ESG-aligned development partners.",
-      ),
-      timeline: parse(
-        "Timeline?",
-        "Phase 1: Feasibility & Baseline Assessment (Months 1–6)\nPhase 2: Infrastructure Procurement & Pilot Deployment (Months 7–18)\nPhase 3: Full-Scale Deployment & Continuous Monitoring (Months 19–36)",
-      ),
-    };
-  }, [plannerOutput]);
-
   // ── Timestamps ──────────────────────────────────────────────────────────
   const formattedDate = generatedAt.current.toLocaleDateString("en-GB", {
     weekday: "long",
@@ -245,207 +221,84 @@ export function ReportViewer({
   const executionDuration =
     elapsedMs > 0 ? `${(elapsedMs / 1000).toFixed(1)} s` : "64.8 s";
 
-  // ── Task 4 — Dynamic Technology Information ─────────────────────────────
-  const techInfo = useMemo(() => {
-    const totalAgents = agentStatuses ? agentStatuses.length : 9;
-    const timeVal = elapsedMs > 0 ? `${(elapsedMs / 1000).toFixed(1)} sec` : "64.8 sec";
-    
-    return {
-      agents: totalAgents,
-      executionTime: timeVal,
-      knowledgeSources: "18", // Static but correct count of retrieved RAG documents
-      platform: "LangGraph",
-      llm: "IBM watsonx.ai",
-      kb: "ChromaDB",
-      standard: "CSRD • ESRS • SDG",
-    };
-  }, [agentStatuses, elapsedMs]);
-
-  // ── Timeline phases parsed from sections ───────────────────────────────
-  const timelinePhases = useMemo(() => {
-    return sections.timeline
-      .split("\n")
-      .map((l) => l.trim())
-      .filter(Boolean)
-      .map((line, idx) => {
-        const periodMatch = line.match(/\(([^)]+)\)\s*$/);
-        const period = periodMatch?.[1] ?? "";
-        const titleLine = line.replace(/\(([^)]+)\)\s*$/, "").trim();
-        const phaseMatch = titleLine.match(/^(?:Phase\s*\d+[:\s–-]+)?(.+)$/i);
-        return {
-          id: idx,
-          phase: `Phase ${idx + 1}`,
-          title: phaseMatch?.[1]?.trim() ?? titleLine,
-          period,
-        };
-      });
-  }, [sections.timeline]);
-
   // ── PDF export — @react-pdf/renderer (programmatic, no canvas) ─────────
   const reportData = useMemo(
-    () => buildReportData({ plannerOutput, queryText, elapsedMs, agentStatuses }, generatedAt.current),
+    () => buildReportData({ plannerOutput, queryText, elapsedMs, agentStatuses, queryResponse }, generatedAt.current),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [reportId],
+    [plannerOutput, queryText, elapsedMs, agentStatuses, queryResponse, reportId],
   );
   const { generate: handleDownloadPdf } = usePdfExport(reportId, reportData);
 
-  // ── SDGs ────────────────────────────────────────────────────────────────
-  const featuredSdgs = ["6", "9", "11", "13", "15"];
+  // Redefine sections/render values dynamically from reportData
+  const objectives = reportData.objectives;
+  const stakeholders = reportData.stakeholders;
+  const featuredSdgs = reportData.featuredSdgs;
+  const policies = reportData.policies;
+  const risks = reportData.risks;
+  const references = reportData.references;
+  const agentLogData = reportData.agentLogRows;
+  const techInfo = reportData.techInfo;
 
-  // ── Policy recommendations ──────────────────────────────────────────────
-  const policies = [
-    {
-      title: "Stormwater Absorption Tax Credits",
-      description:
-        "Introduce stormwater absorption fee credits for local developers to incentivise permeable surface adoption and reduce municipal flood liability.",
-    },
-    {
-      title: "EU Green Deal Procurement Alignment",
-      description:
-        "Align construction sourcing standards with EU Green Deal compliance, mandating low-carbon materials across all capital works exceeding €500k.",
-    },
-    {
-      title: "CSRD ESRS E1 Reporting Mandate",
-      description:
-        "Mandate CSRD ESRS E1 reporting across all municipal transport contractors by 2026, establishing a Scope 3 emissions baseline for the district.",
-    },
-  ];
+  const timelinePhases = useMemo(() => {
+    return reportData.timelinePhases.map((phase, idx) => ({
+      id: idx,
+      phase: phase.phase,
+      title: phase.title,
+      period: phase.period,
+    }));
+  }, [reportData.timelinePhases]);
 
-  // ── Environmental metrics ────────────────────────────────────────────────
-  const envMetrics = [
-    { label: "Stormwater Retained",   value: "1.2 M m³/yr",  icon: Droplets, color: "#26BDE2" },
-    { label: "Urban Canopy Growth",   value: "+18%",          icon: Trees,    color: "#56C02B" },
-    { label: "Impervious Area Restored", value: "42 ha",      icon: Footprints, color: "#4C9F38" },
-    { label: "Eco-Corridors Connected",  value: "4 paths",    icon: Route,    color: "#FD9D24" },
-  ] as const;
-
-  // ── Financial budget allocation ──────────────────────────────────────────
-  const financialRows = [
-    { label: "Blue-Green Infrastructure Sourcing", value: 42, color: "#26BDE2" },
-    { label: "Transit & Network Decarbonization",  value: 24, color: "#56C02B" },
-    { label: "Community Engagement & Education",   value: 18, color: "#FD9D24" },
-    { label: "Monitoring & Reporting Systems",     value: 10, color: "#FD6925" },
-    { label: "Contingency & Risk Reserve",         value: 6,  color: "#9b9b9b" },
-  ];
-
-  const financialKpis = [
-    { label: "Total CAPEX",    value: "€24 M",  icon: Landmark },
-    { label: "Expected ROI",   value: "14.2%",  icon: TrendingUp },
-    { label: "Payback Period", value: "9.4 yr", icon: Percent },
-  ] as const;
-
-  // ── Risk table ───────────────────────────────────────────────────────────
-  const risks = [
-    { factor: "Capital Cost Overruns",      likelihood: "Medium",   mitigation: "Phased procurement & contingency budget" },
-    { factor: "Regulatory / Zoning Delays", likelihood: "Low",      mitigation: "Early stakeholder alignment programme" },
-    { factor: "Community Opposition",       likelihood: "Low",      mitigation: "Co-design workshops & benefits-sharing" },
-    { factor: "Climate Extreme Events",     likelihood: "High",     mitigation: "Resilience stress-testing in design phase" },
-    { factor: "Supply Chain Disruptions",   likelihood: "Medium",   mitigation: "Dual-sourcing and buffer stock agreements" },
-  ];
-
-  // ── References (With optional metadata matching Priority 2) ────────────
-  const references = useMemo<ReferenceItem[]>(() => {
-    return [
-      {
-        title: "IPCC AR7 Synthesis Report on Climate Change",
-        publisher: "Intergovernmental Panel on Climate Change (IPCC)",
-        year: "2025",
-        type: "Synthesis Report",
-        retrievedBy: "Research Agent",
-        url: "https://www.ipcc.ch/report/ar7/syr/",
-      },
-      {
-        title: "EU Green Deal & Taxonomy Regulatory Framework",
-        publisher: "European Commission",
-        year: "2026",
-        type: "Regulatory Framework",
-        retrievedBy: "Research Agent",
-        url: "https://ec.europa.eu/info/strategy/priorities-2019-2024/european-green-deal_en",
-      },
-      {
-        title: "Rotterdam Regional Flood Risk Attenuation Guidelines",
-        publisher: "Rotterdam Municipal Works Directorate",
-        year: "2024",
-        type: "Technical Guideline",
-        retrievedBy: "Research Agent",
-        url: "",
-      },
-      {
-        title: "UN SDG 11 Municipal Case Studies Portfolio",
-        publisher: "United Nations DESA Division",
-        year: "2025",
-        type: "Case Studies Portfolio",
-        retrievedBy: "Research Agent",
-        url: "https://sdgs.un.org/goals/goal11",
-      },
-    ];
-  }, []);
-
-  // ── AI Execution Log Data (Derived from live events or baseline) ────────
-  const agentLogData = useMemo(() => {
-    const baselines: Record<string, { duration: number; order: number }> = {
-      Planner:       { duration: 11.8, order: 1 },
-      Research:      { duration: 5.8,  order: 2 },
-      SDG:           { duration: 3.5,  order: 3 },
-      Policy:        { duration: 5.5,  order: 4 },
-      Environmental: { duration: 8.9,  order: 5 },
-      Finance:       { duration: 5.7,  order: 6 },
-      Risk:          { duration: 6.6,  order: 7 },
-      Timeline:      { duration: 7.1,  order: 8 },
-      Report:        { duration: 9.5,  order: 9 },
+  const envMetrics = useMemo(() => {
+    const iconMap: Record<string, typeof Droplets> = {
+      "stormwater": Droplets,
+      "water": Droplets,
+      "canopy": Trees,
+      "trees": Trees,
+      "biodiversity": Trees,
+      "impervious": Footprints,
+      "footprint": Footprints,
+      "co-benefits": Footprints,
+      "eco-corridors": Route,
+      "corridors": Route,
+      "paths": Route,
     };
-
-    if (!agentStatuses || agentStatuses.length === 0) {
-      return Object.keys(baselines).map((name) => ({
-        name,
-        status: "Completed",
-        duration: `${baselines[name].duration.toFixed(1)} sec`,
-        order: baselines[name].order,
-      }));
-    }
-
-    const completed = agentStatuses
-      .filter((a) => a.status === "done" && a.completedAt)
-      .sort((a, b) => new Date(a.completedAt!).getTime() - new Date(b.completedAt!).getTime());
-
-    return ["Planner", "Research", "SDG", "Policy", "Environmental", "Finance", "Risk", "Timeline", "Report"].map((name) => {
-      const live = agentStatuses.find((a) => a.name === name);
-      if (!live) {
-        return {
-          name,
-          status: "Queued",
-          duration: "-",
-          order: "-",
-        };
+    return reportData.envMetrics.map((m) => {
+      const lowerLabel = m.label.toLowerCase();
+      let icon = Leaf;
+      for (const [k, v] of Object.entries(iconMap)) {
+        if (lowerLabel.includes(k)) {
+          icon = v;
+          break;
+        }
       }
-
-      let statusLabel = "Queued";
-      if (live.status === "running") statusLabel = "Running";
-      else if (live.status === "done") statusLabel = "Completed";
-      else if (live.status === "error") statusLabel = "Failed";
-
-      let durationStr = "-";
-      if (live.startedAt && live.completedAt) {
-        const diff = (new Date(live.completedAt).getTime() - new Date(live.startedAt).getTime()) / 1000;
-        durationStr = `${diff.toFixed(1)} sec`;
-      } else if (live.status === "done") {
-        durationStr = `${(baselines[name]?.duration ?? 5.0).toFixed(1)} sec`;
-      }
-
-      let orderIdx = "-";
-      if (live.status === "done") {
-        const idx = completed.findIndex((c) => c.name === name);
-        orderIdx = idx !== -1 ? String(idx + 1) : String(baselines[name]?.order ?? "-");
-      }
-
-      return {
-        name,
-        status: statusLabel,
-        duration: durationStr,
-        order: orderIdx,
-      };
+      return { ...m, icon };
     });
-  }, [agentStatuses]);
+  }, [reportData.envMetrics]);
+
+  const financialRows = reportData.financialRows;
+
+  const financialKpis = useMemo(() => {
+    const iconMap: Record<string, typeof Landmark> = {
+      "capex": Landmark,
+      "cost": Landmark,
+      "capital": Landmark,
+      "roi": TrendingUp,
+      "return": TrendingUp,
+      "payback": Percent,
+      "period": Percent,
+    };
+    return reportData.financialKpis.map((k) => {
+      const lowerLabel = k.label.toLowerCase();
+      let icon = Coins;
+      for (const [key, val] of Object.entries(iconMap)) {
+        if (lowerLabel.includes(key)) {
+          icon = val;
+          break;
+        }
+      }
+      return { ...k, icon };
+    });
+  }, [reportData.financialKpis]);
 
   // ────────────────────────────────────────────────────────────────────────
   return (

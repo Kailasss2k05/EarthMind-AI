@@ -1,5 +1,20 @@
-from dotenv import load_dotenv
+"""
+settings.py
+-----------
+Central configuration for EarthMind AI.
+
+All values are read from environment variables with sensible defaults.
+In production, provide all values via a .env file or deployment secrets.
+
+Rules
+-----
+• Every attribute is defined EXACTLY ONCE.
+• DATABASE_URL has a default so startup never crashes when .env is absent.
+• REDIS_URL is the canonical Redis connection string.
+"""
+
 import os
+from dotenv import load_dotenv
 
 # Load environment variables from backend/.env
 load_dotenv()
@@ -7,109 +22,76 @@ load_dotenv()
 
 class Settings:
 
-    MODEL_PROVIDER = os.getenv(
-        "MODEL_PROVIDER",
-        "ollama"
-    )
-
-    MODEL_NAME = os.getenv(
-        "MODEL_NAME",
-        "llama3.2:3b"
-    )
-
-    TEMPERATURE = float(
-
-        os.getenv(
-
-            "TEMPERATURE",
-
-            0.3
-
-        )
-
-    )
-
     # ===========================
     # App
     # ===========================
-    APP_NAME = os.getenv("APP_NAME", "EarthMind AI")
-    APP_VERSION = os.getenv("APP_VERSION", "0.1.0")
-    DEBUG = os.getenv("DEBUG", "True").lower() == "true"
+    APP_NAME: str = os.getenv("APP_NAME", "EarthMind AI")
+    APP_VERSION: str = os.getenv("APP_VERSION", "0.1.0")
+    DEBUG: bool = os.getenv("DEBUG", "True").lower() == "true"
 
     # ===========================
     # Server
     # ===========================
-    HOST = os.getenv("HOST", "127.0.0.1")
-    PORT = int(os.getenv("PORT", 8000))
+    HOST: str = os.getenv("HOST", "127.0.0.1")
+    PORT: int = int(os.getenv("PORT", 8000))
 
     # ===========================
-    # Ollama
+    # Ollama / LLM
     # ===========================
-    MODEL_NAME = os.getenv("MODEL_NAME", "llama3.2:3b")
-    OLLAMA_BASE_URL = os.getenv(
-
-        "OLLAMA_BASE_URL",
-
-        "http://localhost:11434"
-
-    )
-    TEMPERATURE = float(os.getenv("TEMPERATURE", 0.3))
+    MODEL_PROVIDER: str = os.getenv("MODEL_PROVIDER", "ollama")
+    MODEL_NAME: str = os.getenv("MODEL_NAME", "llama3.2:3b")
+    OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    TEMPERATURE: float = float(os.getenv("TEMPERATURE", 0.3))
 
     # ===========================
     # PostgreSQL
     # ===========================
-    POSTGRES_HOST = os.getenv("POSTGRES_HOST", "localhost")
-    POSTGRES_PORT = int(os.getenv("POSTGRES_PORT", 5432))
-    POSTGRES_DB = os.getenv("POSTGRES_DB", "earthmind")
-    POSTGRES_USER = os.getenv("POSTGRES_USER", "postgres")
-    POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "postgres")
+    POSTGRES_HOST: str = os.getenv("POSTGRES_HOST", "localhost")
+    POSTGRES_PORT: int = int(os.getenv("POSTGRES_PORT", 5432))
+    POSTGRES_DB: str = os.getenv("POSTGRES_DB", "earthmind")
+    POSTGRES_USER: str = os.getenv("POSTGRES_USER", "postgres")
+    POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD", "postgres")
+
+    # DATABASE_URL has an explicit fallback so the app never crashes
+    # on import when .env is absent (e.g. CI, fresh Docker container).
+    DATABASE_URL: str = os.getenv(
+        "DATABASE_URL",
+        "postgresql://postgres:postgres@localhost:5432/earthmind",
+    )
 
     # ===========================
     # Redis
     # ===========================
-    REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
-    REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+    REDIS_HOST: str = os.getenv("REDIS_HOST", "localhost")
+    REDIS_PORT: int = int(os.getenv("REDIS_PORT", 6379))
+    # REDIS_URL is the canonical connection string; preferred over host+port.
+    REDIS_URL: str = os.getenv(
+        "REDIS_URL",
+        f"redis://{os.getenv('REDIS_HOST', 'localhost')}:{os.getenv('REDIS_PORT', '6379')}",
+    )
 
     # ===========================
     # ChromaDB
     # ===========================
-    CHROMA_DB_PATH = os.getenv(
-        "CHROMA_DB_PATH",
-        "../data/vector_store"
-    )
+    CHROMA_DB_PATH: str = os.getenv("CHROMA_DB_PATH", "../data/vector_store")
 
     # ===========================
     # Agent Settings
     # ===========================
-    MAX_ITERATIONS = int(os.getenv("MAX_ITERATIONS", 10))
-    TOP_K = int(os.getenv("TOP_K", 5))
-
-    #==========================
-    DATABASE_URL = os.getenv("DATABASE_URL")
+    MAX_ITERATIONS: int = int(os.getenv("MAX_ITERATIONS", 10))
+    TOP_K: int = int(os.getenv("TOP_K", 5))
 
     # ===========================
     # WebSocket
     # ===========================
-    WEBSOCKET_PING_INTERVAL = int(
-        os.getenv("WEBSOCKET_PING_INTERVAL", 20)
-    )
+    WEBSOCKET_PING_INTERVAL: int = int(os.getenv("WEBSOCKET_PING_INTERVAL", 20))
 
     # ===========================
-    # Frontend
+    # CORS / Frontend
     # ===========================
-    FRONTEND_URL = os.getenv(
-        "FRONTEND_URL",
-        "http://localhost:3000"
-    )
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
-    # ===========================
-    # CORS
-    # ===========================
-    # Comma-separated list of allowed origins read from .env.
-    # Example .env value:
-    #   ALLOWED_ORIGINS=https://app.earthmind.ai,https://staging.earthmind.ai
-    # In development the four local origins below are used automatically.
-    _raw_origins = os.getenv(
+    _raw_origins: str = os.getenv(
         "ALLOWED_ORIGINS",
         "http://localhost:3000,"
         "http://127.0.0.1:3000,"

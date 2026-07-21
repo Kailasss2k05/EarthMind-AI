@@ -1,35 +1,54 @@
 import json
 
 from app.core.base_agent import BaseAgent
+from app.core.utils import build_references_from_chunks, format_chunks_as_references
 from app.prompts.sdg_prompt import SDG_PROMPT
 from app.rag.retriever import retrieve
 
 
 class SDGAgent(BaseAgent):
 
-    def build_prompt(self, state):
+    def build_prompt(self, state: dict) -> str:
+        outputs = state.get("outputs", {})
 
-        outputs = state["outputs"]
+        # Domain-specific SDG evidence from ChromaDB
+        evidence = retrieve("sdg", state.get("query", ""))
+        if evidence:
+            formatted_evidence = "\n\n".join(
+                f"Source: {doc.get('source', 'Unknown')}\n"
+                f"Page: {doc.get('page', 'N/A')}\n\n"
+                f"{doc.get('text', '')}"
+                for doc in evidence
+            )
+        else:
+            formatted_evidence = "No relevant documents found in the knowledge base."
 
-        evidence = retrieve("sdg", state["query"])
-
-        formatted_evidence = "\n\n".join(
-            f"Source: {doc['source']}\n"
-            f"Page: {doc['page']}\n\n"
-            f"{doc['text']}"
-            for doc in evidence
-        )
+        # Shared references from ResearchAgent retrieval
+        retrieved_context = state.get("retrieved_context", [])
+        references_context = format_chunks_as_references(retrieved_context)
 
         return SDG_PROMPT.format(
-            query=state["query"],
+            query=state.get("query", ""),
             planner_output=json.dumps(
                 state.get("planner_output", {}),
-                indent=2
+                indent=2,
             ),
-            research_output=outputs.get("research", {}),
+            research_output=json.dumps(
+                outputs.get("research", {}),
+                indent=2,
+            ),
             shared_missing_information=json.dumps(
                 state.get("missing_information", []),
-                indent=2
+                indent=2,
             ),
             evidence=formatted_evidence,
+            references_context=references_context,
         )
+
+    def run(self, state: dict) -> dict:
+        """Run with post-processing: populate references from retrieved_context if empty."""
+        result = super().run(state)
+        if isinstance(result, dict) and not result.get("references"):
+            chunks = state.get("retrieved_context", [])
+            result["references"] = build_references_from_chunks(chunks)
+        return result

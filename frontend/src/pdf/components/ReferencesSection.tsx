@@ -22,7 +22,7 @@ export function ReferencesSection({ data }: Props) {
     >
       <View style={S.sectionHeader}>
         <View style={S.sectionHeaderDot} />
-        <Text style={S.h2}>References &amp; Sources</Text>
+        <Text style={S.h2}>References & Sources</Text>
       </View>
       <Text style={{ ...S.bodySmall, marginBottom: 12 }}>
         Evidence base for this report
