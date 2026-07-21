@@ -52,3 +52,46 @@ class QueryHistoryListResponse(BaseModel):
     items: List[QueryHistoryItem] = Field(
         description="Query history records ordered by newest first.",
     )
+
+
+class ReportHistoryItem(BaseModel):
+    """
+    A single report history record returned by GET /api/v1/reports.
+    """
+    id: UUID = Field(description="Unique identifier of the report record.")
+    query_id: UUID = Field(description="Identifier of the associated query.")
+    original_query: str = Field(description="The original natural-language query.")
+    status: str = Field(description="Execution status, e.g. 'completed'.")
+    created_at: datetime = Field(description="UTC timestamp when the report was generated.")
+
+    model_config = {"from_attributes": True}
+
+
+class ReportHistoryListResponse(BaseModel):
+    """
+    Envelope returned by GET /api/v1/reports.
+    """
+    total: int = Field(description="Total number of report history records returned.")
+    items: List[ReportHistoryItem] = Field(
+        description="Report history records ordered by newest first.",
+    )
+
+
+class ReportDetailResponse(BaseModel):
+    """
+    Detailed report response returned by GET /api/v1/reports/{report_id}.
+    """
+    id: UUID = Field(description="Unique identifier of the report record.")
+    query_id: UUID = Field(description="Identifier of the associated query.")
+    original_query: str = Field(description="The original natural-language query.")
+    report: str = Field(description="The full generated markdown report.")
+    planner_output: Optional[dict] = Field(description="The JSON output from the planner.")
+    execution_time: float = Field(description="Wall-clock seconds taken by the pipeline.")
+    confidence: Optional[float] = Field(
+        default=None,
+        description="Aggregate confidence score.",
+    )
+    status: str = Field(description="Execution status, e.g. 'completed'.")
+    created_at: datetime = Field(description="UTC timestamp when the report was generated.")
+
+    model_config = {"from_attributes": True}

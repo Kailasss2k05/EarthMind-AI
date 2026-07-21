@@ -25,3 +25,7 @@ v1_router.include_router(ws_router, tags=["WebSocket"])
 # Document Upload — API for adding to the knowledge base.
 from app.api.routes import documents
 v1_router.include_router(documents.router, tags=["Documents"])
+
+# Reports — read-only API for generated reports.
+from app.api.routes import reports
+v1_router.include_router(reports.router, tags=["Reports"])

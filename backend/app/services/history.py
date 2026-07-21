@@ -30,7 +30,7 @@ import uuid
 from typing import Any
 
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.core.exceptions import DatabaseException
 from app.core.logger import logger
@@ -89,6 +89,85 @@ class HistoryService:
 
         logger.info("QueryHistory fetched -- total=%d records.", len(records))
         return records
+
+    def get_reports(
+        self, 
+        *, 
+        db: Session, 
+        skip: int = 0, 
+        limit: int = 100,
+        status: str | None = None,
+        query_str: str | None = None,
+        sort: str = "desc"
+    ) -> tuple[int, list[ReportHistory]]:
+        """
+        Retrieve paginated ``ReportHistory`` records with their associated query, newest first.
+
+        Returns
+        -------
+        tuple[int, list[ReportHistory]]
+            A tuple of (total_count, records).
+        """
+        try:
+            q = db.query(ReportHistory)
+            
+            if status or query_str:
+                q = q.join(QueryHistory)
+                if status:
+                    q = q.filter(QueryHistory.status == status)
+                if query_str:
+                    q = q.filter(QueryHistory.query.ilike(f"%{query_str}%"))
+
+            total = q.count()
+            
+            if sort == "asc":
+                q = q.order_by(ReportHistory.created_at.asc())
+            else:
+                q = q.order_by(ReportHistory.created_at.desc())
+            
+            if status or query_str:
+                from sqlalchemy.orm import contains_eager
+                q = q.options(contains_eager(ReportHistory.query))
+            else:
+                q = q.options(joinedload(ReportHistory.query))
+                
+            records = (
+                q.offset(skip)
+                .limit(limit)
+                .all()
+            )
+        except SQLAlchemyError as exc:
+            logger.error("HistoryService.get_reports failed. Error: %s", str(exc), exc_info=True)
+            raise DatabaseException("Failed to retrieve report history from the database.") from exc
+
+        logger.info("ReportHistory fetched -- skip=%d limit=%d total=%d", skip, limit, total)
+        return total, records
+
+    def get_report_by_id(self, *, db: Session, report_id: uuid.UUID) -> ReportHistory | None:
+        """
+        Retrieve a single ``ReportHistory`` record by ID, with its associated query.
+
+        Returns
+        -------
+        ReportHistory | None
+            The record if found, else None.
+        """
+        try:
+            record = (
+                db.query(ReportHistory)
+                .options(joinedload(ReportHistory.query))
+                .filter(ReportHistory.id == report_id)
+                .first()
+            )
+        except SQLAlchemyError as exc:
+            logger.error("HistoryService.get_report_by_id failed. Error: %s", str(exc), exc_info=True)
+            raise DatabaseException("Failed to retrieve report history from the database.") from exc
+
+        if record:
+            logger.info("ReportHistory fetched -- id=%s", record.id)
+        else:
+            logger.info("ReportHistory not found -- id=%s", report_id)
+        return record
 
     # ------------------------------------------------------------------
     # Write
