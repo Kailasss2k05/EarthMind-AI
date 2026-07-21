@@ -11,15 +11,21 @@ Flow
 4. Invoke the compiled LangGraph pipeline in a worker thread (non-blocking)
    so WebSocket events can be broadcast in real-time.
 5. Extract every field from the returned state and return a QueryResponse.
+6. Persist QueryHistory and ReportHistory via HistoryService (fire-and-forget
+   semantics: persistence failures are logged but never surface to the caller).
 """
 
+import time
 import uuid
 import asyncio
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, Request
+from sqlalchemy.orm import Session
 
 from app.orchestrator.graph import get_graph
 from app.schemas.query import QueryRequest, QueryResponse
 from app.core.logger import logger
+from app.services.postgres import get_db
+from app.services.history import history_service
 
 router = APIRouter()
 
@@ -33,7 +39,11 @@ router = APIRouter()
         "orchestration pipeline, and returns the full structured result."
     ),
 )
-async def run_query(fastapi_request: Request, request: QueryRequest) -> QueryResponse:
+async def run_query(
+    fastapi_request: Request,
+    request: QueryRequest,
+    db: Session = Depends(get_db),
+) -> QueryResponse:
     """
     Entry point for all agent execution.
 
@@ -66,9 +76,15 @@ async def run_query(fastapi_request: Request, request: QueryRequest) -> QueryRes
     # graph.invoke() is synchronous (LLM calls are blocking).
     # Running it in a thread pool prevents blocking the main event loop,
     # which allows WebSocket broadcasts to be delivered in real-time.
+    start_time = time.perf_counter()
     result = await asyncio.to_thread(get_graph().invoke, initial_state)
+    execution_time = time.perf_counter() - start_time
 
-    logger.info("[%s] Pipeline completed successfully.", request_id)
+    logger.info(
+        "[%s] Pipeline completed successfully in %.3fs.",
+        request_id,
+        execution_time,
+    )
 
     # ── Step 4: Build and return the typed response ───────────────────────────
     outputs = result.get("outputs", {})
@@ -82,12 +98,40 @@ async def run_query(fastapi_request: Request, request: QueryRequest) -> QueryRes
         if isinstance(chunk, dict)
     })
 
+    # ── Step 5: Persist history (fire-and-forget) ─────────────────────────────
+    # Persistence failures must never surface to the caller.  The user always
+    # receives their generated report regardless of database availability.
+    planner_output = result.get("planner_output", {})
+    report = outputs.get("report", "")
+    confidence = planner_output.get("confidence") if isinstance(planner_output, dict) else None
+
+    try:
+        query_record = history_service.save_query(
+            db=db,
+            query=request.query,
+            planner_output=planner_output,
+            execution_time=execution_time,
+            status="completed",
+            confidence=confidence,
+        )
+        history_service.save_report(
+            db=db,
+            query_id=query_record.id,
+            report=report,
+        )
+    except Exception:
+        logger.error(
+            "[%s] History persistence failed — response unaffected.",
+            request_id,
+            exc_info=True,
+        )
+
     return QueryResponse(
         request_id=request_id,
         status="completed",
         query=request.query,
-        planner_output=result.get("planner_output", {}),
-        report=outputs.get("report", ""),
+        planner_output=planner_output,
+        report=report,
         outputs={k: v for k, v in outputs.items() if k != "report"},
         agent_status=result.get("agent_status", {}),
         errors=result.get("errors", {}),

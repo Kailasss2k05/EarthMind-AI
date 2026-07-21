@@ -14,6 +14,10 @@ v1_router.include_router(health.router, tags=["Health"])
 # Query — single public entry point for multi-agent LangGraph execution.
 v1_router.include_router(query.router, tags=["Query"])
 
+# History — read-only API for past queries.
+from app.api.routes import history
+v1_router.include_router(history.router, tags=["History"])
+
 # WebSocket endpoint: /api/v1/ws
 # LangGraph will be wired into this router in a future iteration.
 v1_router.include_router(ws_router, tags=["WebSocket"])
