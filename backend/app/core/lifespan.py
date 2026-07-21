@@ -26,6 +26,7 @@ from app.services.postgres import engine
 from app.services.redis import redis_client
 from app.services.chromadb import chroma_health_check
 from app.core.logger import logger
+from app.database import init_database
 
 
 @asynccontextmanager
@@ -37,10 +38,17 @@ async def lifespan(app: FastAPI):
     logger.info("Starting up EarthMind AI Backend...")
 
     # ── PostgreSQL ─────────────────────────────────────────────────────────
+    # PostgreSQL
     try:
         with engine.connect() as connection:
             connection.execute(text("SELECT 1"))
+
         logger.info("Successfully connected to PostgreSQL.")
+
+        # Create tables if they don't exist
+        init_database()
+        logger.info("Database tables initialized successfully.")
+
     except Exception as e:
         logger.error("Failed to connect to PostgreSQL on startup: %s", e)
 
