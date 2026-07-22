@@ -29,3 +29,7 @@ v1_router.include_router(documents.router, tags=["Documents"])
 # Reports — read-only API for generated reports.
 from app.api.routes import reports
 v1_router.include_router(reports.router, tags=["Reports"])
+
+# Dashboard — aggregated statistics and recent history.
+from app.api.routes import dashboard
+v1_router.include_router(dashboard.router, tags=["Dashboard"])

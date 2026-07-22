@@ -28,11 +28,13 @@ def list_documents(domain: str) -> list[str]:
     """Return a sorted list of unique document filenames in a collection."""
     collection = get_or_create_collection(domain)
     data = collection.get(include=["metadatas"])
-    docs = {
-        metadata["filename"]
-        for metadata in data["metadatas"]
-        if metadata and "filename" in metadata
-    }
+    docs = set()
+    for metadata in data["metadatas"]:
+        if not metadata:
+            continue
+        filename = metadata.get("filename") or metadata.get("source")
+        if filename:
+            docs.add(filename)
     return sorted(docs)
 
 
@@ -97,3 +99,33 @@ def add_chunks_to_collection(
             metadatas=batch_metadatas,
         )
     print("✓ Storage completed.")
+
+
+def get_dashboard_statistics() -> dict:
+    """Return aggregated statistics for the dashboard."""
+    from app.rag.config import DOMAINS
+    
+    total_chunks = 0
+    total_documents = 0
+    domains_stats = []
+    
+    for domain in DOMAINS:
+        collection = get_or_create_collection(domain)
+        chunks = collection.count()
+        docs = list_documents(domain)
+        num_docs = len(docs)
+        
+        total_chunks += chunks
+        total_documents += num_docs
+        
+        domains_stats.append({
+            "domain": domain,
+            "documents": num_docs,
+            "chunks": chunks
+        })
+        
+    return {
+        "total_documents": total_documents,
+        "total_chunks": total_chunks,
+        "domains": domains_stats
+    }
