@@ -12,6 +12,7 @@
  *   3. Replace the `items` array below with a useQuery() call
  */
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Search,
@@ -37,6 +38,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { historyService, HistoryItem } from "@/services";
 
 export const Route = createFileRoute("/history")({
   head: () => ({
@@ -48,22 +50,28 @@ export const Route = createFileRoute("/history")({
   component: HistoryPage,
 });
 
-const items = [
-  { id: "h-014", title: "Urban flooding resilience — Rotterdam", loc: "Rotterdam, NL", date: "Today · 12:04", sdgs: ["11", "13", "6"], status: "Completed" },
-  { id: "h-013", title: "Zero-emission bus corridor design", loc: "Lisbon, PT", date: "Yesterday · 16:22", sdgs: ["11", "13"], status: "Completed" },
-  { id: "h-012", title: "District heating from wastewater", loc: "Copenhagen, DK", date: "2 days ago", sdgs: ["7", "11", "13"], status: "Draft" },
-  { id: "h-011", title: "Coastal mangrove restoration plan", loc: "Cebu, PH", date: "3 days ago", sdgs: ["13", "14", "15"], status: "Completed" },
-  { id: "h-010", title: "Circular textile industry roadmap", loc: "Milan, IT", date: "1 week ago", sdgs: ["12", "9"], status: "Archived" },
-  { id: "h-009", title: "Smart irrigation for arid regions", loc: "Marrakesh, MA", date: "2 weeks ago", sdgs: ["2", "6", "13"], status: "Completed" },
-];
-
 const statusStyle: Record<string, string> = {
   Completed: "bg-[oklch(0.72_0.16_160)]/12 text-[oklch(0.55_0.16_160)]",
+  completed: "bg-[oklch(0.72_0.16_160)]/12 text-[oklch(0.55_0.16_160)]",
   Draft: "bg-[oklch(0.85_0.08_290)]/25 text-[oklch(0.55_0.15_290)]",
   Archived: "bg-muted text-muted-foreground",
 };
 
 function HistoryPage() {
+  const [items, setItems] = useState<HistoryItem[]>([]);
+  
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await historyService.getHistory();
+        setItems(res.items);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    load();
+  }, []);
+
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-8">
       <PageHeader
@@ -114,23 +122,16 @@ function HistoryPage() {
                     <h3 className="font-display text-lg tracking-tight">{it.title}</h3>
                   </div>
                   <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {it.loc}</span>
-                    <span className="flex items-center gap-1 font-numeric"><Calendar className="h-3 w-3" /> {it.date}</span>
-                    <span className="font-numeric">ID {it.id}</span>
+                    <span className="flex items-center gap-1 font-numeric"><Calendar className="h-3 w-3" /> {new Date(it.created_at).toLocaleString()}</span>
+                    <span className="font-numeric">ID {it.id.split('-')[0]}</span>
+                    <span className="font-numeric">{it.type.toUpperCase()}</span>
                   </div>
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {it.sdgs.map((s) => (
-                      <span
-                        key={s}
-                        className="inline-flex h-6 items-center rounded-full border border-primary/20 bg-primary/5 px-2 font-numeric text-[11px] text-primary"
-                      >
-                        SDG {s}
-                      </span>
-                    ))}
+                  <div className="mt-3 flex flex-wrap gap-1.5 text-sm text-muted-foreground">
+                    {it.summary}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge className={cn("rounded-full", statusStyle[it.status])}>{it.status}</Badge>
+                  <Badge className={cn("rounded-full", statusStyle[it.status] || "bg-muted text-foreground/80")}>{it.status}</Badge>
                   <Button asChild size="sm" className="rounded-full">
                     <Link to="/reports">Open</Link>
                   </Button>

@@ -14,7 +14,7 @@
  *   3. Replace the `docs` array below with a useQuery() call
  */
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Search,
@@ -45,6 +45,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { documentService } from "@/services";
 
 export const Route = createFileRoute("/documents")({
   head: () => ({
@@ -57,6 +58,7 @@ export const Route = createFileRoute("/documents")({
 });
 
 type Doc = {
+  id: string;
   name: string;
   kind: "pdf" | "docx" | "csv" | "image";
   size: string;
@@ -64,16 +66,22 @@ type Doc = {
   status: "indexed" | "pending";
 };
 
-const docs: Doc[] = [
-  { name: "Rotterdam-flood-2025.pdf", kind: "pdf", size: "4.2 MB", date: "Jul 18, 2026", status: "indexed" },
-  { name: "supplier-emissions.csv", kind: "csv", size: "1.1 MB", date: "Jul 17, 2026", status: "indexed" },
-  { name: "urban-canopy-map.png", kind: "image", size: "3.4 MB", date: "Jul 16, 2026", status: "pending" },
-  { name: "esrs-e1-narrative.docx", kind: "docx", size: "820 KB", date: "Jul 14, 2026", status: "indexed" },
-  { name: "cmip7-projections.pdf", kind: "pdf", size: "12.8 MB", date: "Jul 11, 2026", status: "indexed" },
-  { name: "district-heating.pdf", kind: "pdf", size: "2.6 MB", date: "Jul 10, 2026", status: "indexed" },
-  { name: "supplier-lca.csv", kind: "csv", size: "684 KB", date: "Jul 08, 2026", status: "pending" },
-  { name: "coastline-satellite.png", kind: "image", size: "6.1 MB", date: "Jul 07, 2026", status: "indexed" },
-];
+function inferKind(filename: string): "pdf" | "docx" | "csv" | "image" {
+  const ext = filename.split(".").pop()?.toLowerCase();
+  if (ext === "pdf") return "pdf";
+  if (ext === "docx" || ext === "doc") return "docx";
+  if (ext === "csv" || ext === "xlsx") return "csv";
+  if (["png", "jpg", "jpeg", "svg"].includes(ext || "")) return "image";
+  return "pdf"; // default fallback
+}
+
+function formatSize(bytes: number) {
+  if (bytes === 0) return "Unknown";
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+}
 
 const iconMap = {
   pdf: FileText,
@@ -88,7 +96,7 @@ const colorMap = {
   image: "bg-primary/12 text-primary",
 };
 
-function DocRowActions() {
+function DocRowActions({ id, onDelete }: { id: string; onDelete: (id: string) => void }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -100,7 +108,9 @@ function DocRowActions() {
         <DropdownMenuItem><Eye className="mr-2 h-4 w-4" /> Preview</DropdownMenuItem>
         <DropdownMenuItem><Download className="mr-2 h-4 w-4" /> Download</DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="text-destructive"><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem>
+        <DropdownMenuItem className="text-destructive" onClick={() => onDelete(id)}>
+          <Trash2 className="mr-2 h-4 w-4" /> Delete
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -108,6 +118,37 @@ function DocRowActions() {
 
 function DocumentsPage() {
   const [view, setView] = useState<"grid" | "list">("grid");
+  const [docs, setDocs] = useState<Doc[]>([]);
+
+  const fetchDocs = async () => {
+    try {
+      const res = await documentService.getDocuments();
+      const formatted = res.items.map(item => ({
+        id: item.id,
+        name: item.filename,
+        kind: inferKind(item.filename),
+        size: formatSize(item.size),
+        date: item.uploaded_at ? item.uploaded_at.split("T")[0] : "Unknown",
+        status: "indexed" as const,
+      }));
+      setDocs(formatted);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  useEffect(() => {
+    fetchDocs();
+  }, []);
+
+  const handleDelete = async (id: string) => {
+    try {
+      await documentService.deleteDocument(id);
+      fetchDocs();
+    } catch (e) {
+      console.error("Failed to delete document", e);
+    }
+  };
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-8">
@@ -161,7 +202,7 @@ function DocumentsPage() {
                   <div className={cn("rounded-2xl p-3", colorMap[d.kind])}>
                     <Icon className="h-6 w-6" />
                   </div>
-                  <DocRowActions />
+                  <DocRowActions id={d.id} onDelete={handleDelete} />
                 </div>
                 <p className="mt-4 truncate text-sm font-medium">{d.name}</p>
                 <p className="mt-1 font-numeric text-[11px] text-muted-foreground">{d.size} · {d.date}</p>
@@ -215,7 +256,7 @@ function DocumentsPage() {
                           <Badge className="rounded-full bg-muted text-muted-foreground">Pending</Badge>
                         )}
                       </td>
-                      <td className="py-3 text-right"><DocRowActions /></td>
+                      <td className="py-3 text-right"><DocRowActions id={d.id} onDelete={handleDelete} /></td>
                     </tr>
                   );
                 })}

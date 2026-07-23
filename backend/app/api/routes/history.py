@@ -5,34 +5,40 @@ This module exposes endpoints for clients to retrieve previously
 executed sustainability queries and their statuses.
 """
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
+from typing import Optional
 
 from app.core.logger import logger
 from app.services.postgres import get_db
 from app.services.history import history_service
-from app.schemas.history import QueryHistoryListResponse
+from app.schemas.history import HistoryListResponse
 
 router = APIRouter()
 
-
 @router.get(
     "/history",
-    response_model=QueryHistoryListResponse,
-    summary="List all executed queries",
-    description="Returns a list of all query history records, ordered by newest first.",
+    response_model=HistoryListResponse,
+    summary="List combined query and report history",
+    description="Returns a paginated list of all combined history records, ordered by newest first.",
 )
-def get_query_history(db: Session = Depends(get_db)) -> QueryHistoryListResponse:
+def get_history(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
+    query: Optional[str] = Query(None),
+    sort: str = Query("desc"),
+    db: Session = Depends(get_db)
+) -> HistoryListResponse:
     """
-    Fetch all query history records.
+    Fetch all history records (queries and reports) combined.
     """
-    logger.info("Fetching query history list")
+    logger.info("Fetching combined history list")
     
-    # Retrieve records using the service
-    records = history_service.get_query_history(db=db)
+    total, items = history_service.get_combined_history(
+        db=db, skip=skip, limit=limit, query_str=query, sort=sort
+    )
     
-    # Build and return the response envelope
-    return QueryHistoryListResponse(
-        total=len(records),
-        items=records
+    return HistoryListResponse(
+        total=total,
+        items=items
     )

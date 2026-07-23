@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Bot, Cpu, Play, Pause, Settings2, Sparkles } from "lucide-react";
 
 import { PageHeader, Panel } from "@/components/ui-parts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { agents } from "@/lib/mock-data";
+import { agentService, AgentItem } from "@/services";
 
 export const Route = createFileRoute("/agents")({
   head: () => ({
@@ -24,6 +25,20 @@ const statusStyles: Record<string, string> = {
 };
 
 function AgentsPage() {
+  const [agents, setAgents] = useState<AgentItem[]>([]);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await agentService.getAgentStatus();
+        setAgents(res.agents);
+      } catch (err) {
+        console.error("Failed to load agent status", err);
+      }
+    }
+    load();
+  }, []);
+
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-8">
       <PageHeader
@@ -74,13 +89,13 @@ function AgentsPage() {
                 <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
                   Tasks
                 </p>
-                <p className="mt-1 font-display text-xl">{a.tasks.toLocaleString()}</p>
+                <p className="mt-1 font-display text-xl">{a.tasks_completed.toLocaleString()}</p>
               </div>
               <div className="rounded-2xl border border-border/50 p-3">
                 <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
                   Accuracy
                 </p>
-                <p className="mt-1 font-display text-xl">{a.accuracy}%</p>
+                <p className="mt-1 font-display text-xl">{a.accuracy_score}%</p>
               </div>
             </div>
 

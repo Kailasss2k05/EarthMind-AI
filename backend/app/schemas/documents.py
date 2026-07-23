@@ -42,3 +42,15 @@ class UploadDocumentResponse(BaseModel):
         ..., 
         description="True if new embeddings were generated, False otherwise"
     )
+
+class DocumentItem(BaseModel):
+    id: str
+    filename: str
+    domain: str
+    chunks: int
+    size: int
+    uploaded_at: Optional[str] = None
+
+class DocumentListResponse(BaseModel):
+    items: list[DocumentItem]
+

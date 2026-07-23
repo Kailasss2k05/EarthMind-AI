@@ -205,3 +205,152 @@ export interface DashboardStatsResponse {
   recent_reports: ReportHistoryItem[];
   recent_uploads: RecentUpload[];
 }
+
+// ─── REST: Knowledge Base ──────────────────────────────────────────────────
+
+export interface KnowledgeBaseResponse {
+  total_documents: number;
+  total_chunks: number;
+  collections: DomainStats[];
+  recent_uploads: RecentUpload[];
+}
+
+// ─── REST: Documents ───────────────────────────────────────────────────────
+
+export interface DocumentItem {
+  id: string;
+  filename: string;
+  domain: string;
+  chunks: number;
+  size: number;
+  uploaded_at: string | null;
+}
+
+export interface DocumentListResponse {
+  items: DocumentItem[];
+}
+
+// ─── REST: Reports ─────────────────────────────────────────────────────────
+
+export interface ReportHistoryItemEnhanced {
+  id: string;
+  query_id: string;
+  original_query: string;
+  status: string;
+  title: string;
+  summary: string;
+  created_at: string;
+}
+
+export interface ReportHistoryListResponse {
+  total: number;
+  items: ReportHistoryItemEnhanced[];
+}
+
+// ─── REST: History ─────────────────────────────────────────────────────────
+
+export interface HistoryItem {
+  id: string;
+  type: string;
+  status: string;
+  created_at: string;
+  title: string;
+  summary: string;
+}
+
+export interface HistoryListResponse {
+  total: number;
+  items: HistoryItem[];
+}
+
+// ─── REST: Analytics ───────────────────────────────────────────────────────
+
+export interface TimeSeriesDataPoint {
+  date: string;
+  value: number;
+}
+
+export interface AgentStats {
+  executions: number;
+  last_run: string | null;
+  average_execution_time: number;
+}
+
+export interface AnalyticsTimeBucket {
+  queries_per_period: TimeSeriesDataPoint[];
+  reports_generated_per_period: TimeSeriesDataPoint[];
+  documents_uploaded_per_period: TimeSeriesDataPoint[];
+  knowledge_growth_per_period: TimeSeriesDataPoint[];
+}
+
+export interface AnalyticsResponse {
+  daily: AnalyticsTimeBucket;
+  weekly: AnalyticsTimeBucket;
+  monthly: AnalyticsTimeBucket;
+  documents_per_domain: Record<string, number>;
+  chunks_per_domain: Record<string, number>;
+  agent_statistics: Record<string, AgentStats>;
+}
+
+// ─── REST: Settings ────────────────────────────────────────────────────────
+
+export interface SettingsConfigured {
+  postgres: boolean;
+  chromadb: boolean;
+  redis: boolean;
+  watsonx: boolean;
+}
+
+export interface SettingsResponse {
+  organisation: string;
+  region: string;
+  notification_defaults: Record<string, boolean>;
+  configured: SettingsConfigured;
+}
+
+// ─── REST: System Status ───────────────────────────────────────────────────
+
+export interface ServiceConnection {
+  connected: boolean;
+}
+
+export interface WatsonxConfig {
+  configured: boolean;
+}
+
+export interface SystemServices {
+  postgres: ServiceConnection;
+  redis: ServiceConnection;
+  chromadb: ServiceConnection;
+  watsonx: WatsonxConfig;
+}
+
+export interface SystemStatusResponse {
+  services: SystemServices;
+  documents: number;
+  chunks: number;
+  knowledge_base: number;
+  agents: number;
+  embedding_model: string;
+}
+
+// ─── REST: Agents Status ───────────────────────────────────────────────────
+
+export interface AgentStatusDetail {
+  status: string;
+  executions: number;
+  last_run: string | null;
+  average_execution_time: number;
+}
+
+export interface AgentStatusResponse {
+  planner: AgentStatusDetail;
+  research: AgentStatusDetail;
+  policy: AgentStatusDetail;
+  environmental: AgentStatusDetail;
+  finance: AgentStatusDetail;
+  risk: AgentStatusDetail;
+  timeline: AgentStatusDetail;
+  report: AgentStatusDetail;
+}
+

@@ -48,7 +48,8 @@ export async function apiRequest<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
-  const url = `${API_BASE_URL}${path}`;
+  const normalizedPath = path.startsWith("/api") ? path : `/api/v1${path.startsWith("/") ? "" : "/"}${path}`;
+  const url = `${API_BASE_URL}${normalizedPath}`;
 
   const response = await fetch(url, {
     ...options,
@@ -94,4 +95,17 @@ export function post<T>(path: string, body: unknown): Promise<T> {
 /** Convenience: HTTP GET */
 export function get<T>(path: string): Promise<T> {
   return apiRequest<T>(path, { method: "GET" });
+}
+
+/** Convenience: HTTP PUT with a JSON body */
+export function put<T>(path: string, body: unknown): Promise<T> {
+  return apiRequest<T>(path, {
+    method: "PUT",
+    body: JSON.stringify(body),
+  });
+}
+
+/** Convenience: HTTP DELETE */
+export function del<T>(path: string): Promise<T> {
+  return apiRequest<T>(path, { method: "DELETE" });
 }

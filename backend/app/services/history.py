@@ -30,7 +30,7 @@ import uuid
 from typing import Any
 
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, contains_eager
 
 from app.core.exceptions import DatabaseException
 from app.core.logger import logger
@@ -142,6 +142,69 @@ class HistoryService:
 
         logger.info("ReportHistory fetched -- skip=%d limit=%d total=%d", skip, limit, total)
         return total, records
+
+    def get_combined_history(
+        self,
+        *,
+        db: Session,
+        skip: int = 0,
+        limit: int = 100,
+        query_str: str | None = None,
+        sort: str = "desc"
+    ) -> tuple[int, list[dict]]:
+        """
+        Retrieve paginated combined history of queries and reports.
+        """
+        try:
+            # Fetch queries
+            q_query = db.query(QueryHistory)
+            if query_str:
+                q_query = q_query.filter(QueryHistory.query.ilike(f"%{query_str}%"))
+            queries = q_query.all()
+
+            # Fetch reports
+            r_query = db.query(ReportHistory).join(QueryHistory)
+            if query_str:
+                r_query = r_query.filter(QueryHistory.query.ilike(f"%{query_str}%"))
+            r_query = r_query.options(contains_eager(ReportHistory.query))
+            reports = r_query.all()
+
+            combined = []
+            for q in queries:
+                combined.append({
+                    "id": str(q.id),
+                    "type": "query",
+                    "status": q.status,
+                    "created_at": q.created_at,
+                    "title": q.query[:50] + "..." if len(q.query) > 50 else q.query,
+                    "summary": f"Query execution completed in {q.execution_time:.2f}s"
+                })
+
+            for r in reports:
+                # Extract summary from report markdown (first 100 chars of content)
+                lines = [line.strip() for line in r.report.split("\n") if line.strip() and not line.startswith("#")]
+                summary = lines[0][:100] + "..." if lines and len(lines[0]) > 100 else (lines[0] if lines else "Report generated.")
+
+                title = r.query.query
+                combined.append({
+                    "id": str(r.id),
+                    "type": "report",
+                    "status": r.query.status,
+                    "created_at": r.created_at,
+                    "title": f"Report: {title[:40]}..." if len(title) > 40 else f"Report: {title}",
+                    "summary": summary
+                })
+
+            # Sort combined
+            combined.sort(key=lambda x: x["created_at"], reverse=(sort == "desc"))
+            total = len(combined)
+
+            # Paginate
+            paginated = combined[skip: skip + limit]
+            return total, paginated
+        except SQLAlchemyError as exc:
+            logger.error("HistoryService.get_combined_history failed. Error: %s", str(exc), exc_info=True)
+            raise DatabaseException("Failed to retrieve combined history from the database.") from exc
 
     def get_report_by_id(self, *, db: Session, report_id: uuid.UUID) -> ReportHistory | None:
         """
