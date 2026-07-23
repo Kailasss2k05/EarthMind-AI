@@ -145,3 +145,63 @@ export interface AgentState {
   completedAt?: string;
   errorReason?: string;
 }
+
+// ─── REST: History ─────────────────────────────────────────────────────────────
+
+export interface QueryHistoryItem {
+  id: string;
+  query: string;
+  status: string;
+  execution_time: number;
+  confidence: number | null;
+  created_at: string;
+}
+
+export interface ReportHistoryItem {
+  id: string;
+  query_id: string;
+  original_query: string;
+  status: string;
+  created_at: string;
+}
+
+// ─── REST: Dashboard ──────────────────────────────────────────────────────────
+
+export interface QueriesStats {
+  total: number;
+  completed: number;
+  failed: number;
+  processing: number;
+}
+
+export interface ReportsStats {
+  total: number;
+}
+
+export interface DomainStats {
+  domain: string;
+  documents: number;
+  chunks: number;
+}
+
+export interface KnowledgeBaseStats {
+  total_documents: number;
+  total_chunks: number;
+  domains: DomainStats[];
+}
+
+export interface RecentUpload {
+  filename: string;
+  domain: string;
+  uploaded_at: string;
+}
+
+export interface DashboardStatsResponse {
+  generated_at: string;
+  queries: QueriesStats;
+  reports: ReportsStats;
+  knowledge_base: KnowledgeBaseStats;
+  recent_queries: QueryHistoryItem[];
+  recent_reports: ReportHistoryItem[];
+  recent_uploads: RecentUpload[];
+}
