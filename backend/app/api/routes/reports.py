@@ -43,16 +43,26 @@ def get_reports_list(
     
     total, records = history_service.get_reports(db=db, skip=skip, limit=limit, status=status, query_str=query, sort=sort)
     
-    items = [
-        ReportHistoryItem(
-            id=r.id,
-            query_id=r.query_id,
-            original_query=r.query.query,
-            status=r.query.status,
-            created_at=r.created_at
+    items = []
+    for r in records:
+        # Extract summary from report markdown
+        lines = [line.strip() for line in r.report.split("\n") if line.strip() and not line.startswith("#")]
+        summary = lines[0][:100] + "..." if lines and len(lines[0]) > 100 else (lines[0] if lines else "Report generated.")
+
+        title = r.query.query
+        title = f"Report: {title[:40]}..." if len(title) > 40 else f"Report: {title}"
+
+        items.append(
+            ReportHistoryItem(
+                id=r.id,
+                query_id=r.query_id,
+                original_query=r.query.query,
+                status=r.query.status,
+                title=title,
+                summary=summary,
+                created_at=r.created_at
+            )
         )
-        for r in records
-    ]
     
     return ReportHistoryListResponse(
         total=total,

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import {
@@ -10,6 +11,11 @@ import {
   ArrowDownRight,
   ArrowRight,
   TrendingUp,
+  Search,
+  FileText,
+  Database,
+  Layers,
+  Loader2,
 } from "lucide-react";
 import {
   Area,
@@ -24,7 +30,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { emissionsSeries, activityFeed } from "@/lib/mock-data";
+import { emissionsSeries } from "@/lib/mock-data";
+import { getDashboardStats } from "@/services/dashboard.service";
+import type { DashboardStatsResponse, QueryHistoryItem, ReportHistoryItem, KnowledgeBaseStats } from "@/services/types";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -46,43 +54,77 @@ export const Route = createFileRoute("/")({
   component: OverviewPage,
 });
 
-const kpis = [
-  {
-    label: "Sustainability Score",
-    value: "92.4",
-    unit: "/100",
-    delta: 4.8,
-    icon: Leaf,
-    caption: "Aligned to 14 UN SDGs",
-  },
-  {
-    label: "Active Agents",
-    value: "12",
-    unit: "running",
-    delta: 2,
-    icon: Bot,
-    caption: "watsonx.ai · LangGraph",
-  },
-  {
-    label: "Emissions Avoided",
-    value: "1,055",
-    unit: "tCO₂e",
-    delta: -8.4,
-    icon: Activity,
-    caption: "vs. baseline scenario",
-    invertColors: true,
-  },
-  {
-    label: "Renewable Energy",
-    value: "83",
-    unit: "%",
-    delta: 5.1,
-    icon: Zap,
-    caption: "Solar · Wind · Hydro",
-  },
-];
-
 function OverviewPage() {
+  const [stats, setStats] = useState<DashboardStatsResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadStats() {
+      try {
+        setLoading(true);
+        const data = await getDashboardStats();
+        setStats(data);
+        setError(null);
+      } catch (err: any) {
+        setError(err.message || "Failed to load dashboard stats");
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadStats();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error || !stats) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="rounded-lg bg-red-500/10 p-6 text-center text-red-500">
+          <p className="font-medium">Failed to load dashboard</p>
+          <p className="text-sm opacity-80">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const kpis = [
+    {
+      label: "Total Queries",
+      value: stats.queries.total.toString(),
+      delta: 0,
+      icon: Search,
+      caption: `${stats.queries.completed} completed, ${stats.queries.failed} failed`,
+    },
+    {
+      label: "Total Reports",
+      value: stats.reports.total.toString(),
+      delta: 0,
+      icon: FileText,
+      caption: "Generated reports",
+    },
+    {
+      label: "Total Indexed Documents",
+      value: stats.knowledge_base.total_documents.toString(),
+      delta: 0,
+      icon: Database,
+      caption: "Across all domains",
+    },
+    {
+      label: "Total Chunks",
+      value: stats.knowledge_base.total_chunks.toString(),
+      delta: 0,
+      icon: Layers,
+      caption: "Vector embeddings",
+    },
+  ];
+
   return (
     <div className="relative mx-auto flex max-w-7xl flex-col gap-10 pb-16">
       <AnimatedBackdrop />
@@ -157,7 +199,12 @@ function OverviewPage() {
       {/* CHART + ACTIVITY */}
       <section className="grid gap-4 lg:grid-cols-3">
         <EmissionsChart />
-        <ActivityStream />
+        <ActivityStream queries={stats.recent_queries} reports={stats.recent_reports} />
+      </section>
+
+      {/* KNOWLEDGE BASE */}
+      <section className="grid gap-4 lg:grid-cols-1">
+        <KnowledgeBaseSection stats={stats.knowledge_base} />
       </section>
     </div>
   );
@@ -214,7 +261,7 @@ function KpiCard({
   value: string;
   unit?: string;
   delta: number;
-  icon: typeof Leaf;
+  icon: any;
   caption?: string;
   index?: number;
   invertColors?: boolean;
@@ -287,6 +334,9 @@ function EmissionsChart() {
             <h3 className="font-display text-2xl font-medium tracking-tight">
               Emissions trajectory
             </h3>
+            <Badge variant="outline" className="ml-2 font-normal text-muted-foreground text-[10px]">
+              Demo Analytics
+            </Badge>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
             12-month decomposition · tCO₂e · SBTi validated
@@ -393,55 +443,126 @@ const severityStyles: Record<string, string> = {
   success: "text-[color:var(--success)] bg-[color:var(--success)]/10",
   info: "text-primary bg-primary/10",
   warning: "text-[color:var(--warning)] bg-[color:var(--warning)]/12",
+  completed: "text-[color:var(--success)] bg-[color:var(--success)]/10",
+  processing: "text-primary bg-primary/10",
+  failed: "text-[color:var(--error)] bg-[color:var(--error)]/12",
 };
 
-function ActivityStream() {
+function ActivityStream({ queries, reports }: { queries: QueryHistoryItem[], reports: ReportHistoryItem[] }) {
+  const items = [
+    ...queries.map((q) => ({
+      id: q.id,
+      title: q.query,
+      type: "Query",
+      time: new Date(q.created_at),
+      status: q.status,
+    })),
+    ...reports.map((r) => ({
+      id: r.id,
+      title: r.original_query || "Generated Report",
+      type: "Report",
+      time: new Date(r.created_at),
+      status: r.status,
+    })),
+  ].sort((a, b) => b.time.getTime() - a.time.getTime());
+
   return (
     <motion.section
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, delay: 0.28 }}
-      className="glass rounded-2xl p-6"
+      className="glass flex flex-col rounded-2xl p-6 h-full max-h-[400px] overflow-hidden"
     >
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-display text-xl font-medium tracking-tight">
-            Agent activity
+            Recent Activity
           </h3>
           <p className="mt-1 text-xs text-muted-foreground">
-            Live signals from the runtime
+            Latest queries and reports
           </p>
         </div>
-        <Badge className="rounded-full border border-border/60 bg-white/60 font-normal text-muted-foreground shadow-none hover:bg-white/70 dark:bg-white/5">
-          Live
-        </Badge>
       </div>
-      <ul className="mt-5 space-y-4">
-        {activityFeed.slice(0, 5).map((a) => (
-          <li key={a.id} className="flex items-start gap-3">
-            <span
-              className={cn(
-                "mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full text-[11px] font-medium",
-                severityStyles[a.severity],
-              )}
+      <div className="mt-5 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+        {items.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No recent activity.</p>
+        ) : (
+          <ul className="space-y-4">
+            {items.map((a) => (
+              <li key={a.id} className="flex items-start gap-3">
+                <span
+                  className={cn(
+                    "mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full text-[11px] font-medium",
+                    severityStyles[a.status] || severityStyles.info,
+                  )}
+                >
+                  {a.type.charAt(0)}
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm leading-snug truncate" title={a.title}>
+                    <span className="font-medium">{a.type}</span>{" "}
+                    <span className="text-muted-foreground">{a.title}</span>
+                  </p>
+                  <p className="mt-0.5 font-numeric text-[11px] text-muted-foreground flex gap-2">
+                    <span>{a.time.toLocaleString()}</span>
+                    <span className="capitalize opacity-80 border-l border-border pl-2">{a.status}</span>
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </motion.section>
+  );
+}
+
+/* ---------- Knowledge Base ---------- */
+function KnowledgeBaseSection({ stats }: { stats: KnowledgeBaseStats }) {
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.55, delay: 0.3 }}
+      className="glass rounded-2xl p-6"
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Database className="h-5 w-5 text-primary" />
+          <h3 className="font-display text-2xl font-medium tracking-tight">
+            Knowledge Base
+          </h3>
+        </div>
+        <div className="flex gap-4">
+          <div className="text-right">
+            <p className="text-xs text-muted-foreground">Total Documents</p>
+            <p className="font-numeric text-lg font-medium">{stats.total_documents}</p>
+          </div>
+          <div className="text-right border-l border-border/50 pl-4">
+            <p className="text-xs text-muted-foreground">Total Chunks</p>
+            <p className="font-numeric text-lg font-medium">{stats.total_chunks}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {stats.domains.length === 0 ? (
+          <p className="text-sm text-muted-foreground col-span-full">No domains indexed yet.</p>
+        ) : (
+          stats.domains.map((domain) => (
+            <div
+              key={domain.domain}
+              className="rounded-xl border border-border/60 bg-white/40 p-4 transition-colors hover:bg-white/60 dark:bg-white/5 dark:hover:bg-white/10"
             >
-              {a.agent
-                .split(" ")
-                .map((w) => w[0])
-                .join("")}
-            </span>
-            <div className="min-w-0">
-              <p className="text-sm leading-snug">
-                <span className="font-medium">{a.agent}</span>{" "}
-                <span className="text-muted-foreground">{a.action}</span>
-              </p>
-              <p className="mt-0.5 font-numeric text-[11px] text-muted-foreground">
-                {a.time}
-              </p>
+              <p className="text-sm font-medium capitalize">{domain.domain}</p>
+              <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+                <span className="flex items-center gap-1.5"><FileText className="h-3 w-3" /> {domain.documents}</span>
+                <span className="flex items-center gap-1.5"><Layers className="h-3 w-3" /> {domain.chunks}</span>
+              </div>
             </div>
-          </li>
-        ))}
-      </ul>
+          ))
+        )}
+      </div>
     </motion.section>
   );
 }

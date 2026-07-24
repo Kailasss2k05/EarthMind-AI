@@ -11,8 +11,11 @@ Uses the shared ``get_chroma_client()`` singleton from
 """
 
 from chromadb.utils.batch_utils import create_batches
+from pathlib import Path
+from datetime import datetime
 
 from app.services.chromadb import get_chroma_client
+from app.rag.config import DOMAINS, RAW_DATA_DIR
 
 
 def get_or_create_collection(domain: str):
@@ -39,10 +42,15 @@ def list_documents(domain: str) -> list[str]:
 
 
 def delete_document(domain: str, filename: str) -> None:
-    """Delete all chunks belonging to one PDF."""
+    """Delete all chunks belonging to one PDF and remove the physical file."""
     collection = get_or_create_collection(domain)
     collection.delete(where={"filename": filename})
-    print(f"Deleted '{filename}' from '{domain}' collection.")
+    
+    file_path = RAW_DATA_DIR / domain / filename
+    if file_path.exists():
+        file_path.unlink()
+        
+    print(f"Deleted '{filename}' from '{domain}' collection and filesystem.")
 
 
 def is_pdf_indexed(domain: str, filename: str) -> bool:
@@ -129,3 +137,60 @@ def get_dashboard_statistics() -> dict:
         "total_chunks": total_chunks,
         "domains": domains_stats
     }
+
+def get_collection_statistics() -> list[dict]:
+    """Return statistics for each collection."""
+    return get_dashboard_statistics()["domains"]
+
+def get_recent_uploads(limit: int = 10) -> list[dict]:
+    """Return the most recently uploaded documents across all domains."""
+    all_files = []
+    for domain in DOMAINS:
+        domain_dir = RAW_DATA_DIR / domain
+        if domain_dir.exists():
+            for file_path in domain_dir.glob("*.pdf"):
+                stat = file_path.stat()
+                all_files.append({
+                    "id": f"{domain}:{file_path.name}",
+                    "filename": file_path.name,
+                    "domain": domain,
+                    "size": stat.st_size,
+                    "uploaded_at": datetime.fromtimestamp(stat.st_mtime).isoformat()
+                })
+    
+    # Sort by uploaded_at descending
+    all_files.sort(key=lambda x: x["uploaded_at"], reverse=True)
+    return all_files[:limit]
+
+def get_documents() -> list[dict]:
+    """Return all documents unified across domains with their chunk count and metadata."""
+    all_docs = []
+    for domain in DOMAINS:
+        collection = get_or_create_collection(domain)
+        # Using get to fetch metadata and calculate chunk counts per file
+        data = collection.get(include=["metadatas"])
+        
+        chunk_counts = {}
+        for meta in data["metadatas"]:
+            if not meta:
+                continue
+            filename = meta.get("filename") or meta.get("source")
+            if filename:
+                chunk_counts[filename] = chunk_counts.get(filename, 0) + 1
+                
+        domain_dir = RAW_DATA_DIR / domain
+        for filename, count in chunk_counts.items():
+            file_path = domain_dir / filename
+            size = file_path.stat().st_size if file_path.exists() else 0
+            uploaded_at = datetime.fromtimestamp(file_path.stat().st_mtime).isoformat() if file_path.exists() else None
+            
+            all_docs.append({
+                "id": f"{domain}:{filename}",
+                "filename": filename,
+                "domain": domain,
+                "chunks": count,
+                "size": size,
+                "uploaded_at": uploaded_at
+            })
+            
+    return all_docs

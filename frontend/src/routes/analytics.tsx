@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState, useEffect } from "react";
 import {
   Bar,
   BarChart,
@@ -13,7 +14,7 @@ import {
 import { TrendingDown, Droplets, Wind, Recycle } from "lucide-react";
 
 import { PageHeader, Panel, StatCard } from "@/components/ui-parts";
-import { emissionsSeries } from "@/lib/mock-data";
+import { analyticsService, AnalyticsResponse } from "@/services";
 
 export const Route = createFileRoute("/analytics")({
   head: () => ({
@@ -25,19 +26,33 @@ export const Route = createFileRoute("/analytics")({
   component: AnalyticsPage,
 });
 
-const waterData = emissionsSeries.map((m, i) => ({
-  month: m.month,
-  intensity: 42 - i * 1.2 + Math.sin(i) * 2,
-}));
-
-const wasteData = emissionsSeries.map((m, i) => ({
-  month: m.month,
-  landfill: 120 - i * 4,
-  recycled: 60 + i * 5,
-  composted: 20 + i * 2,
-}));
-
 function AnalyticsPage() {
+  const [data, setData] = useState<AnalyticsResponse | null>(null);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await analyticsService.getAnalytics();
+        setData(res);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    load();
+  }, []);
+
+  const waterData = data?.time_series.map(point => ({
+    month: new Date(point.date).toLocaleString('default', { month: 'short' }),
+    intensity: point.water_intensity,
+  })) || [];
+
+  const wasteData = data?.time_series.map(point => ({
+    month: new Date(point.date).toLocaleString('default', { month: 'short' }),
+    landfill: point.waste_landfill,
+    recycled: point.waste_recycled,
+    composted: point.waste_composted,
+  })) || [];
+
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-8">
       <PageHeader
@@ -47,10 +62,10 @@ function AnalyticsPage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="YoY reduction" value="12.7" unit="%" delta={2.4} icon={TrendingDown} accent="leaf" index={0} />
-        <StatCard label="Water intensity" value="28.4" unit="m³/unit" delta={-6.1} icon={Droplets} accent="ocean" index={1} />
-        <StatCard label="Air quality index" value="42" unit="AQI" delta={-3.8} icon={Wind} accent="solar" index={2} />
-        <StatCard label="Circularity" value="71" unit="%" delta={4.2} icon={Recycle} accent="violet" index={3} />
+        <StatCard label="YoY reduction" value={data?.kpis.yoy_reduction.value.toString() || "0"} unit="%" delta={data?.kpis.yoy_reduction.delta} icon={TrendingDown} accent="leaf" index={0} />
+        <StatCard label="Water intensity" value={data?.kpis.water_intensity.value.toString() || "0"} unit="m³/unit" delta={data?.kpis.water_intensity.delta} icon={Droplets} accent="ocean" index={1} />
+        <StatCard label="Air quality index" value={data?.kpis.aqi.value.toString() || "0"} unit="AQI" delta={data?.kpis.aqi.delta} icon={Wind} accent="solar" index={2} />
+        <StatCard label="Circularity" value={data?.kpis.circularity.value.toString() || "0"} unit="%" delta={data?.kpis.circularity.delta} icon={Recycle} accent="violet" index={3} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -111,34 +126,15 @@ function AnalyticsPage() {
         description="Compare policy pathways against your current trajectory"
       >
         <div className="grid gap-4 md:grid-cols-3">
-          {[
-            {
-              name: "Business as usual",
-              value: "1,240 tCO₂e",
-              detail: "+17% by 2030",
-              tone: "destructive",
-            },
-            {
-              name: "Committed pathway",
-              value: "620 tCO₂e",
-              detail: "−41% by 2030",
-              tone: "leaf",
-            },
-            {
-              name: "Ambitious 1.5°C",
-              value: "310 tCO₂e",
-              detail: "−71% by 2030",
-              tone: "ocean",
-            },
-          ].map((s) => (
+          {(data?.scenarios || []).map((s) => (
             <div
               key={s.name}
               className={`rounded-2xl border p-5 ${
-                s.tone === "destructive"
+                s.name.toLowerCase().includes("usual")
                   ? "border-destructive/30 bg-destructive/5"
-                  : s.tone === "leaf"
-                  ? "border-[oklch(0.65 0.22 290)]/40 bg-[oklch(0.65 0.22 290)]/8"
-                  : "border-[oklch(0.62 0.18 275)]/40 bg-[oklch(0.62 0.18 275)]/8"
+                  : s.name.toLowerCase().includes("ambitious")
+                  ? "border-[oklch(0.62 0.18 275)]/40 bg-[oklch(0.62 0.18 275)]/8"
+                  : "border-[oklch(0.65 0.22 290)]/40 bg-[oklch(0.65 0.22 290)]/8"
               }`}
             >
               <p className="text-xs uppercase tracking-widest text-muted-foreground">

@@ -81,6 +81,13 @@ class BaseAgent(ABC):
 
             result = json.loads(json_text)
 
+            if not isinstance(result, dict):
+                raise json.JSONDecodeError(
+                    "Parsed JSON is not a dictionary.",
+                    json_text,
+                    0,
+                )
+
             # Calculate confidence
             result["confidence_score"] = calculate_confidence(result)
 

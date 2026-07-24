@@ -62,9 +62,29 @@ class ReportHistoryItem(BaseModel):
     query_id: UUID = Field(description="Identifier of the associated query.")
     original_query: str = Field(description="The original natural-language query.")
     status: str = Field(description="Execution status, e.g. 'completed'.")
+    title: str = Field(description="Generated title derived from the query.", default="")
+    summary: str = Field(description="Generated summary extracted from the report.", default="")
     created_at: datetime = Field(description="UTC timestamp when the report was generated.")
 
     model_config = {"from_attributes": True}
+
+class HistoryItem(BaseModel):
+    """
+    A single history event (either a query or a report) returned by GET /api/v1/history.
+    """
+    id: UUID
+    type: str = Field(description="'query' or 'report'")
+    status: str
+    created_at: datetime
+    title: str
+    summary: str
+
+class HistoryListResponse(BaseModel):
+    """
+    Combined timeline envelope returned by GET /api/v1/history.
+    """
+    total: int
+    items: List[HistoryItem]
 
 
 class ReportHistoryListResponse(BaseModel):

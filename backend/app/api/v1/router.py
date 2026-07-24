@@ -33,3 +33,24 @@ v1_router.include_router(reports.router, tags=["Reports"])
 # Dashboard — aggregated statistics and recent history.
 from app.api.routes import dashboard
 v1_router.include_router(dashboard.router, tags=["Dashboard"])
+
+# Knowledge Base — aggregated stats and collections
+from app.api.routes import knowledge_base
+v1_router.include_router(knowledge_base.router, tags=["Knowledge Base"])
+
+# Analytics — time series metrics and agent stats
+from app.api.routes import analytics
+v1_router.include_router(analytics.router, tags=["Analytics"])
+
+# Settings — public configuration
+from app.api.routes import settings
+v1_router.include_router(settings.router, tags=["Settings"])
+
+# System Status — infrastructure connectivity and counts
+from app.api.routes import system
+v1_router.include_router(system.router, tags=["System"])
+
+# Agents Status — operational status and metrics
+from app.api.routes import agents
+v1_router.include_router(agents.router, tags=["Agents"])
+

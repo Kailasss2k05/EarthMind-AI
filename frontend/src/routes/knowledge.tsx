@@ -1,16 +1,4 @@
-/**
- * TODO: ENDPOINT MISSING (partial)
- * The stat cards and collections list use static data.
- * No /api/v1/knowledge or ChromaDB browse endpoint exists yet.
- *
- * WHAT IS CONNECTED:
- *   - GET /api/v1/health → shows real ChromaDB connectivity status
- *
- * To fully connect this page:
- *   GET /api/v1/knowledge/stats  →  { totalDocs, totalChunks, collections }
- *   GET /api/v1/knowledge/documents  →  { items: KnowledgeDoc[] }
- *   POST /api/v1/knowledge/upload  →  upload and index a new document
- */
+import { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import {
@@ -27,14 +15,16 @@ import {
   Globe,
   FlaskConical,
   ScrollText,
+  Folder,
+  AlertCircle
 } from "lucide-react";
 
 import { PageHeader, Panel, StatCard } from "@/components/ui-parts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { knowledgeBaseService, systemService, KnowledgeBaseResponse, SystemStatusResponse } from "@/services";
 
 export const Route = createFileRoute("/knowledge")({
   head: () => ({
@@ -46,22 +36,83 @@ export const Route = createFileRoute("/knowledge")({
   component: KnowledgePage,
 });
 
-const collections = [
-  { name: "Government Policies", icon: Landmark, docs: 412, color: "from-primary/20" },
-  { name: "UN SDGs", icon: Globe, docs: 176, color: "from-[oklch(0.62_0.18_275)]/25" },
-  { name: "Research Papers", icon: FlaskConical, docs: 1284, color: "from-[oklch(0.68_0.20_290)]/25" },
-  { name: "Municipality Rules", icon: ScrollText, docs: 328, color: "from-[oklch(0.85_0.08_290)]/30" },
-];
+function formatBytes(bytes: number, decimals = 2) {
+  if (!+bytes) return '0 Bytes';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+}
 
-const recent = [
-  { name: "EU Green Deal — Consolidated 2026.pdf", size: "4.2 MB", status: "indexed", chunks: 812 },
-  { name: "IPCC AR7 Synthesis Report.pdf", size: "12.8 MB", status: "indexing", chunks: 0, progress: 62 },
-  { name: "Rotterdam Climate Adaptation Plan.docx", size: "2.1 MB", status: "indexed", chunks: 214 },
-  { name: "SDG 11 municipal case studies.csv", size: "684 KB", status: "indexed", chunks: 91 },
-  { name: "Coastal resilience finance mechanisms.pdf", size: "6.4 MB", status: "queued", chunks: 0 },
-];
+const getDomainIcon = (domain: string) => {
+  const d = domain.toLowerCase();
+  if (d.includes("policy")) return Landmark;
+  if (d.includes("finance") || d.includes("sdg")) return Globe;
+  if (d.includes("research")) return FlaskConical;
+  if (d.includes("rule")) return ScrollText;
+  return Folder;
+};
+
+const getDomainColor = (index: number) => {
+  const colors = [
+    "from-primary/20",
+    "from-[oklch(0.62_0.18_275)]/25",
+    "from-[oklch(0.68_0.20_290)]/25",
+    "from-[oklch(0.85_0.08_290)]/30",
+  ];
+  return colors[index % colors.length];
+};
 
 function KnowledgePage() {
+  const [stats, setStats] = useState<KnowledgeBaseResponse | null>(null);
+  const [systemStatus, setSystemStatus] = useState<SystemStatusResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        setLoading(true);
+        setError(null);
+        const [kbData, sysData] = await Promise.all([
+          knowledgeBaseService.getKnowledgeBase(),
+          systemService.getSystemStatus()
+        ]);
+        setStats(kbData);
+        setSystemStatus(sysData);
+      } catch (err: any) {
+        console.error("Failed to load knowledge base data", err);
+        setError(err.message || "Failed to load data");
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-muted-foreground">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p>Loading knowledge base...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-destructive">
+        <AlertCircle className="h-8 w-8" />
+        <p>Error: {error}</p>
+        <Button variant="outline" onClick={() => window.location.reload()}>Retry</Button>
+      </div>
+    );
+  }
+
+  const collections = stats?.collections || [];
+  const recent = stats?.recent_uploads || [];
+
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-8">
       <PageHeader
@@ -76,9 +127,9 @@ function KnowledgePage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Documents indexed" value="2,204" icon={BookOpen} accent="violet" index={0} />
-        <StatCard label="Chunks" value="184,392" icon={Layers} accent="ocean" index={1} />
-        <StatCard label="Embedding model" value="ibm/slate-125m" icon={Cpu} accent="leaf" index={2} />
+        <StatCard label="Documents indexed" value={stats?.total_documents?.toLocaleString() || "0"} icon={BookOpen} accent="violet" index={0} />
+        <StatCard label="Chunks" value={stats?.total_chunks?.toLocaleString() || "0"} icon={Layers} accent="ocean" index={1} />
+        <StatCard label="Embedding model" value={systemStatus?.embedding_model || "Unknown"} icon={Cpu} accent="leaf" index={2} />
         <StatCard label="Vector store" value="ChromaDB" icon={Database} accent="solar" index={3} />
       </div>
 
@@ -94,65 +145,70 @@ function KnowledgePage() {
 
       <div>
         <h3 className="mb-4 font-display text-2xl tracking-tight">Collections</h3>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {collections.map((c, i) => (
-            <motion.div
-              key={c.name}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05, duration: 0.4 }}
-              className="glass group relative overflow-hidden rounded-3xl p-5"
-            >
-              <div className={cn("pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-gradient-to-br to-transparent blur-2xl", c.color)} />
-              <div className="flex items-start justify-between">
-                <div className="rounded-2xl bg-primary/10 p-2.5 text-primary">
-                  <c.icon className="h-5 w-5" />
-                </div>
-                <span className="font-numeric text-2xl tracking-tight">{c.docs}</span>
-              </div>
-              <h4 className="mt-4 font-display text-lg leading-tight tracking-tight">{c.name}</h4>
-              <p className="mt-1 text-xs text-muted-foreground">Auto-refreshed weekly</p>
-            </motion.div>
-          ))}
-        </div>
+        {collections.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border/50 p-8 text-center text-muted-foreground">
+            <Database className="mx-auto mb-3 h-8 w-8 opacity-50" />
+            <p>No collections found in the knowledge base.</p>
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {collections.map((c, i) => {
+              const Icon = getDomainIcon(c.domain);
+              const color = getDomainColor(i);
+              return (
+                <motion.div
+                  key={c.domain}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05, duration: 0.4 }}
+                  className="glass group relative overflow-hidden rounded-3xl p-5"
+                >
+                  <div className={cn("pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-gradient-to-br to-transparent blur-2xl", color)} />
+                  <div className="flex items-start justify-between">
+                    <div className="rounded-2xl bg-primary/10 p-2.5 text-primary">
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <span className="font-numeric text-2xl tracking-tight">{c.documents.toLocaleString()}</span>
+                  </div>
+                  <h4 className="mt-4 font-display text-lg leading-tight tracking-tight capitalize">{c.domain}</h4>
+                  <p className="mt-1 text-xs text-muted-foreground">{c.chunks.toLocaleString()} chunks</p>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <Panel title="Recently uploaded" description="Streamed into ChromaDB via the ingestion pipeline">
-        <div className="space-y-3">
-          {recent.map((d) => (
-            <div
-              key={d.name}
-              className="flex items-center gap-4 rounded-2xl border border-border/50 p-3"
-            >
-              <div className="rounded-xl bg-primary/10 p-2 text-primary">
-                <FileText className="h-4 w-4" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{d.name}</p>
-                <p className="mt-0.5 flex items-center gap-3 font-numeric text-[11px] text-muted-foreground">
-                  <span>{d.size}</span>
-                  {d.chunks > 0 && <span>· {d.chunks.toLocaleString()} chunks</span>}
-                </p>
-                {d.status === "indexing" && (
-                  <Progress value={d.progress} className="mt-2 h-1" />
-                )}
-              </div>
-              {d.status === "indexed" && (
+        {recent.length === 0 ? (
+          <div className="py-6 text-center text-sm text-muted-foreground">
+            No recently uploaded documents.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {recent.map((d) => (
+              <div
+                key={d.id}
+                className="flex items-center gap-4 rounded-2xl border border-border/50 p-3"
+              >
+                <div className="rounded-xl bg-primary/10 p-2 text-primary">
+                  <FileText className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{d.filename}</p>
+                  <p className="mt-0.5 flex items-center gap-3 font-numeric text-[11px] text-muted-foreground">
+                    <span>{formatBytes(d.size)}</span>
+                    <span className="capitalize">· {d.domain}</span>
+                    <span>· {new Date(d.uploaded_at).toLocaleDateString()}</span>
+                  </p>
+                </div>
                 <Badge className="rounded-full bg-[oklch(0.72_0.16_160)]/12 text-[oklch(0.55_0.16_160)]">
                   <CheckCircle2 className="mr-1 h-3 w-3" /> Indexed
                 </Badge>
-              )}
-              {d.status === "indexing" && (
-                <Badge className="rounded-full bg-primary/12 text-primary">
-                  <Loader2 className="mr-1 h-3 w-3 animate-spin" /> Indexing
-                </Badge>
-              )}
-              {d.status === "queued" && (
-                <Badge className="rounded-full bg-muted text-muted-foreground">Queued</Badge>
-              )}
-            </div>
-          ))}
-        </div>
+              </div>
+            ))}
+          </div>
+        )}
       </Panel>
     </div>
   );

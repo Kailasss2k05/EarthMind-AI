@@ -5,6 +5,7 @@ from pathlib import Path
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, status
 from pydantic import ValidationError
 from enum import Enum
+from fastapi.responses import FileResponse
 
 class DomainEnum(str, Enum):
     sdg = "sdg"
@@ -13,13 +14,14 @@ class DomainEnum(str, Enum):
     finance = "finance"
     research = "research"
 
-from app.schemas.documents import UploadDocumentResponse
+from app.schemas.documents import UploadDocumentResponse, DocumentListResponse
 from app.rag.config import DOMAINS, RAW_DATA_DIR
 from app.config.settings import settings
 from app.core.exceptions import ValidationException, AgentException, EarthMindException
 from app.rag.ingest import ingest_uploaded_pdf
 from app.rag.vector_store import is_pdf_indexed
 from app.core.logger import get_logger
+from app.services.documents import document_service
 
 logger = get_logger(__name__)
 router = APIRouter(tags=["Documents"])
@@ -128,3 +130,53 @@ async def upload_document(
         processing_time=processing_time,
         indexed=result["indexed"]
     )
+
+@router.get("/documents", response_model=DocumentListResponse)
+def list_documents():
+    """List all documents across all domains."""
+    logger.info("Fetching all documents")
+    items = document_service.get_all_documents()
+    return DocumentListResponse(items=items)
+
+@router.delete("/documents")
+def delete_document(id: str):
+    """Delete a document by its ID (format: domain:filename)."""
+    logger.info(f"Deleting document with id: {id}")
+    try:
+        document_service.delete_document(id)
+        return {"status": "success", "message": f"Document {id} deleted successfully."}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Failed to delete document {id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to delete document.")
+
+@router.get("/documents/download")
+def download_document(id: str):
+    """Download a document by its ID (format: domain:filename)."""
+    logger.info(f"Downloading document with id: {id}")
+    try:
+        parts = id.split(":", 1)
+        if len(parts) != 2:
+            raise ValueError(f"Invalid document id format: {id}")
+        domain_str, filename = parts
+        
+        file_path = RAW_DATA_DIR / domain_str / filename
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="File not found")
+            
+        media_type = "application/pdf" if filename.lower().endswith('.pdf') else "application/octet-stream"
+        
+        return FileResponse(
+            path=file_path, 
+            filename=filename,
+            media_type=media_type,
+            content_disposition_type="inline" # Allow previewing in browser
+        )
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Failed to download document {id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to download document.")
