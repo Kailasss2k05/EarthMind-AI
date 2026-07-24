@@ -1,17 +1,29 @@
-"""
-helpers.py
-----------
-Pure utility functions used by graph nodes.
+def update_missing_information(state, agent_output):
+    """
+    Merge missing_information from an agent into the shared state.
+    Removes duplicates based on the description field.
+    """
 
-Design contract
----------------
-Each function ACCEPTS the relevant sub-dict and RETURNS a new value.
-Nodes are responsible for assembling the returned patch dict.
-Nothing here mutates state in-place, keeping the LangGraph
-immutability model intact.
-"""
+    shared = state.setdefault("missing_information", [])
 
-from typing import Dict, List, Any
+    # Track descriptions already present
+    existing_descriptions = {
+        item.get("description")
+        for item in shared
+        if isinstance(item, dict)
+    }
+
+    for item in agent_output.get("missing_information", []):
+
+        # Ignore malformed entries
+        if not isinstance(item, dict):
+            continue
+
+        description = item.get("description")
+
+        if description and description not in existing_descriptions:
+            shared.append(item)
+            existing_descriptions.add(description)
 
 
 # ─── Agent registry ───────────────────────────────────────────────────────────

@@ -81,11 +81,10 @@ class BaseAgent(ABC):
 
             result = json.loads(json_text)
 
+            # Ensure the result is a JSON object
             if not isinstance(result, dict):
-                raise json.JSONDecodeError(
-                    "Parsed JSON is not a dictionary.",
-                    json_text,
-                    0,
+                raise ValueError(
+                    f"{self.__class__.__name__} must return a JSON object, got {type(result).__name__}"
                 )
 
             # Calculate confidence
