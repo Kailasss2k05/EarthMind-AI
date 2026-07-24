@@ -1,75 +1,118 @@
+import json
+import logging
+import re
 from abc import ABC, abstractmethod
 
-from app.services.llm import get_llm
-import time
-import logging
+from json_repair import repair_json
+from tenacity import (
+    retry,
+    stop_after_attempt,
+    wait_exponential,
+    retry_if_exception_type,
+)
+
+from app.core.utils import calculate_confidence,fallback_response
 
 logger = logging.getLogger(__name__)
 
+
 class BaseAgent(ABC):
-    """
-    Parent class for all agents.
-    """
 
-    def __init__(self):
+    returns_json = True
 
-        self.llm = get_llm()
+    def __init__(self, llm):
+        self.llm = llm
 
     @abstractmethod
     def build_prompt(self, state):
-
-        """
-        Every agent must implement
-        its own prompt.
-        """
         pass
+
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=2, min=2, max=10),
+        retry=retry_if_exception_type(Exception),
+        reraise=True,
+    )
+    def invoke_llm(self, prompt):
+        """
+        Automatically retries LLM invocation.
+
+        Attempts:
+            1
+            2 (after 2 sec)
+            3 (after 4 sec)
+        """
+
+        return self.llm.invoke(prompt)
 
     def run(self, state):
 
-        agent_name = self.__class__.__name__
-
-        start = time.time()
+        prompt = self.build_prompt(state)
 
         try:
 
-            prompt = self.build_prompt(state)
+            response = self.invoke_llm(prompt)
 
-            MAX_RETRIES = 3
+            content = response.content.strip()
 
-            for attempt in range(MAX_RETRIES):
+            if not self.returns_json:
+                return content
 
-                try:
+            print(f"\n===== {self.__class__.__name__} RAW OUTPUT =====")
+            print(content)
+            print("==============================================\n")
 
-                    response = self.llm.invoke(prompt)
+            # Remove markdown fences
+            content = re.sub(r"^```json\s*", "", content, flags=re.IGNORECASE)
+            content = re.sub(r"^```\s*", "", content)
+            content = re.sub(r"\s*```$", "", content)
 
-                    return response.content
+            # Extract JSON
+            match = re.search(r"\{.*\}", content, re.DOTALL)
 
-                except Exception:
+            if not match:
+                raise json.JSONDecodeError(
+                    "No JSON object found",
+                    content,
+                    0,
+                )
 
-                    if attempt == MAX_RETRIES - 1:
+            json_text = repair_json(match.group(0))
 
-                        raise
-            state["agent_status"][agent_name] = "SUCCESS"
+            result = json.loads(json_text)
 
-            logger.info(f"{agent_name} completed")
+            # Ensure the result is a JSON object
+            if not isinstance(result, dict):
+                raise ValueError(
+                    f"{self.__class__.__name__} must return a JSON object, got {type(result).__name__}"
+                )
 
-            return response.content
+            # Calculate confidence
+            result["confidence_score"] = calculate_confidence(result)
+
+            return result
+
+        except json.JSONDecodeError as e:
+
+            logger.error(
+                "%s returned invalid JSON.\n%s",
+                self.__class__.__name__,
+                content,
+            )
+
+            return fallback_response(
+    self.__class__.__name__.replace("Agent", "").lower(),
+    str(e),
+)
 
         except Exception as e:
 
-            state["agent_status"][agent_name] = "FAILED"
-
-            state["errors"][agent_name] = str(e)
-
-            logger.exception(e)
-
-            raise
-
-        finally:
-
-            logger.info(
-
-                f"{agent_name} took {time.time()-start:.2f}s"
-
+            logger.exception(
+                "%s failed after all retry attempts.",
+                self.__class__.__name__,
             )
 
+            return fallback_response(
+    self.__class__.__name__.replace("Agent", "").lower(),
+    str(e),
+)

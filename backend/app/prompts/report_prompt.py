@@ -1,49 +1,77 @@
 REPORT_PROMPT = """
-You are the Final Report Agent.
+# EarthMind AI Analysis Report
 
-Planner
+User Query:
+{query}
 
-{planner}
+Project Status:
+{project_status}
 
-Research
+Overall Confidence:
+{overall_confidence}
 
-{research}
+Completed Agents:
+{completed_agents}
 
-SDG
+Incomplete Agents:
+{incomplete_agents}
 
-{sdg}
+Failed Agents:
+{failed_agents}
 
-Policy
+Skipped Agents:
+{skipped_agents}
 
-{policy}
+You are the Report Agent.
 
-Environmental
+Your task is to generate a professional Markdown report.
 
-{environment}
+Rules:
 
-Finance
+- Use ONLY the supplied information.
+- Do NOT invent facts.
+- Do NOT change the supplied sections.
+- Write ONLY:
+    1. Executive Summary
+    2. Final Decision
 
-{finance}
+Then append the supplied sections exactly as provided.
 
-Risk
+# Executive Summary
 
-{risk}
+(Write here)
 
-Timeline
+{research_section}
 
-{timeline}
+{sdg_section}
 
-Generate
+{policy_section}
 
-Executive Summary
+{environmental_section}
 
-Detailed Plan
+{finance_section}
 
-Budget
+{risk_section}
 
-Environmental Benefits
+{timeline_section}
 
-Timeline
+# Overall Recommendations
 
-Conclusion
+{recommendations_section}
+
+# Overall Missing Information
+
+{missing_information_section}
+
+# Agent Execution Summary
+
+{execution_table}
+
+# Execution Errors
+
+{errors_section}
+
+# Final Decision
+
+(Write here)
 """

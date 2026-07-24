@@ -3,26 +3,26 @@ from langchain_ollama import ChatOllama
 from app.config.settings import settings
 
 
-def get_llm():
-
+def get_llm(json_mode: bool = True):
     """
     Returns the configured LLM.
+
+    json_mode=True  -> Used by Planner, Research, SDG, Policy, etc.
+    json_mode=False -> Used by ReportAgent.
     """
 
-    if settings.MODEL_PROVIDER == "ollama":
-
-        return ChatOllama(
-
-            model=settings.MODEL_NAME,
-
-            base_url=settings.OLLAMA_BASE_URL,
-
-            temperature=settings.TEMPERATURE
-
+    if settings.MODEL_PROVIDER != "ollama":
+        raise ValueError(
+            f"Unsupported provider: {settings.MODEL_PROVIDER}"
         )
 
-    raise ValueError(
+    kwargs = {
+        "model": settings.MODEL_NAME,
+        "base_url": settings.OLLAMA_BASE_URL,
+        "temperature": 0,
+    }
 
-        f"Unsupported provider: {settings.MODEL_PROVIDER}"
+    if json_mode:
+        kwargs["format"] = "json"
 
-    )
+    return ChatOllama(**kwargs)

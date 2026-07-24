@@ -1,31 +1,21 @@
 """
 vector_store.py
 ----------------
-Step 4 of the pipeline: ChromaDB setup.
+ChromaDB vector store utilities.
 
-ChromaDB is the vector database: it stores each chunk's text + its
-embedding + metadata (source file, page, domain), a
-nd lets us search
-"which chunks are closest in meaning to this query?" very fast.
-
-Design note (matches SRS Section 3.4):
-"Each agent that requires grounded evidence queries its own
-domain-filtered collection in ChromaDB rather than a single shared
-index."
--> So instead of ONE big collection, we create one Chroma *collection*
-per domain (sdg, environmental, policy, finance, research). This keeps
-the SDG agent from accidentally retrieving a finance document, etc.
+Each knowledge domain gets its own collection.
+Large insertions are automatically split into batches.
 """
 
 import chromadb
+from chromadb.utils.batch_utils import create_batches
+
 from .config import VECTOR_STORE_DIR
 
 
-def get_chroma_client() -> chromadb.ClientAPI:
+def get_chroma_client():
     """
-    A PersistentClient saves the database to disk at VECTOR_STORE_DIR,
-    so the data is still there next time you run the program (unlike
-    an in-memory client, which forgets everything when the script ends).
+    Create/Open persistent ChromaDB database.
     """
     VECTOR_STORE_DIR.mkdir(parents=True, exist_ok=True)
     return chromadb.PersistentClient(path=str(VECTOR_STORE_DIR))
@@ -33,41 +23,109 @@ def get_chroma_client() -> chromadb.ClientAPI:
 
 def get_or_create_collection(domain: str):
     """
-    Each domain gets its own named collection, e.g. 'sdg', 'policy'.
-    get_or_create means: safe to call this every time you run the
-    script, it won't error out if the collection already exists.
+    Return (or create) a collection for a domain.
     """
     client = get_chroma_client()
+
     return client.get_or_create_collection(
         name=domain,
         metadata={"domain": domain},
     )
-
-
-def add_chunks_to_collection(domain: str, chunks: list[dict], embeddings: list[list[float]]):
+def list_documents(domain: str) -> list[str]:
     """
-    Store chunks + their embeddings + metadata in the domain's collection.
-
-    chunks: list of {"source", "page", "chunk_index", "text"}
-    embeddings: list of vectors, same length/order as chunks
+    Return a sorted list of unique document names in a collection.
     """
+    collection = get_or_create_collection(domain)
+
+    data = collection.get(include=["metadatas"])
+
+    docs = {
+        metadata["filename"]
+        for metadata in data["metadatas"]
+        if metadata and "filename" in metadata
+    }
+
+    return sorted(docs)
+def delete_document(domain: str, filename: str):
+    """
+    Delete all chunks belonging to one PDF.
+    """
+
+    collection = get_or_create_collection(domain)
+
+    collection.delete(
+        where={"filename": filename}
+    )
+
+    print(f"Deleted '{filename}' from '{domain}' collection.")
+    
+def is_pdf_indexed(domain: str, filename: str) -> bool:
+    """
+    Check whether a PDF has already been indexed.
+    """
+
+    collection = get_or_create_collection(domain)
+
+    results = collection.get(
+        where={"filename": filename},
+        limit=1,
+    )
+
+    return len(results["ids"]) > 0
+
+def add_chunks_to_collection(
+    domain: str,
+    chunks: list[dict],
+    embeddings: list[list[float]],
+):
+    """
+    Store document chunks in ChromaDB using automatic batching.
+    """
+
     if not chunks:
         return
 
     collection = get_or_create_collection(domain)
 
-    ids = [f"{domain}-{c['source']}-p{c['page']}-c{c['chunk_index']}" for c in chunks]
-    documents = [c["text"] for c in chunks]
-    metadatas = [
-        {"source": c["source"], "page": c["page"], "domain": domain}
-        for c in chunks
+    ids = [
+        f"{domain}-{chunk['source']}-p{chunk['page']}-c{chunk['chunk_index']}"
+        for chunk in chunks
     ]
 
-    # upsert = "insert or update": re-running ingestion on the same
-    # files won't create duplicate entries.
-    collection.upsert(
+    documents = [chunk["text"] for chunk in chunks]
+
+    metadatas = [
+        {
+            "source": chunk["source"],
+            "filename": chunk["source"],
+            "page": chunk["page"],
+            "domain": domain,
+            "chunk_index": chunk["chunk_index"],
+            "chunk_length": len(chunk["text"]),
+        }
+        for chunk in chunks
+    ]
+
+    client = get_chroma_client()
+
+    batches = create_batches(
+        api=client,
         ids=ids,
-        embeddings=embeddings,
         documents=documents,
+        embeddings=embeddings,
         metadatas=metadatas,
     )
+
+    print(f"Saving {len(ids)} chunks in {len(batches)} batch(es)...")
+
+    for batch in batches:
+        batch_ids, batch_embeddings, batch_metadatas, batch_documents = batch
+
+        collection.upsert(
+            ids=batch_ids,
+            embeddings=batch_embeddings,
+            documents=batch_documents,
+            metadatas=batch_metadatas,
+        )
+
+    print("✓ Storage completed.")
