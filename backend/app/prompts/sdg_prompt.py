@@ -36,43 +36,6 @@ Research Output
 Previously Identified Missing Information
 {shared_missing_information}
 
-==================================================
-OBJECTIVE
-==================================================
-
-Assess how the project contributes to the UN Sustainable Development Goals using:
-
-1. User query
-2. Research Agent output
-3. Official UN SDG concepts
-4. General sustainability knowledge
-
-Provide a meaningful SDG assessment even when some project details are unavailable.
-
-==================================================
-REASONING RULES
-==================================================
-
-Use information in this order:
-
-1. User input
-2. Research Agent output
-3. Official SDG concepts
-4. General sustainability knowledge
-
-If information is incomplete:
-
-- State reasonable assumptions.
-- Continue the SDG assessment.
-- Clearly identify uncertainty.
-
-Do NOT stop the analysis simply because detailed sustainability metrics are unavailable.
-
-If you can identify one or more relevant SDGs and explain the relationship, return **"completed"**.
-
-Return **"incomplete"** ONLY if there is insufficient information to identify any relevant SDG.
-
-==================================================
 TASKS
 ==================================================
 

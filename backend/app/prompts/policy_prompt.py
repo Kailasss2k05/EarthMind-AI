@@ -1,3 +1,14 @@
+"""
+policy_prompt.py
+----------------
+Prompt template for the Policy Agent.
+
+NOTE: This file uses regular string concatenation (not an f-string) to embed
+COMMON_AGENT_PROMPT.  Using an f-string would collapse the ``{{...}}``
+double-brace escapes inside COMMON_AGENT_PROMPT into single ``{...}`` braces,
+causing a KeyError when PolicyAgent.build_prompt() later calls .format().
+"""
+
 from app.prompts.common_prompt import COMMON_AGENT_PROMPT
 
 POLICY_PROMPT = """
@@ -39,9 +50,6 @@ SDG Output
 Previously Identified Missing Information
 {shared_missing_information}
 
-==================================================
-OBJECTIVE
-==================================================
 
 Produce a practical policy and regulatory assessment using:
 
@@ -51,9 +59,6 @@ Produce a practical policy and regulatory assessment using:
 
 Your goal is to identify likely compliance requirements, regulatory considerations, and policy implications.
 
-==================================================
-REASONING RULES
-==================================================
 
 Use information in this order:
 

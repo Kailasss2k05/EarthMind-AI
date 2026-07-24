@@ -3,11 +3,11 @@ from app.prompts.report_prompt import REPORT_PROMPT
 from app.agents.report.aggregator import build_report_context
 
 
-class ReportAgent(BaseAgent):
+import json
 
-    returns_json = False
+from app.core.base_agent import BaseAgent
+from app.prompts.report_prompt import REPORT_PROMPT
 
-    def build_prompt(self, state):
 
         context = build_report_context(state)
 

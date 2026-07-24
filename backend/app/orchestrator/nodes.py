@@ -25,7 +25,7 @@ environmental = EnvironmentalAgent(llm)
 finance = FinanceAgent(llm)
 risk = RiskAgent(llm)
 timeline = TimelineAgent(llm)
-report_agent = ReportAgent(get_llm(json_mode=False))
+report = ReportAgent(llm)
 
 def planner_node(state):
     """
@@ -43,8 +43,6 @@ def planner_node(state):
     state["required_agents"] = required
 
     state["execution_order"] = resolve_dependencies(required)
-    print("Required:", required)
-    print("Execution Order:", state["execution_order"])
     from app.orchestrator.helpers import ALL_AGENTS
 
     for agent in ALL_AGENTS:
@@ -166,5 +164,5 @@ def timeline_node(state):
 
 
 def report_node(state):
-    state["outputs"]["report"] = report_agent.run(state)
+    state["outputs"]["report"] = report.run(state)
     return state

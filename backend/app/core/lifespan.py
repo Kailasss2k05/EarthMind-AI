@@ -1,50 +1,89 @@
+"""
+lifespan.py
+-----------
+FastAPI application lifespan context manager.
+
+Startup
+-------
+1. Capture the main event loop for thread-safe WebSocket broadcasting.
+2. Verify PostgreSQL connectivity.
+3. Verify Redis connectivity.
+4. Verify ChromaDB connectivity.
+
+Shutdown
+--------
+1. Dispose the SQLAlchemy connection pool.
+2. Close the Redis connection.
+"""
+
+import asyncio
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from sqlalchemy import text
+
 from app.services.postgres import engine
 from app.services.redis import redis_client
+from app.services.chromadb import chroma_health_check
 from app.core.logger import logger
+from app.database import init_database
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Capture the main event loop for thread-safe WebSocket broadcasting
-    import asyncio
+    # ── Capture event loop for WebSocket broadcasting ──────────────────────
     from app.websocket.manager import manager
     manager.loop = asyncio.get_running_loop()
 
-    # Startup actions
     logger.info("Starting up EarthMind AI Backend...")
-    
-    # Verify PostgreSQL connection
+
+    # ── PostgreSQL ─────────────────────────────────────────────────────────
+    # PostgreSQL
     try:
         with engine.connect() as connection:
             connection.execute(text("SELECT 1"))
+
         logger.info("Successfully connected to PostgreSQL.")
+
+        # Create tables if they don't exist
+        init_database()
+        logger.info("Database tables initialized successfully.")
+
     except Exception as e:
-        logger.error(f"Failed to connect to PostgreSQL on startup: {e}")
-        
-    # Verify Redis connection
+        logger.error("Failed to connect to PostgreSQL on startup: %s", e)
+
+    # ── Redis ──────────────────────────────────────────────────────────────
     try:
         redis_client.ping()
         logger.info("Successfully connected to Redis.")
     except Exception as e:
-        logger.error(f"Failed to connect to Redis on startup: {e}")
+        logger.error("Failed to connect to Redis on startup: %s", e)
+
+    # ── ChromaDB ───────────────────────────────────────────────────────────
+    try:
+        if chroma_health_check():
+            logger.info("Successfully connected to ChromaDB.")
+        else:
+            logger.warning(
+                "ChromaDB is reachable but returned an unexpected result. "
+                "Run ingest.py to populate the knowledge base."
+            )
+    except Exception as e:
+        logger.error("Failed to connect to ChromaDB on startup: %s", e)
 
     yield  # Application runs here
-    
-    # Shutdown actions
+
+    # ── Shutdown ───────────────────────────────────────────────────────────
     logger.info("Shutting down EarthMind AI Backend...")
-    
-    # Close PostgreSQL connection cleanly
+
     try:
         engine.dispose()
-        logger.info("PostgreSQL connection closed cleanly.")
+        logger.info("PostgreSQL connection pool closed.")
     except Exception as e:
-        logger.error(f"Error closing PostgreSQL connection: {e}")
-        
-    # Close Redis connection cleanly
+        logger.error("Error closing PostgreSQL connection: %s", e)
+
     try:
         redis_client.close()
-        logger.info("Redis connection closed cleanly.")
+        logger.info("Redis connection closed.")
     except Exception as e:
-        logger.error(f"Error closing Redis connection: {e}")
+        logger.error("Error closing Redis connection: %s", e)

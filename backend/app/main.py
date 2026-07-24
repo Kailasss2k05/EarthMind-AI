@@ -16,11 +16,11 @@ app = FastAPI(
 # Keeps all handler logic out of main.py for clean separation of concerns.
 register_exception_handlers(app)
 
-# Register CORS middleware.
-configure_cors(app)
-
 # Register Request Logger middleware.
 configure_request_logger(app)
+
+# Register CORS middleware.
+configure_cors(app)
 
 # Single router inclusion: root_router delegates to versioned routers (v1, v2, ...).
 # All routes are accessible under /api/v{n}/... prefixes.
