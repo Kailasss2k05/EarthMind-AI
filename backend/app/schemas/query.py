@@ -6,9 +6,12 @@ These models define the public contract for:
 
 Keeping schemas in a dedicated module decouples the HTTP layer from
 orchestration internals so both can evolve independently.
+
+Backend source: app/api/routes/query.py
 """
 
 from uuid import UUID
+from typing import Any, Dict, List
 from pydantic import BaseModel, Field
 
 
@@ -29,11 +32,34 @@ class QueryResponse(BaseModel):
 
     Fields
     ------
-    request_id     : Unique identifier for this request (for tracing / logging).
-    status         : Execution status — always "completed" on the happy path.
-    planner_output : Structured plan produced by the Planner agent.
+    request_id          : Unique trace ID (UUID) for logging / correlation.
+    status              : Always ``"completed"`` on the happy path.
+    query               : Echo of the original query for client convenience.
+    planner_output      : Structured plan dict produced by the Planner agent.
+    report              : Final Markdown report produced by the Report agent.
+    outputs             : Per-agent structured outputs (excluding ``report``).
+    agent_status        : Execution status for every agent that ran or was skipped.
+    errors              : Error messages for any agent that failed.
+    missing_information : Deduplicated list of information gaps across all agents.
     """
 
     request_id: UUID
     status: str
-    planner_output: str
+    query: str
+
+    planner_output: Dict[str, Any] = Field(default_factory=dict)
+    report: str = Field(default="")
+    outputs: Dict[str, Any] = Field(default_factory=dict)
+    agent_status: Dict[str, str] = Field(default_factory=dict)
+    errors: Dict[str, str] = Field(default_factory=dict)
+    missing_information: List[str] = Field(default_factory=list)
+
+    # RAG metadata — lightweight summary (not raw chunks)
+    retrieved_chunks: int = Field(
+        default=0,
+        description="Number of document chunks retrieved by ResearchAgent.",
+    )
+    retrieved_domains: List[str] = Field(
+        default_factory=list,
+        description="Unique ChromaDB domain names searched during retrieval.",
+    )

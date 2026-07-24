@@ -1,0 +1,411 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-violet-deep: var(--violet-deep);
+  --color-violet-electric: var(--violet-electric);
+  --color-violet-soft: var(--violet-soft);
+  --font-display: "Playfair Display", ui-serif, Georgia, serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+}
+
+
+:root {
+  --radius: 1rem;
+  /* Near-white canvas #FAFAFC */
+  --background: oklch(0.985 0.003 285);
+  --foreground: oklch(0.16 0.02 285);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.16 0.02 285);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.16 0.02 285);
+
+  /* Deep Violet #6D28D9 */
+  --primary: oklch(0.42 0.22 285);
+  --primary-foreground: oklch(0.99 0.005 285);
+
+  --secondary: oklch(0.965 0.008 285);
+  --secondary-foreground: oklch(0.22 0.04 285);
+
+  --muted: oklch(0.965 0.006 285);
+  --muted-foreground: oklch(0.5 0.02 285);
+
+  --accent: oklch(0.94 0.03 285);
+  --accent-foreground: oklch(0.25 0.08 285);
+
+  --destructive: oklch(0.6 0.22 25);
+  --destructive-foreground: oklch(0.99 0 0);
+
+  --border: oklch(0.92 0.005 285 / 0.8);
+  --input: oklch(0.92 0.008 285);
+  --ring: oklch(0.55 0.24 285);
+
+  /* Brand palette */
+  --violet-deep: oklch(0.42 0.22 285);      /* #6D28D9 */
+  --violet-electric: oklch(0.65 0.22 290);  /* #8B5CF6 */
+  --violet-soft: oklch(0.85 0.08 290);      /* #C4B5FD */
+
+  /* Semantic status */
+  --success: oklch(0.72 0.17 162);          /* #10B981 */
+  --warning: oklch(0.78 0.16 68);           /* #F59E0B */
+  --error: oklch(0.65 0.24 22);             /* #EF4444 */
+
+  --chart-1: oklch(0.42 0.22 285);
+  --chart-2: oklch(0.65 0.22 290);
+  --chart-3: oklch(0.85 0.08 290);
+  --chart-4: oklch(0.55 0.20 265);
+  --chart-5: oklch(0.72 0.15 320);
+
+  --sidebar: oklch(0.99 0.003 285);
+  --sidebar-foreground: oklch(0.16 0.02 285);
+  --sidebar-primary: oklch(0.42 0.22 285);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.955 0.012 285);
+  --sidebar-accent-foreground: oklch(0.25 0.08 285);
+  --sidebar-border: oklch(0.92 0.005 285 / 0.7);
+  --sidebar-ring: oklch(0.55 0.24 285);
+
+  --gradient-aurora: radial-gradient(
+      1200px 600px at 8% -10%,
+      color-mix(in oklab, var(--violet-electric) 22%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 500px at 92% 8%,
+      color-mix(in oklab, var(--violet-deep) 18%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(
+      800px 500px at 50% 110%,
+      color-mix(in oklab, var(--violet-soft) 30%, transparent),
+      transparent 60%
+    );
+  --gradient-primary: linear-gradient(135deg, var(--violet-deep), var(--violet-electric));
+  --gradient-mesh: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--violet-deep) 90%, black),
+    var(--violet-electric) 55%,
+    color-mix(in oklab, var(--violet-soft) 85%, white)
+  );
+  --shadow-elegant: 0 24px 60px -24px color-mix(in oklab, var(--violet-deep) 35%, transparent);
+  --shadow-soft: 0 1px 2px -1px oklch(0 0 0 / 0.06), 0 4px 20px -6px oklch(0 0 0 / 0.08);
+  --shadow-brand: 0 10px 30px -12px color-mix(in oklab, var(--violet-deep) 55%, transparent);
+}
+
+.dark {
+  /* Near-black #09090B */
+  --background: oklch(0.145 0.005 285);
+  --foreground: oklch(0.97 0.005 285);
+
+  --card: oklch(0.185 0.008 285);
+  --card-foreground: oklch(0.97 0.005 285);
+  --popover: oklch(0.185 0.008 285);
+  --popover-foreground: oklch(0.97 0.005 285);
+
+  --primary: oklch(0.7 0.22 290);
+  --primary-foreground: oklch(0.16 0.03 285);
+
+  --secondary: oklch(0.22 0.01 285);
+  --secondary-foreground: oklch(0.97 0.005 285);
+
+  --muted: oklch(0.21 0.008 285);
+  --muted-foreground: oklch(0.68 0.02 285);
+
+  --accent: oklch(0.28 0.06 285);
+  --accent-foreground: oklch(0.97 0.005 285);
+
+  --destructive: oklch(0.68 0.22 25);
+  --destructive-foreground: oklch(0.99 0 0);
+
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.7 0.22 290);
+
+  --success: oklch(0.72 0.17 162);
+  --warning: oklch(0.78 0.16 68);
+  --error: oklch(0.68 0.24 22);
+
+  --violet-deep: oklch(0.55 0.24 285);
+  --violet-electric: oklch(0.7 0.22 290);
+  --violet-soft: oklch(0.85 0.08 290);
+
+  --chart-1: oklch(0.7 0.22 290);
+  --chart-2: oklch(0.55 0.24 285);
+  --chart-3: oklch(0.85 0.08 290);
+  --chart-4: oklch(0.6 0.2 265);
+  --chart-5: oklch(0.72 0.16 320);
+
+  --sidebar: oklch(0.17 0.006 285);
+  --sidebar-foreground: oklch(0.97 0.005 285);
+  --sidebar-primary: oklch(0.7 0.22 290);
+  --sidebar-primary-foreground: oklch(0.16 0.03 285);
+  --sidebar-accent: oklch(0.23 0.012 285);
+  --sidebar-accent-foreground: oklch(0.97 0.005 285);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: oklch(0.7 0.22 290);
+}
+
+@utility glass {
+  background: color-mix(in oklab, var(--card) 72%, transparent);
+  backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid color-mix(in oklab, var(--foreground) 6%, transparent);
+  box-shadow: var(--shadow-soft);
+}
+
+@utility text-gradient {
+  background: var(--gradient-primary);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+@utility bg-aurora {
+  background-image: var(--gradient-aurora);
+}
+
+@utility bg-mesh {
+  background-image: var(--gradient-mesh);
+}
+
+@utility grid-lines {
+  background-image:
+    linear-gradient(color-mix(in oklab, var(--foreground) 5%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklab, var(--foreground) 5%, transparent) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+@utility font-numeric {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+@keyframes aurora-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-4%, 3%, 0) scale(1.08); }
+}
+@keyframes aurora-drift-2 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1.05); }
+  50% { transform: translate3d(5%, -4%, 0) scale(1); }
+}
+@keyframes pulse-ring {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html,
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv11", "ss01", "ss03";
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+    font-weight: 500;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* Print stylesheet — triggered by the "Export PDF" button                     */
+/* document.body gets .printing-report while window.print() is active         */
+/* ─────────────────────────────────────────────────────────────────────────── */
+@media print {
+
+  /* A4 page setup with named counter for Page X of Y */
+  @page {
+    size: A4 portrait;
+    margin: 18mm 16mm 22mm 16mm;
+    @bottom-center {
+      content: "EarthMind AI  ·  Page " counter(page) " of " counter(pages);
+      font-family: system-ui, sans-serif;
+      font-size: 7pt;
+      color: #94a3b8;
+    }
+  }
+
+  /* First page (cover) — no running footer */
+  @page :first {
+    @bottom-center { content: none; }
+  }
+
+  /* ── Visibility: show only the report, hide everything else ── */
+  body.printing-report * {
+    visibility: hidden;
+  }
+
+  body.printing-report [data-report-viewer],
+  body.printing-report [data-report-viewer] * {
+    visibility: visible;
+  }
+
+  body.printing-report [data-report-viewer] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    background: white;
+    color: black;
+  }
+
+  /* ── Hide all app chrome ── */
+  body.printing-report [data-sidebar],
+  body.printing-report nav,
+  body.printing-report header,
+  body.printing-report [data-sonner-toaster],
+  body.printing-report [data-report-viewer] header {
+    display: none !important;
+  }
+
+  /* ── Suppress framer-motion transforms ── */
+  [data-report-viewer] {
+    transform: none !important;
+    opacity: 1 !important;
+  }
+
+  /* ── Cover page: force A4 height and exact page block ── */
+  [data-report-viewer] [aria-label="Cover page"] {
+    background: #0f172a !important;
+    color: white !important;
+    height: 248mm !important; /* reduced to 248mm to guarantee no page 2 overflow */
+    min-height: 248mm !important;
+    max-height: 248mm !important;
+    margin-bottom: 0 !important;
+    box-sizing: border-box !important;
+    border: none !important;
+    border-radius: 0 !important;
+    overflow: hidden !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ── Explicitly span full width for double-span cards in print ── */
+  body.printing-report [data-report-viewer] #pdf-exec-summary,
+  body.printing-report [data-report-viewer] #pdf-risk,
+  body.printing-report [data-report-viewer] #pdf-execution-summary,
+  body.printing-report [data-report-viewer] .md\:col-span-2 {
+    grid-column: span 2 / span 2 !important;
+  }
+
+  /* ── Force References cards grid to single column in print ── */
+  body.printing-report [data-report-viewer] #pdf-references [role="list"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Section cards: prevent internal page breaks ── */
+  [data-report-viewer] section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* ── Grid: single column in print for cleaner flow ── */
+  [data-report-viewer] .md\:grid-cols-2 {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* ── Reset glassmorphism styles not supported in print ── */
+  [data-report-viewer] .glass {
+    background: white !important;
+    border: 1px solid #e2e8f0 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+  }
+
+  /* ── Ensure gradients print with colour ── */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ── Typography adjustments for print (Enforce minimum 11pt) ── */
+  [data-report-viewer] h1 { font-size: 32pt; }
+  [data-report-viewer] h2 { font-size: 22pt; }
+  [data-report-viewer] h3 { font-size: 13pt; }
+  [data-report-viewer] p,
+  [data-report-viewer] li,
+  [data-report-viewer] td,
+  [data-report-viewer] span:not(.font-numeric) { font-size: 11pt !important; line-height: 1.55; }
+  [data-report-viewer] .font-numeric { font-size: 11pt !important; }
+
+  /* ── Stacking context: hide fixed footer/watermark on first page ── */
+  [data-report-viewer] [aria-label="Cover page"] {
+    position: relative;
+    z-index: 100 !important;
+    background: #0f172a !important;
+  }
+
+  body.printing-report .fixed.bottom-0 {
+    z-index: 10 !important;
+  }
+
+  /* ── Page number counters for HTML print footer ── */
+  .print-page-counter::after {
+    content: counter(page);
+  }
+  .print-pages-total::after {
+    content: counter(pages);
+  }
+
+  /* ── Animation reset ── */
+  [data-report-viewer] * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

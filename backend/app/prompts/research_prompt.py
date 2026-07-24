@@ -49,42 +49,6 @@ Previously Identified Missing Information
 
 {shared_missing_information}
 
-==================================================
-OBJECTIVE
-==================================================
-
-Perform a technical research analysis of the user's query.
-
-Your goal is NOT simply to extract information.
-
-Your goal is to provide the best possible technical understanding using:
-
-1. The user query.
-2. Planner output.
-3. Previous agent outputs.
-4. Your general technical knowledge.
-
-==================================================
-REASONING RULES
-==================================================
-
-Use information in the following priority:
-
-1. User-provided information.
-2. Outputs from previous agents.
-3. General technical knowledge.
-
-When information is unavailable:
-
-• State reasonable assumptions.
-• Continue the analysis whenever possible.
-• Explain uncertainty.
-
-Do NOT stop the analysis simply because every detail is unavailable.
-
-Only return "incomplete" if meaningful technical analysis cannot be performed.
-
-==================================================
 TASKS
 ==================================================
 
@@ -192,54 +156,9 @@ only if the input is invalid or cannot be understood.
 
 Do NOT use "incomplete" simply because some technical details are unavailable.
 
-==================================================
-MISSING INFORMATION
-==================================================
-
-Only include NEW missing information.
-
-Possible examples:
-
-• Technical specifications
-• Dataset availability
-• System architecture
-• Hardware requirements
-• Software requirements
-• Performance requirements
-• Evaluation methodology
-• Implementation details
-
-Never repeat information already listed in:
 
 Previously Identified Missing Information.
 
-==================================================
-REFERENCES
-==================================================
-
-Only include references explicitly supplied in the inputs.
-
-Never invent citations.
-
-If no references are available, return an empty list.
-
-==================================================
-OUTPUT FORMAT
-==================================================
-
-Return ONLY valid JSON.
-
-{{
-    "agent": "Research Agent",
-    "status": "completed | incomplete | failed",
-    "summary": "",
-    "findings": [],
-    "recommendations": [],
-    "missing_information": [],
-    "references": []
-}}
-
-Do not include markdown.
 
 Do not include explanations.
 
