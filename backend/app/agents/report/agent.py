@@ -1,6 +1,6 @@
 from app.core.base_agent import BaseAgent
 from app.prompts.report_prompt import REPORT_PROMPT
-import json
+from app.agents.report.aggregator import build_report_context
 
 
 class ReportAgent(BaseAgent):
@@ -9,184 +9,56 @@ class ReportAgent(BaseAgent):
 
     def build_prompt(self, state):
 
-        outputs = state.get("outputs", {})
+        context = build_report_context(state)
 
-        # ---------------------------------
-        # Overall Confidence
-        # ---------------------------------
+        try:
 
-        scores = []
+            prompt = REPORT_PROMPT.format(
 
-        for name, output in outputs.items():
+                query=context["query"],
 
-            if name == "report":
-                continue
+                project_status=context["project_status"],
 
-            if isinstance(output, dict):
+                overall_confidence=context["overall_confidence"],
 
-                score = output.get("confidence_score")
+                completed_agents=", ".join(context["completed_agents"]) or "None",
 
-                if isinstance(score, (int, float)):
-                    scores.append(score)
+                incomplete_agents=", ".join(context["incomplete_agents"]) or "None",
 
-        overall_confidence = (
-            round(sum(scores) / len(scores), 2)
-            if scores else 0.0
-        )
+                failed_agents=", ".join(context["failed_agents"]) or "None",
 
-        # ---------------------------------
-        # Overall Project Status
-        # ---------------------------------
+                skipped_agents=", ".join(context["skipped_agents"]) or "None",
 
-        statuses = []
+                research_section=context["research_section"],
 
-        for name, output in outputs.items():
+                sdg_section=context["sdg_section"],
 
-            if name == "report":
-                continue
+                policy_section=context["policy_section"],
 
-            if isinstance(output, dict):
-                statuses.append(output.get("status", "failed"))
+                environmental_section=context["environmental_section"],
 
-        if "failed" in statuses:
-            project_status = "Not Feasible"
+                finance_section=context["finance_section"],
 
-        elif "incomplete" in statuses:
-            project_status = "Partially Feasible"
+                risk_section=context["risk_section"],
 
-        else:
-            project_status = "Feasible"
+                timeline_section=context["timeline_section"],
 
-        # ---------------------------------
-        # Executed Agents
-        # ---------------------------------
+                recommendations_section=context["recommendations_section"],
 
-        executed_agents = ", ".join(
-            agent.title()
-            for agent in outputs.keys()
-            if agent != "report"
-        )
+                missing_information_section=context["missing_information_section"],
 
-        # ---------------------------------
-        # Overall Missing Information
-        # ---------------------------------
+                execution_table=context["execution_table"],
 
-        missing = set()
+                errors_section=context["errors_section"],
 
-        for output in outputs.values():
-
-            if isinstance(output, dict):
-
-                missing.update(
-                    output.get("missing_information", [])
-                )
-
-        overall_missing = sorted(missing)
-
-        # ---------------------------------
-        # Overall Recommendations
-        # ---------------------------------
-
-        recommendations = set()
-
-        for output in outputs.values():
-
-            if isinstance(output, dict):
-
-                recommendations.update(
-                    output.get("recommendations", [])
-                )
-
-        overall_recommendations = sorted(recommendations)
-
-        # Save for report prompt
-
-        state["overall_confidence"] = overall_confidence
-        state["project_status"] = project_status
-        state["executed_agents"] = executed_agents
-        state["overall_missing"] = overall_missing
-        state["overall_recommendations"] = overall_recommendations
-
-        overall_recommendations_text = (
-            "\n".join(f"- {item}" for item in overall_recommendations)
-            if overall_recommendations else "None"
-        )
-
-        shared_missing_information_text = (
-            "\n".join(f"- {item}" for item in state.get("missing_information", []))
-            if state.get("missing_information") else "None"
-        )
-
-        return REPORT_PROMPT.format(
-
-            query=state.get("query", ""),
-
-            planner_output=json.dumps(
-                state.get("planner_output", {}),
-                indent=2
-            ),
-
-            research_output=json.dumps(
-                outputs.get("research", {}),
-                indent=2
-            ),
-
-            sdg_output=json.dumps(
-                outputs.get("sdg", {}),
-                indent=2
-            ),
-
-            policy_output=json.dumps(
-                outputs.get("policy", {}),
-                indent=2
-            ),
-
-            environmental_output=json.dumps(
-                outputs.get("environmental", {}),
-                indent=2
-            ),
-
-            finance_output=json.dumps(
-                outputs.get("finance", {}),
-                indent=2
-            ),
-
-            risk_output=json.dumps(
-                outputs.get("risk", {}),
-                indent=2
-            ),
-
-            timeline_output=json.dumps(
-                outputs.get("timeline", {}),
-                indent=2
-            ),
-
-            overall_confidence=overall_confidence,
-            project_status=project_status,
-            executed_agents=executed_agents,
-
-            overall_missing=json.dumps(
-                overall_missing,
-                indent=2
-            ),
-
-            overall_recommendations=json.dumps(
-                overall_recommendations,
-                indent=2
-            ),
-
-            shared_missing_information=json.dumps(
-                state.get("missing_information", []),
-                indent=2
-            ),
-
-            agent_status=json.dumps(
-                state.get("agent_status", {}),
-                indent=2
-            ),
-
-            errors=json.dumps(
-                state.get("errors", {}),
-                indent=2
             )
-        )
+
+            return prompt
+
+        except Exception as e:
+
+            print("\n========== REPORT PROMPT ERROR ==========")
+            print(repr(e))
+            print("=========================================\n")
+
+            raise

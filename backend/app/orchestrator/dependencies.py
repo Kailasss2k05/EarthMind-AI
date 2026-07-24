@@ -2,29 +2,44 @@ DEPENDENCIES = {
     "research": [],
     "sdg": ["research"],
     "policy": ["research"],
-    "environmental": ["policy"],
-    "finance": ["policy", "environmental"],
-    "risk": ["finance"],
-    "timeline": ["finance", "risk"],
+    "environmental": ["research"],
+    "finance": ["research"],
+    "risk": ["research"],
+    "timeline": ["research"],
     "report": []
 }
 
-from collections import OrderedDict
+GRAPH_ORDER = [
+    "research",
+    "sdg",
+    "policy",
+    "environmental",
+    "finance",
+    "risk",
+    "timeline",
+]
 
 
 def resolve_dependencies(required_agents):
-    resolved = []
+    required = set(required_agents)
 
-    def visit(agent):
-        for dep in DEPENDENCIES.get(agent, []):
-            visit(dep)
+    # Recursively include dependencies
+    changed = True
+    while changed:
+        changed = False
 
-        if agent not in resolved:
-            resolved.append(agent)
+        for agent in list(required):
+            for dep in DEPENDENCIES.get(agent, []):
+                if dep not in required:
+                    required.add(dep)
+                    changed = True
 
-    for agent in required_agents:
-        visit(agent)
+    execution_order = [
+        agent
+        for agent in GRAPH_ORDER
+        if agent in required
+    ]
 
-    resolved.append("report")
+    execution_order.append("report")
 
-    return resolved
+    return execution_order

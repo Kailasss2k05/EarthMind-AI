@@ -1,158 +1,210 @@
 from app.prompts.json_prompt import JSON_INSTRUCTIONS
 
 COMMON_AGENT_PROMPT = """
-==============================
-GENERAL RULES
-==============================
+==================================================
+COMMON RULES
+==================================================
 
 Use ONLY the supplied inputs.
 
-Do NOT:
+Use information in this priority:
 
-- invent facts
-- use external knowledge
-- infer unsupported conclusions
+1. User input
+2. Previous agent outputs
+3. Domain knowledge explicitly allowed by the current agent prompt
+
+Never:
+
+- fabricate facts
 - fabricate findings
 - fabricate recommendations
 - fabricate references
+- fabricate missing information
+- invent statistics
+- invent numerical values
+- invent citations
+- contradict previous agent outputs
 
-If information is unavailable, explicitly state it.
+If information is uncertain:
 
-==============================
-STATUS RULES
-==============================
+- clearly state assumptions
+- continue the analysis whenever reasonable
 
-Return ONE of the following statuses.
+Do NOT return "incomplete" simply because some information is unavailable.
 
-success
+==================================================
+STATUS
+==================================================
 
-The analysis is complete.
+Return exactly ONE of these values.
+
+completed
+
+A meaningful analysis was successfully produced.
 
 incomplete
 
-The analysis could be partially completed but important
-information is missing.
+Essential information prevents meaningful analysis.
 
 failed
 
-The analysis could not be performed because of an execution
-or tool failure.
+The input is invalid or the analysis cannot be performed.
 
-Do NOT use any other status.
+Never use any other value.
 
-==============================
-OUTPUT REQUIREMENTS
-==============================
+==================================================
+JSON SCHEMA
+==================================================
 
-Return ONLY valid JSON.
+Return EXACTLY this schema.
 
-Every field MUST exist.
+{{
+    "agent": "",
 
-Never omit a field.
+    "status": "completed",
+
+    "summary": "",
+
+    "findings": [],
+
+    "recommendations": [],
+
+    "missing_information": [],
+
+    "references": [],
+
+    "confidence_score": 0.00
+}}
+
+Never omit any field.
 
 Never return null.
 
-Return exactly this schema.
+==================================================
+FIELD RULES
+==================================================
+
+summary
+
+- One concise paragraph.
+- Never leave empty.
+
+--------------------------------------------------
+
+findings
+
+Each finding MUST be
 
 {{
-    "agent":"",
-
-    "status":"success",
-
-    "summary":"",
-
-    "findings":[],
-
-    "recommendations":[],
-
-    "missing_information":[],
-
-    "references":[]
+    "type": "...",
+    "description": "..."
 }}
 
-==============================
-LIST RULES
-==============================
+If none
 
-If no findings exist
+[]
 
-"findings": []
+--------------------------------------------------
 
-Never
+recommendations
 
-[""]
+Each recommendation MUST be
 
-If no recommendations exist
+{{
+    "action": "...",
+    "rationale": "..."
+}}
 
-"recommendations": []
+If none
 
-Never
+[]
 
-[""]
+--------------------------------------------------
 
-If no references exist
+missing_information
 
-"references": []
+Each item MUST be
 
-Never
+{{
+    "type": "...",
+    "description": "..."
+}}
 
-[""]
+Only include NEW missing information.
 
-If no missing information exists
+Never repeat items already present in
+Previously Identified Missing Information.
 
-"missing_information": []
+If none
 
-Never
+[]
 
-[""]
+--------------------------------------------------
 
-==============================
-SUMMARY RULES
-==============================
+references
 
-Always provide one summary sentence.
-
-If information is insufficient,
-explicitly state why.
-
-==============================
-FINDINGS RULES
-==============================
-
-Only include findings directly supported
-by the supplied inputs.
-
-If there is insufficient evidence
-
-return
-
-"findings": []
-
-==============================
-RECOMMENDATION RULES
-==============================
-
-Recommend actions ONLY when supported
-by the supplied inputs.
+Only references explicitly supplied in previous agent outputs.
 
 Otherwise
 
-"recommendations": []
+[]
 
-==============================
-REFERENCES RULES
-==============================
+--------------------------------------------------
 
-Only include references explicitly
-present in the inputs.
+confidence_score
 
-Otherwise
+Decimal between 0.00 and 1.00.
 
-"references": []
+Suggested interpretation:
 
-==============================
+0.90 - 1.00  Very High
+
+0.70 - 0.89  High
+
+0.40 - 0.69  Medium
+
+0.00 - 0.39  Low
+
+==================================================
+EXAMPLE OUTPUT
+==================================================
+
+{{
+    "agent":"Research Agent",
+
+    "status":"completed",
+
+    "summary":"A meaningful analysis was completed using the available information.",
+
+    "findings":[
+        {{
+            "type":"technology",
+            "description":"Electric buses reduce tailpipe emissions."
+        }}
+    ],
+
+    "recommendations":[
+        {{
+            "action":"Collect operational emission data.",
+            "rationale":"Improves the accuracy of future assessments."
+        }}
+    ],
+
+    "missing_information":[
+        {{
+            "type":"dataset",
+            "description":"Operational emission measurements."
+        }}
+    ],
+
+    "references":[],
+
+    "confidence_score":0.84
+}}
+
+==================================================
 FINAL VALIDATION
-==============================
+==================================================
 
 Before returning verify:
 
@@ -162,23 +214,23 @@ Before returning verify:
 
 ✓ status is one of
 
-- success
-- incomplete
-- failed
+completed
+incomplete
+failed
 
-✓ findings is never [""]
+✓ summary is not empty
 
-✓ recommendations is never [""]
+✓ findings contains objects only
 
-✓ references is never [""]
+✓ recommendations contains objects only
 
-✓ missing_information is never [""]
+✓ missing_information contains objects only
 
-✓ summary is never empty
+✓ references is a list
+
+✓ confidence_score is between 0 and 1
 
 ✓ No fabricated facts
-
-✓ No external knowledge
 
 Return ONLY JSON.
 

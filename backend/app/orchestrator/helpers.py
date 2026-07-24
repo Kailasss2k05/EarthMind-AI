@@ -1,15 +1,29 @@
 def update_missing_information(state, agent_output):
     """
     Merge missing_information from an agent into the shared state.
+    Removes duplicates based on the description field.
     """
 
-    shared = set(state.get("missing_information", []))
+    shared = state.setdefault("missing_information", [])
 
-    current = set(
-        agent_output.get("missing_information", [])
-    )
+    # Track descriptions already present
+    existing_descriptions = {
+        item.get("description")
+        for item in shared
+        if isinstance(item, dict)
+    }
 
-    state["missing_information"] = list(shared | current)
+    for item in agent_output.get("missing_information", []):
+
+        # Ignore malformed entries
+        if not isinstance(item, dict):
+            continue
+
+        description = item.get("description")
+
+        if description and description not in existing_descriptions:
+            shared.append(item)
+            existing_descriptions.add(description)
 
 def update_agent_status(state, agent_name, output):
     """
