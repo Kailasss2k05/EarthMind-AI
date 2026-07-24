@@ -1,154 +1,66 @@
-from app.prompts.planner_json_prompt import PLANNER_JSON_INSTRUCTIONS
-
-PLANNER_PROMPT = """
-==============================
-PLANNER RULES
-==============================
-
-Analyze the user's query and select the agents required to answer it.
-
-You MUST choose one or more agents.
-
-The required_agents list MUST NEVER be empty.
-
-Always include "research" unless the query is entirely about a single
-specialized domain where research adds no value.
-
-Choose ONLY from:
-
-- research
-- sdg
-- policy
-- environmental
-- finance
-- risk
-- timeline
-
-Do NOT invent agent names.
+PLANNER_PROMPT = """\
+You are a routing agent. Your ONLY job is to output a JSON object.
 
 ==============================
-USER QUERY
+TASK
 ==============================
 
-{query}
+Read the user query and choose which analysis agents are needed.
+
+USER QUERY: {query}
 
 ==============================
-ROUTING GUIDE
+VALID AGENTS
 ==============================
 
-Use this table to determine which agents to include.
-
-If ANY of the listed keywords appear in the query (in any form, including
-synonyms or closely related terms), include the corresponding agent.
-
-timeline
-    Trigger keywords:
-    roadmap, implementation roadmap, implementation plan, timeline, milestones,
-    deployment schedule, deployment roadmap, rollout, phases, five-year, 5-year, three-year, 3-year,
-    two-year, 2-year, annual plan, quarterly plan, implementation strategy,
-    execution plan, phased approach, workplan, Gantt, sequencing,
-    step-by-step plan, year-by-year
-
-finance
-    Trigger keywords:
-    budget, investment, funding, grants, ROI, return on investment,
-    CAPEX, capital expenditure, OPEX, operational expenditure,
-    cost, costs, financial, revenue, expenditure, payback,
-    economic feasibility, cost-benefit, financial model,
-    capital, financing, loan, subsidy, tax incentive, profit
-
-risk
-    Trigger keywords:
-    risk, risks, uncertainty, uncertainties, disaster, hazard, hazards,
-    vulnerability, vulnerabilities, resilience, safety, threat, threats,
-    mitigation, contingency, failure mode, downside, exposure,
-    climate risk, operational risk, reputational risk, transition risk
-
-policy
-    Trigger keywords:
-    regulation, regulations, government, compliance, ministry,
-    legislation, policy, policies, regulatory, permit, legal,
-    standard, framework, law, mandate, directive, governance,
-    CSRD, TCFD, EU Green Deal, municipal, national, international,
-    obligation, reporting requirement, disclosure
-
-environmental
-    Trigger keywords:
-    biodiversity, ecosystem, ecosystems, forest, forests, emissions,
-    pollution, climate, carbon, greenhouse, habitat, deforestation,
-    sustainability, ecology, ecological, carbon footprint, net zero,
-    carbon neutral, GHG, CO2, environmental impact, water, air quality,
-    land use, nature-based, green infrastructure
-
-sdg
-    Trigger keywords:
-    SDG, SDGs, Sustainable Development Goal, Sustainable Development Goals,
-    Agenda 2030, UN Goals, UN targets, global goals, Goal 1, Goal 2,
-    Goal 3, Goal 4, Goal 5, Goal 6, Goal 7, Goal 8, Goal 9, Goal 10,
-    Goal 11, Goal 12, Goal 13, Goal 14, Goal 15, Goal 16, Goal 17,
-    SDG 1 through SDG 17
+research, sdg, policy, environmental, finance, risk, timeline
 
 ==============================
-SELECTION RULES
+AGENT SELECTION RULES
 ==============================
 
-1. Read the full query.
+Always include "research".
 
-2. Check EVERY keyword in the ROUTING GUIDE.
+Add "environmental" → query mentions: emissions, carbon, pollution, climate,
+  CO2, GHG, ecosystem, biodiversity, air quality, environmental impact,
+  net zero, sustainability, electric vehicle, electric bus, clean energy.
 
-3. For each keyword that appears, add the corresponding agent
-   to required_agents.
+Add "finance" → query mentions: cost, budget, investment, funding, ROI,
+  capital, revenue, economic, financial, CAPEX, OPEX, subsidy, grant.
 
-4. IMPORTANT: Timeline Agent MUST be selected whenever the user's intent involves planning over time or the deliverable contains chronological planning (e.g., roadmaps, schedules, phased rollouts).
+Add "risk" → query mentions: risk, hazard, vulnerability, safety, threat,
+  resilience, uncertainty, mitigation, failure, challenge, barrier.
 
-4. Always include "research" unless you have specific reason not to.
+Add "policy" → query mentions: regulation, compliance, government, law,
+  legislation, policy, mandate, directive, framework, permit, governance.
 
-5. Never select an agent that is completely irrelevant to the query.
+Add "timeline" → query mentions: roadmap, timeline, phases, milestones,
+  rollout, implementation plan, schedule, step-by-step, year plan.
 
-6. If multiple agents are triggered, include all of them.
-
-==============================
-OUTPUT REQUIREMENTS
-==============================
-
-Return ONLY valid JSON.
-
-Return exactly this schema.
-
-{{
-    "objective": "",
-    "required_agents": []
-}}
+Add "sdg" → query mentions: SDG, Sustainable Development Goal, Agenda 2030,
+  UN Goals, Goal 1 through Goal 17.
 
 ==============================
-VALIDATION
+OUTPUT FORMAT
 ==============================
 
-Before returning verify:
+Return ONLY a JSON object — no code, no explanation, no markdown.
+The first character MUST be {{ and the last character MUST be }}.
 
-✓ Valid JSON
+Example 1:
+Query: "Assess environmental impacts of electric buses"
+Output:
+{{"objective": "Assess environmental impacts of electric buses", "required_agents": ["research", "environmental"]}}
 
-✓ objective is not empty and accurately describes the user's goal
+Example 2:
+Query: "What is the budget and timeline for solar panel deployment?"
+Output:
+{{"objective": "Determine budget and timeline for solar panel deployment", "required_agents": ["research", "finance", "timeline"]}}
 
-✓ required_agents is not empty
+Example 3:
+Query: "What are the SDG targets for clean energy policy compliance?"
+Output:
+{{"objective": "Identify SDG targets and policy requirements for clean energy", "required_agents": ["research", "sdg", "policy"]}}
 
-✓ Every agent name is valid (from the list above)
-
-✓ No duplicate agents
-
-✓ Timeline is included if query mentions roadmap / timeline / phases / milestones / year plans
-
-✓ Finance is included if query mentions budget / cost / investment / ROI / funding
-
-✓ Risk is included if query mentions risk / hazard / vulnerability / safety / mitigation
-
-✓ Policy is included if query mentions regulation / compliance / government / legislation
-
-✓ Environmental is included if query mentions emissions / carbon / ecosystem / climate
-
-✓ SDG is included if query mentions SDG / Sustainable Development Goals / UN Goals
-
-Return ONLY JSON.
+Now output JSON for the user query above. Return ONLY the JSON object.
 """
-
-PLANNER_PROMPT += "\n\n" + PLANNER_JSON_INSTRUCTIONS

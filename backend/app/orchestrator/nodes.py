@@ -35,7 +35,7 @@ from app.websocket.events import (
     broadcast_agent_completed,
     broadcast_agent_failed,
 )
-from app.services.llm import get_llm
+from app.services.llm import get_llm, get_planner_llm
 import logging
 
 logger = logging.getLogger(__name__)
@@ -73,7 +73,7 @@ def _agent(name: str):
             "timeline":    TimelineAgent,
             "report":      ReportAgent,
         }
-        _agents[name] = mapping[name](llm)
+        _agents[name] = mapping[name](get_planner_llm() if name == "planner" else llm)
     return _agents[name]
 
 
