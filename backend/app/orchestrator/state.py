@@ -4,6 +4,7 @@ from typing import TypedDict, Dict, List, Any
 class GraphState(TypedDict):
     # ── Input ────────────────────────────────────────────────────────────────
     query: str
+    location: str
 
     # ── Planner ──────────────────────────────────────────────────────────────
     planner_output: dict
@@ -19,9 +20,17 @@ class GraphState(TypedDict):
     agent_status: Dict[str, str]
     errors: Dict[str, str]
 
-    # ── Missing information: list of {type, description} objects ─────────────
-    # Each item: {"type": "dataset|policy|...", "description": "..."}
+    # ── Missing information ──────────────────────────────────────────────────
     missing_information: List[Dict[str, str]]
 
-    # ── RAG context populated by ResearchAgent ────────────────────────────────
+    # ── RAG context populated by ResearchAgent ───────────────────────────────
     retrieved_context: List[dict]
+
+    # ── Tool Inputs ──────────────────────────────────────────────────────────
+    carbon_input: Dict[str, Any]
+    budget_input: Dict[str, Any]
+
+    # ── Tool Outputs (optional but recommended) ──────────────────────────────
+    carbon_analysis: Dict[str, Any]
+    budget_analysis: Dict[str, Any]
+    location_analysis: Dict[str, Any]
