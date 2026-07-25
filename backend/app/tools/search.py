@@ -1,28 +1,45 @@
-"""
-Temporary Search Tool
+from dataclasses import dataclass
+import requests
 
-Later this will connect to
-DuckDuckGo / Tavily / ChromaDB.
-"""
 
-def search_documents(query: str):
+@dataclass
+class SearchInput:
+    query: str
+    max_results: int = 5
 
-    return f"""
-Search Results
 
-Topic:
-{query}
+class SearchTool:
 
-Information:
+    BASE_URL = "https://api.duckduckgo.com/"
 
-Rainwater harvesting can reduce
-freshwater consumption.
+    @staticmethod
+    def search(data: SearchInput):
 
-Schools benefit from rooftop
-collection systems.
+        params = {
+            "q": data.query,
+            "format": "json"
+        }
 
-Government incentives exist
-for sustainable infrastructure.
+        try:
+            response = requests.get(
+                SearchTool.BASE_URL,
+                params=params,
+                timeout=10,
+            )
 
-UN SDG 6 and SDG 13 are relevant.
-"""
+            response.raise_for_status()
+
+            result = response.json()
+
+            return {
+                "success": True,
+                "heading": result.get("Heading"),
+                "abstract": result.get("Abstract"),
+                "related_topics": result.get("RelatedTopics", [])
+            }
+
+        except Exception as e:
+            return {
+                "success": False,
+                "message": str(e)
+            }

@@ -49,6 +49,22 @@ Previously Identified Missing Information
 
 {shared_missing_information}
 
+Knowledge Base Context
+
+{rag_context}
+
+Web Search Results
+
+{web_context}
+
+Use both the Knowledge Base Context and Web Search Results.
+
+Prefer the Knowledge Base when the two sources overlap.
+
+Use Web Search Results to include recent information that may not yet exist in the knowledge base.
+
+Do not invent facts beyond the provided sources.
+
 TASKS
 ==================================================
 

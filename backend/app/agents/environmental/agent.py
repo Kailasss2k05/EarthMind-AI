@@ -3,8 +3,10 @@ import json
 from app.core.base_agent import BaseAgent
 from app.core.utils import build_references_from_chunks
 from app.prompts.environmental_prompt import ENVIRONMENTAL_PROMPT
+
 from app.tools.carbon import CarbonInput, CarbonTool
 from app.tools.maps import MapsTool, LocationInput
+from app.tools.weather import WeatherTool, WeatherInput
 
 
 class EnvironmentalAgent(BaseAgent):
@@ -12,9 +14,9 @@ class EnvironmentalAgent(BaseAgent):
     def build_prompt(self, state: dict) -> str:
         outputs = state.get("outputs", {})
 
-        # -----------------------------
+        # ----------------------------------------------------
         # Carbon Tool
-        # -----------------------------
+        # ----------------------------------------------------
         carbon_data = state.get("carbon_input", {})
 
         carbon = CarbonInput(
@@ -27,9 +29,9 @@ class EnvironmentalAgent(BaseAgent):
 
         carbon_analysis = CarbonTool.calculate(carbon)
 
-        # -----------------------------
+        # ----------------------------------------------------
         # Maps Tool
-        # -----------------------------
+        # ----------------------------------------------------
         location = state.get("location", "")
 
         if location:
@@ -42,9 +44,31 @@ class EnvironmentalAgent(BaseAgent):
                 "message": "No location provided."
             }
 
-        # -----------------------------
-        # Build Prompt
-        # -----------------------------
+        # ----------------------------------------------------
+        # Weather Tool
+        # ----------------------------------------------------
+        if (
+            location_analysis.get("success")
+            and location_analysis.get("latitude") is not None
+            and location_analysis.get("longitude") is not None
+        ):
+
+            weather_analysis = WeatherTool.get_weather(
+                WeatherInput(
+                    latitude=location_analysis["latitude"],
+                    longitude=location_analysis["longitude"],
+                )
+            )
+
+        else:
+            weather_analysis = {
+                "success": False,
+                "message": "Weather could not be retrieved because location is unavailable."
+            }
+
+        # ----------------------------------------------------
+        # Prompt
+        # ----------------------------------------------------
         return ENVIRONMENTAL_PROMPT.format(
             query=state.get("query", ""),
 
@@ -73,6 +97,11 @@ class EnvironmentalAgent(BaseAgent):
                 indent=2,
             ),
 
+            weather_analysis=json.dumps(
+                weather_analysis,
+                indent=2,
+            ),
+
             shared_missing_information=json.dumps(
                 state.get("missing_information", []),
                 indent=2,
@@ -84,7 +113,7 @@ class EnvironmentalAgent(BaseAgent):
         Run Environmental Agent.
 
         If the model returns no references,
-        populate them from retrieved context.
+        populate them from retrieved_context.
         """
 
         result = super().run(state)
