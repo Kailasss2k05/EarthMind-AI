@@ -65,8 +65,9 @@ export function buildReportData(props: RawProps, generatedAt: Date): ReportData 
   const sdgNumbers: string[] = [];
   const sdgOutputs = queryResponse?.outputs?.sdg as Record<string, any> | undefined;
   if (sdgOutputs?.findings && Array.isArray(sdgOutputs.findings)) {
-    sdgOutputs.findings.forEach((f: string) => {
-      const match = f.match(/SDG\s*(\d+)/i);
+    sdgOutputs.findings.forEach((f: any) => {
+      const text = typeof f === "string" ? f : (f?.description ?? "");
+      const match = text.match(/SDG\s*(\d+)/i);
       if (match && match[1]) {
         sdgNumbers.push(match[1]);
       }
@@ -78,8 +79,13 @@ export function buildReportData(props: RawProps, generatedAt: Date): ReportData 
   let policies: PolicyItem[] = [];
   const policyOutputs = queryResponse?.outputs?.policy as Record<string, any> | undefined;
   if (policyOutputs?.findings && Array.isArray(policyOutputs.findings)) {
-    policies = policyOutputs.findings.map((f: string) => {
-      const parts = f.split(/[:–-]/);
+    policies = policyOutputs.findings.map((f: any) => {
+      const text = typeof f === "string" ? f : (f?.description ?? "");
+      const title = typeof f === "string" ? "" : (f?.type ?? "");
+      const parts = text.split(/[:–-]/);
+      if (title) {
+        return { title, description: text };
+      }
       if (parts.length > 1) {
         return {
           title: parts[0].trim(),
@@ -87,8 +93,8 @@ export function buildReportData(props: RawProps, generatedAt: Date): ReportData 
         };
       }
       return {
-        title: f.length > 40 ? f.slice(0, 40) + "..." : f,
-        description: f
+        title: text.length > 40 ? text.slice(0, 40) + "..." : text,
+        description: text
       };
     });
   }
@@ -114,8 +120,15 @@ export function buildReportData(props: RawProps, generatedAt: Date): ReportData 
   const envOutputs = queryResponse?.outputs?.environmental as Record<string, any> | undefined;
   if (envOutputs?.findings && Array.isArray(envOutputs.findings)) {
     const colors = ["#26BDE2", "#56C02B", "#4C9F38", "#FD9D24"];
-    envMetrics = envOutputs.findings.map((f: string, idx: number) => {
-      const parts = f.split(/[:–-]/);
+    envMetrics = envOutputs.findings.map((f: any, idx: number) => {
+      if (typeof f === "object" && f !== null) {
+        return {
+          label: f.type ?? "Impact Indicator " + (idx + 1),
+          value: f.description ?? "",
+          color: colors[idx % colors.length]
+        };
+      }
+      const parts = (f as string).split(/[:–-]/);
       if (parts.length > 1) {
         return {
           label: parts[0].trim(),
@@ -125,7 +138,7 @@ export function buildReportData(props: RawProps, generatedAt: Date): ReportData 
       }
       return {
         label: "Impact Indicator " + (idx + 1),
-        value: f,
+        value: f as string,
         color: colors[idx % colors.length]
       };
     });
@@ -145,23 +158,20 @@ export function buildReportData(props: RawProps, generatedAt: Date): ReportData 
   const financeOutputs = queryResponse?.outputs?.finance as Record<string, any> | undefined;
   if (financeOutputs?.findings && Array.isArray(financeOutputs.findings)) {
     const colors = ["#26BDE2", "#56C02B", "#FD9D24", "#FD6925", "#9b9b9b"];
-    financeOutputs.findings.forEach((f: string, idx: number) => {
-      const parts = f.split(/[:–-]/);
-      if (parts.length > 1) {
-        const label = parts[0].trim();
+    financeOutputs.findings.forEach((f: any, idx: number) => {
+      const text = typeof f === "string" ? f : (f?.description ?? "");
+      const label = typeof f === "object" ? (f?.type ?? "") : "";
+      const parts = text.split(/[:–-]/);
+      if (label) {
+        financialKpis.push({ label, value: text });
+      } else if (parts.length > 1) {
+        const lbl = parts[0].trim();
         const valStr = parts.slice(1).join(":").trim();
         if (valStr.includes("%")) {
           const valNum = parseFloat(valStr.replace(/[^0-9.]/g, "")) || 10;
-          financialRows.push({
-            label,
-            value: valNum,
-            color: colors[idx % colors.length]
-          });
+          financialRows.push({ label: lbl, value: valNum, color: colors[idx % colors.length] });
         } else {
-          financialKpis.push({
-            label,
-            value: valStr
-          });
+          financialKpis.push({ label: lbl, value: valStr });
         }
       }
     });
@@ -187,8 +197,10 @@ export function buildReportData(props: RawProps, generatedAt: Date): ReportData 
   let risks: RiskEntry[] = [];
   const riskOutputs = queryResponse?.outputs?.risk as Record<string, any> | undefined;
   if (riskOutputs?.findings && Array.isArray(riskOutputs.findings)) {
-    risks = riskOutputs.findings.map((f: string) => {
-      const match = f.match(/^(.*?)\s*\((Low|Medium|High|Critical)\)\s*[:–-]\s*(.*)$/i);
+    risks = riskOutputs.findings.map((f: any) => {
+      const text = typeof f === "string" ? f : (f?.description ?? "");
+      const typeLabel = typeof f === "object" ? (f?.type ?? "") : "";
+      const match = text.match(/^(.*?)\s*\((Low|Medium|High|Critical)\)\s*[:–-]\s*(.*)$/i);
       if (match) {
         return {
           factor: match[1].trim(),
@@ -196,18 +208,18 @@ export function buildReportData(props: RawProps, generatedAt: Date): ReportData 
           mitigation: match[3].trim()
         };
       }
-      const parts = f.split(/[:–-]/);
+      const parts = text.split(/[:–-]/);
       if (parts.length > 1) {
         return {
-          factor: parts[0].trim(),
+          factor: typeLabel || parts[0].trim(),
           likelihood: "Medium",
           mitigation: parts.slice(1).join(":").trim()
         };
       }
       return {
-        factor: f,
+        factor: typeLabel || text,
         likelihood: "Medium",
-        mitigation: "Actively monitor implementation vectors."
+        mitigation: text || "Actively monitor implementation vectors."
       };
     });
   }
@@ -225,11 +237,12 @@ export function buildReportData(props: RawProps, generatedAt: Date): ReportData 
   let timelinePhases: TimelinePhase[] = [];
   const timelineOutputs = queryResponse?.outputs?.timeline as Record<string, any> | undefined;
   if (timelineOutputs?.findings && Array.isArray(timelineOutputs.findings)) {
-    timelinePhases = timelineOutputs.findings.map((f: string, idx: number) => {
-      const periodMatch = f.match(/\(([^)]+)\)\s*$/);
+    timelinePhases = timelineOutputs.findings.map((f: any, idx: number) => {
+      const text = typeof f === "string" ? f : (f?.description ?? "");
+      const periodMatch = text.match(/\(([^)]+)\)\s*$/);
       const period = periodMatch?.[1] ?? "";
-      const titleLine = f.replace(/\(([^)]+)\)\s*$/, "").trim();
-      const phaseMatch = titleLine.match(/^(?:Phase\s*\d+[:\s–-]+)?(.+)$/i);
+      const titleLine = text.replace(/\(([^)]+)\)\s*$/, "").trim();
+      const phaseMatch = titleLine.match(/^(?:Phase\s*\d+[:\s\u2013-]+)?(.+)$/i);
       return {
         phase: `Phase ${idx + 1}`,
         title: phaseMatch?.[1]?.trim() ?? titleLine,
@@ -344,8 +357,10 @@ export function buildReportData(props: RawProps, generatedAt: Date): ReportData 
       const live = agentStatuses.find((a) => a.name === name);
       if (!live) return { name, status: "Queued", duration: "-", order: "-" };
 
+      const backendStatus = queryResponse?.agent_status?.[name.toLowerCase()];
       let status = "Queued";
-      if (live.status === "running") status = "Running";
+      if (backendStatus === "skipped") status = "Skipped";
+      else if (live.status === "running") status = "Running";
       else if (live.status === "done") status = "Completed";
       else if (live.status === "error") status = "Failed";
 
@@ -398,7 +413,7 @@ export function buildReportData(props: RawProps, generatedAt: Date): ReportData 
       executionTime:    elapsedMs > 0 ? `${(elapsedMs / 1000).toFixed(1)} sec` : "64.8 sec",
       knowledgeSources: String(references.length),
       platform:         "LangGraph",
-      llm:              "IBM watsonx.ai",
+      llm:              "Ollama",
       kb:               "ChromaDB",
       standard:         "CSRD · ESRS · SDG",
     },

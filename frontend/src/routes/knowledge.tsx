@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import {
   BookOpen,
@@ -120,8 +120,10 @@ function KnowledgePage() {
         title="Knowledge Base"
         description="The corpus your agents reason over — governed, versioned and vectorised for fast retrieval."
         actions={
-          <Button className="rounded-full bg-gradient-to-r from-[oklch(0.42_0.22_285)] to-[oklch(0.55_0.24_285)] text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.42_0.22_285/0.7)]">
-            <Upload className="mr-1.5 h-4 w-4" /> Upload documents
+          <Button asChild className="rounded-full bg-gradient-to-r from-[oklch(0.42_0.22_285)] to-[oklch(0.55_0.24_285)] text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.42_0.22_285/0.7)]">
+            <Link to="/documents">
+              <Upload className="mr-1.5 h-4 w-4" /> Upload documents
+            </Link>
           </Button>
         }
       />

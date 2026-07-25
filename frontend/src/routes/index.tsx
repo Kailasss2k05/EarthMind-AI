@@ -3,10 +3,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import {
   Sparkles,
-  Activity,
-  Leaf,
-  Bot,
-  Zap,
   ArrowUpRight,
   ArrowDownRight,
   ArrowRight,
@@ -30,9 +26,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { emissionsSeries } from "@/lib/mock-data";
 import { getDashboardStats } from "@/services/dashboard.service";
-import type { DashboardStatsResponse, QueryHistoryItem, ReportHistoryItem, KnowledgeBaseStats } from "@/services/types";
+import { analyticsService } from "@/services/analytics.service";
+import type { DashboardStatsResponse, QueryHistoryItem, ReportHistoryItem, KnowledgeBaseStats, AnalyticsResponse } from "@/services/types";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -41,13 +37,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Build Sustainable Communities with AI — EarthMind AI unites multi-agent intelligence, watsonx.ai and the UN SDGs into a single sustainability operating system.",
+          "Build Sustainable Communities with AI — EarthMind AI unites multi-agent intelligence, Ollama and the UN SDGs into a single sustainability operating system.",
       },
       { property: "og:title", content: "EarthMind AI — Sustainability Intelligence" },
       {
         property: "og:description",
         content:
-          "Multi-agent orchestration, LangGraph, IBM watsonx.ai and RAG aligned to the UN SDGs.",
+          "Multi-agent orchestration, LangGraph, Ollama and RAG aligned to the UN SDGs.",
       },
     ],
   }),
@@ -56,6 +52,7 @@ export const Route = createFileRoute("/")({
 
 function OverviewPage() {
   const [stats, setStats] = useState<DashboardStatsResponse | null>(null);
+  const [analytics, setAnalytics] = useState<AnalyticsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -63,8 +60,12 @@ function OverviewPage() {
     async function loadStats() {
       try {
         setLoading(true);
-        const data = await getDashboardStats();
-        setStats(data);
+        const [statsData, analyticsData] = await Promise.all([
+          getDashboardStats(),
+          analyticsService.getAnalytics(),
+        ]);
+        setStats(statsData);
+        setAnalytics(analyticsData);
         setError(null);
       } catch (err: any) {
         setError(err.message || "Failed to load dashboard stats");
@@ -163,7 +164,7 @@ function OverviewPage() {
 
         <p className="mt-6 max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-[17px]">
           EarthMind AI combines multi-agent intelligence, LangGraph orchestration,
-          IBM watsonx.ai, RAG and sustainability analytics to generate intelligent
+          Ollama, RAG and sustainability analytics to generate intelligent
           action plans aligned with the UN Sustainable Development Goals.
         </p>
 
@@ -180,11 +181,14 @@ function OverviewPage() {
             </Link>
           </Button>
           <Button
+            asChild
             variant="outline"
             size="lg"
             className="h-11 rounded-full border-border/70 bg-white/60 px-5 text-sm font-medium backdrop-blur-sm dark:bg-white/5"
           >
-            View live agents
+            <Link to="/agents">
+              View live agents
+            </Link>
           </Button>
         </div>
       </motion.section>
@@ -198,7 +202,7 @@ function OverviewPage() {
 
       {/* CHART + ACTIVITY */}
       <section className="grid gap-4 lg:grid-cols-3">
-        <EmissionsChart />
+        <PipelineActivityChart analytics={analytics} />
         <ActivityStream queries={stats.recent_queries} reports={stats.recent_reports} />
       </section>
 
@@ -318,8 +322,18 @@ function KpiCard({
   );
 }
 
-/* ---------- Emissions chart ---------- */
-function EmissionsChart() {
+/* ---------- Pipeline Activity chart ---------- */
+function PipelineActivityChart({ analytics }: { analytics: AnalyticsResponse | null }) {
+  // Combine queries and reports into one chart
+  const data = (analytics?.daily.queries_per_period ?? []).map((q, i) => {
+    const r = analytics?.daily.reports_generated_per_period[i];
+    return {
+      date: new Date(q.date).toLocaleDateString("default", { month: "short", day: "numeric" }),
+      queries: q.value,
+      reports: r ? r.value : 0,
+    };
+  });
+
   return (
     <motion.section
       initial={{ opacity: 0, y: 16 }}
@@ -332,21 +346,17 @@ function EmissionsChart() {
           <div className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-primary" />
             <h3 className="font-display text-2xl font-medium tracking-tight">
-              Emissions trajectory
+              Pipeline Activity
             </h3>
-            <Badge variant="outline" className="ml-2 font-normal text-muted-foreground text-[10px]">
-              Demo Analytics
-            </Badge>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
-            12-month decomposition · tCO₂e · SBTi validated
+            Daily executions & generated reports
           </p>
         </div>
         <div className="hidden items-center gap-3 text-[11px] font-medium text-muted-foreground sm:flex">
           {[
-            { c: "oklch(0.42 0.22 285)", l: "Scope 1" },
-            { c: "oklch(0.62 0.22 290)", l: "Scope 2" },
-            { c: "oklch(0.85 0.08 290)", l: "Scope 3" },
+            { c: "oklch(0.42 0.22 285)", l: "Queries" },
+            { c: "oklch(0.62 0.22 290)", l: "Reports" },
           ].map((x) => (
             <span key={x.l} className="inline-flex items-center gap-1.5">
               <span
@@ -362,7 +372,7 @@ function EmissionsChart() {
       <div className="mt-5 h-[280px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
-            data={emissionsSeries}
+            data={data}
             margin={{ top: 10, right: 8, left: -18, bottom: 0 }}
           >
             <defs>
@@ -374,10 +384,6 @@ function EmissionsChart() {
                 <stop offset="0%" stopColor="oklch(0.62 0.22 290)" stopOpacity={0.5} />
                 <stop offset="100%" stopColor="oklch(0.62 0.22 290)" stopOpacity={0} />
               </linearGradient>
-              <linearGradient id="s3" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="oklch(0.85 0.08 290)" stopOpacity={0.55} />
-                <stop offset="100%" stopColor="oklch(0.85 0.08 290)" stopOpacity={0} />
-              </linearGradient>
             </defs>
             <CartesianGrid
               strokeDasharray="3 4"
@@ -385,7 +391,7 @@ function EmissionsChart() {
               vertical={false}
             />
             <XAxis
-              dataKey="month"
+              dataKey="date"
               stroke="oklch(0.5 0.02 285)"
               fontSize={11}
               tickLine={false}
@@ -409,23 +415,15 @@ function EmissionsChart() {
             />
             <Area
               type="monotone"
-              dataKey="scope3"
-              stackId="1"
-              stroke="oklch(0.85 0.08 290)"
-              fill="url(#s3)"
-              strokeWidth={2}
-            />
-            <Area
-              type="monotone"
-              dataKey="scope2"
-              stackId="1"
+              dataKey="reports"
+              stackId="2"
               stroke="oklch(0.62 0.22 290)"
               fill="url(#s2)"
               strokeWidth={2}
             />
             <Area
               type="monotone"
-              dataKey="scope1"
+              dataKey="queries"
               stackId="1"
               stroke="oklch(0.42 0.22 285)"
               fill="url(#s1)"

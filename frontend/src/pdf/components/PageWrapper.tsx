@@ -88,7 +88,7 @@ export function PageWrapper({
             Multi-Agent Sustainability Intelligence Platform
           </Text>
           <Text style={{ fontSize: 6, color: BRAND.muted }}>
-            Generated using IBM watsonx.ai + LangGraph
+            Generated using Ollama + LangGraph
           </Text>
         </View>
         <View style={{ alignItems: "flex-end" }}>

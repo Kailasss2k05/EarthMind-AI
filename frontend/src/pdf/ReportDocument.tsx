@@ -42,7 +42,7 @@ export function ReportDocument({ data }: Props) {
       subject="Sustainability Action Report"
       creator="EarthMind AI v1.8.4"
       producer="@react-pdf/renderer"
-      keywords="sustainability, ESG, CSRD, ESRS, SDG, LangGraph, watsonx.ai"
+      keywords="sustainability, ESG, CSRD, ESRS, SDG, LangGraph, Ollama"
     >
       <CoverPage data={data} />
       <TableOfContents data={data} />

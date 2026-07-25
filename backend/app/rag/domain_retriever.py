@@ -19,16 +19,17 @@ This module sits on top of the existing retriever.py and adds:
    chunks (e.g. all relevant collections are empty), the function falls
    back to retrieve_all() so the pipeline always has some context.
 
-Design note
------------
-retriever.py is NOT modified.  This module only calls the existing
-retrieve(domain, query) and retrieve_all(query) functions.
+Performance fix (C-6):
+   The query embedding is computed ONCE here and passed to every
+   per-domain retrieve() call, eliminating the N×embedding-model
+   invocations that occurred previously.
 """
 
 import logging
 from typing import List
 
 from .config import DOMAINS, DEFAULT_TOP_K
+from .embedder import embed_texts
 from .retriever import retrieve, retrieve_all
 
 logger = logging.getLogger(__name__)
@@ -155,10 +156,13 @@ def retrieve_domains(
         ", ".join(domains) if domains else "(none — fallback to all)",
     )
 
-    # ── Query each selected domain ────────────────────────────────────────────
+    # ── Compute query embedding ONCE (C-6 fix) ───────────────────────────────
+    query_embedding = embed_texts([query])[0]
+
+    # ── Query each selected domain — reuse the same embedding ────────────────
     all_chunks: List[dict] = []
     for domain in domains:
-        chunks = retrieve(domain, query, top_k)
+        chunks = retrieve(domain, query, top_k, query_embedding=query_embedding)
         # Ensure domain tag is set
         for c in chunks:
             if c.get("domain") is None:
@@ -170,7 +174,7 @@ def retrieve_domains(
         logger.warning(
             "[RAG] All selected collections empty. Falling back to retrieve_all()."
         )
-        all_chunks = retrieve_all(query, top_k)
+        all_chunks = retrieve_all(query, top_k, query_embedding=query_embedding)
 
     # ── Apply domain relevance boost ──────────────────────────────────────────
     all_chunks = _apply_domain_boost(all_chunks, domains)

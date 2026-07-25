@@ -11,9 +11,17 @@ from tenacity import (
     retry_if_exception_type,
 )
 
-from app.core.utils import calculate_confidence,fallback_response
+from app.core.utils import calculate_confidence, fallback_response
 
 logger = logging.getLogger(__name__)
+
+# Exceptions that should NEVER be retried — re-raise immediately (M-7)
+_NON_RETRYABLE = (
+    MemoryError,
+    KeyboardInterrupt,
+    SystemExit,
+    GeneratorExit,
+)
 
 
 class BaseAgent(ABC):
@@ -35,15 +43,22 @@ class BaseAgent(ABC):
     )
     def invoke_llm(self, prompt):
         """
-        Automatically retries LLM invocation.
+        Automatically retries LLM invocation on transient failures.
+
+        Non-retryable exceptions (MemoryError, KeyboardInterrupt, etc.)
+        are re-raised immediately without consuming retry budget (M-7).
 
         Attempts:
             1
             2 (after 2 sec)
             3 (after 4 sec)
         """
-
-        return self.llm.invoke(prompt)
+        try:
+            return self.llm.invoke(prompt)
+        except _NON_RETRYABLE:
+            raise
+        except Exception:
+            raise  # tenacity will retry
 
     def run(self, state):
 
@@ -58,9 +73,11 @@ class BaseAgent(ABC):
             if not self.returns_json:
                 return content
 
-            print(f"\n===== {self.__class__.__name__} RAW OUTPUT =====")
-            print(content)
-            print("==============================================\n")
+            logger.debug(
+                "%s RAW OUTPUT:\n%s",
+                self.__class__.__name__,
+                content,
+            )
 
             # Remove markdown fences
             content = re.sub(r"^```json\s*", "", content, flags=re.IGNORECASE)
@@ -92,6 +109,10 @@ class BaseAgent(ABC):
 
             return result
 
+        except _NON_RETRYABLE:
+            # Never swallow critical system exceptions
+            raise
+
         except json.JSONDecodeError as e:
 
             logger.error(
@@ -101,9 +122,9 @@ class BaseAgent(ABC):
             )
 
             return fallback_response(
-    self.__class__.__name__.replace("Agent", "").lower(),
-    str(e),
-)
+                self.__class__.__name__.replace("Agent", "").lower(),
+                str(e),
+            )
 
         except Exception as e:
 
@@ -113,6 +134,6 @@ class BaseAgent(ABC):
             )
 
             return fallback_response(
-    self.__class__.__name__.replace("Agent", "").lower(),
-    str(e),
-)
+                self.__class__.__name__.replace("Agent", "").lower(),
+                str(e),
+            )

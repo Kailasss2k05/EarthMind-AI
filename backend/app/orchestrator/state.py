@@ -18,7 +18,10 @@ class GraphState(TypedDict):
     # ── Shared state updated by every agent ──────────────────────────────────
     agent_status: Dict[str, str]
     errors: Dict[str, str]
-    missing_information: List[str]
+
+    # ── Missing information: list of {type, description} objects ─────────────
+    # Each item: {"type": "dataset|policy|...", "description": "..."}
+    missing_information: List[Dict[str, str]]
 
     # ── RAG context populated by ResearchAgent ────────────────────────────────
     retrieved_context: List[dict]
