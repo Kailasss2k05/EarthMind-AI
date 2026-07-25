@@ -213,27 +213,25 @@ function AgentsPage() {
         <div className="relative h-80 overflow-hidden rounded-2xl border border-border/50 bg-gradient-to-br from-primary/5 via-transparent to-[oklch(0.62_0.18_275)]/8">
           <svg className="absolute inset-0 h-full w-full" viewBox="0 0 800 320" preserveAspectRatio="none">
             <defs>
-              <linearGradient id="edge" x1="0" x2="1">
+              <linearGradient id="edge" x1="0" y1="0" x2="800" y2="0" gradientUnits="userSpaceOnUse">
                 <stop offset="0%" stopColor="oklch(0.55 0.24 285)" stopOpacity="0.5" />
                 <stop offset="100%" stopColor="oklch(0.62 0.18 275)" stopOpacity="0.5" />
               </linearGradient>
             </defs>
             {([
-              [100, 160, 300, 60],
-              [100, 160, 300, 120],
-              [100, 160, 300, 180],
-              [100, 160, 300, 240],
-              [100, 160, 300, 300],
-              [300, 60, 540, 100],
-              [300, 120, 540, 140],
-              [300, 180, 540, 180],
-              [300, 240, 540, 220],
-              [300, 300, 540, 260],
-              [540, 100, 700, 160],
-              [540, 140, 700, 160],
-              [540, 180, 700, 160],
-              [540, 220, 700, 160],
-              [540, 260, 700, 160],
+              [80, 160, 260, 160],
+              [260, 160, 480, 45],
+              [260, 160, 480, 90],
+              [260, 160, 480, 135],
+              [260, 160, 480, 180],
+              [260, 160, 480, 225],
+              [260, 160, 480, 270],
+              [480, 45, 720, 160],
+              [480, 90, 720, 160],
+              [480, 135, 720, 160],
+              [480, 180, 720, 160],
+              [480, 225, 720, 160],
+              [480, 270, 720, 160],
             ] as [number, number, number, number][]).map(([x1, y1, x2, y2], i) => (
               <motion.line
                 key={i}
@@ -251,15 +249,15 @@ function AgentsPage() {
             ))}
           </svg>
           {[
-            { x: 100, y: 160, label: "Planner" },
-            { x: 300, y: 60, label: "Research" },
-            { x: 300, y: 120, label: "SDG" },
-            { x: 300, y: 180, label: "Policy" },
-            { x: 300, y: 240, label: "Environmental" },
-            { x: 300, y: 300, label: "Finance" },
-            { x: 540, y: 100, label: "Risk" },
-            { x: 540, y: 180, label: "Timeline" },
-            { x: 700, y: 160, label: "Report" },
+            { x: 80, y: 160, label: "Planner" },
+            { x: 260, y: 160, label: "Research" },
+            { x: 480, y: 45, label: "SDG" },
+            { x: 480, y: 90, label: "Policy" },
+            { x: 480, y: 135, label: "Environmental" },
+            { x: 480, y: 180, label: "Finance" },
+            { x: 480, y: 225, label: "Risk" },
+            { x: 480, y: 270, label: "Timeline" },
+            { x: 720, y: 160, label: "Report" },
           ].map((n, i) => (
             <motion.div
               key={n.label}

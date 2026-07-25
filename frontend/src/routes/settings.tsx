@@ -136,7 +136,7 @@ function SettingsPage() {
         <Panel title="API credentials" description="Status of configured services">
           <div className="space-y-3">
             {[
-              { label: "watsonx.ai", configured: settings.configured?.watsonx },
+              { label: "Ollama", configured: settings.configured?.ollama ?? true },
               { label: "PostgreSQL", configured: settings.configured?.postgres },
               { label: "ChromaDB", configured: settings.configured?.chromadb },
               { label: "Redis", configured: settings.configured?.redis },

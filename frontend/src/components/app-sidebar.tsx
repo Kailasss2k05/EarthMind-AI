@@ -111,7 +111,7 @@ export function AppSidebar() {
               All agents nominal
             </div>
             <p className="mt-1 text-[11px] text-muted-foreground">
-              12 workflows running · watsonx.ai
+              12 workflows running · Ollama
             </p>
           </div>
         )}

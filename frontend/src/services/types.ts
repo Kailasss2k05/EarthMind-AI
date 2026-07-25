@@ -191,8 +191,10 @@ export interface KnowledgeBaseStats {
 }
 
 export interface RecentUpload {
+  id: string;
   filename: string;
   domain: string;
+  size: number;
   uploaded_at: string;
 }
 
@@ -246,6 +248,20 @@ export interface ReportHistoryListResponse {
   total: number;
   items: ReportHistoryItemEnhanced[];
 }
+
+/** GET /api/v1/reports/{id} — full report detail */
+export interface ReportDetailResponse {
+  id: string;
+  query_id: string;
+  original_query: string;
+  report: string; // Full Markdown report text
+  planner_output: Record<string, unknown> | null;
+  execution_time: number;
+  confidence: number | null;
+  status: string;
+  created_at: string;
+}
+
 
 // ─── REST: History ─────────────────────────────────────────────────────────
 

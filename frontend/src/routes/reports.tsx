@@ -1,354 +1,397 @@
 /**
- * TODO: ENDPOINT MISSING
- * This page currently renders static mock data from a hardcoded report.
- * A real reports endpoint does NOT yet exist in the backend.
+ * /reports — Lists all generated AI reports and renders individual report details.
  *
- * To connect this page to real data, the backend needs:
- *   GET /api/v1/reports/{request_id}  →  { sections: ReportSection[], metadata: ReportMeta }
+ * Two states:
+ *   - List view   (default)              → GET /api/v1/reports
+ *   - Detail view (?reportId=<uuid>)     → GET /api/v1/reports/{id}
  *
- * Once that endpoint is added:
- *   1. Add report types to services/types.ts
- *   2. Add getReport(requestId) to services/report.service.ts
- *   3. Read the request_id from route search params and fetch the report
+ * The History page "Open" button sets ?reportId=<id> to jump straight to a report.
  */
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useSearch, useNavigate } from "@tanstack/react-router";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   FileText,
   Download,
   Share2,
-  FileDown,
-  Braces,
-  Leaf,
-  Wallet,
-  Scale,
-  ShieldAlert,
-  CalendarClock,
+  ArrowLeft,
+  Loader2,
+  AlertCircle,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  Search,
+  Calendar,
   Sparkles,
-  ExternalLink,
-  Target,
 } from "lucide-react";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  PieChart,
-  Pie,
-  Cell,
-  LineChart,
-  Line,
-  CartesianGrid,
-} from "recharts";
 
 import { PageHeader, Panel } from "@/components/ui-parts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { reportService } from "@/services/report.service";
+import type { ReportHistoryItemEnhanced, ReportDetailResponse } from "@/services/types";
+
+// ─── Route definition ───────────────────────────────────────────────────────
 
 export const Route = createFileRoute("/reports")({
+  validateSearch: (s: Record<string, unknown>) => ({
+    reportId: typeof s.reportId === "string" ? s.reportId : undefined,
+  }),
   head: () => ({
     meta: [
-      { title: "Report · EarthMind AI" },
-      { name: "description", content: "Multi-agent sustainability plan report." },
+      { title: "Reports · EarthMind AI" },
+      { name: "description", content: "AI-generated multi-agent sustainability reports." },
     ],
   }),
-  component: ReportPage,
+  component: ReportsPage,
 });
 
-const sections = [
-  { id: "summary", label: "Executive Summary" },
-  { id: "sdg", label: "Recommended SDGs" },
-  { id: "env", label: "Environmental Analysis" },
-  { id: "fin", label: "Financial Analysis" },
-  { id: "policy", label: "Policy Recommendations" },
-  { id: "risk", label: "Risk Analysis" },
-  { id: "timeline", label: "Timeline" },
-  { id: "reco", label: "Recommendations" },
-  { id: "refs", label: "References" },
-];
+// ─── Helpers ────────────────────────────────────────────────────────────────
 
-const sdgBars = [
-  { sdg: "SDG 6", score: 82 },
-  { sdg: "SDG 11", score: 96 },
-  { sdg: "SDG 13", score: 91 },
-  { sdg: "SDG 9", score: 74 },
-  { sdg: "SDG 15", score: 68 },
-];
+function statusBadge(status: string) {
+  if (status === "completed")
+    return "bg-[oklch(0.72_0.16_160)]/12 text-[oklch(0.55_0.16_160)]";
+  if (status === "partial")
+    return "bg-[oklch(0.85_0.12_60)]/20 text-[oklch(0.55_0.15_60)]";
+  return "bg-muted text-muted-foreground";
+}
 
-const budgetPie = [
-  { name: "Infrastructure", value: 42, color: "oklch(0.55 0.24 285)" },
-  { name: "Technology", value: 24, color: "oklch(0.62 0.18 275)" },
-  { name: "Community", value: 18, color: "oklch(0.68 0.20 290)" },
-  { name: "Operations", value: 16, color: "oklch(0.85 0.08 290)" },
-];
+function StatusIcon({ status }: { status: string }) {
+  if (status === "completed") return <CheckCircle2 className="h-3.5 w-3.5" />;
+  if (status === "partial") return <AlertCircle className="h-3.5 w-3.5" />;
+  return <XCircle className="h-3.5 w-3.5" />;
+}
 
-const timelineLine = [
-  { q: "Q1", plan: 20, actual: 18 },
-  { q: "Q2", plan: 42, actual: 39 },
-  { q: "Q3", plan: 60, actual: 55 },
-  { q: "Q4", plan: 78, actual: null },
-  { q: "Q5", plan: 92, actual: null },
-  { q: "Q6", plan: 100, actual: null },
-];
+/** Render a Markdown string as simple styled HTML without an external library. */
+function MarkdownBody({ text }: { text: string }) {
+  if (!text) return <p className="text-muted-foreground italic">No report content.</p>;
 
-function Section({
-  id,
-  icon: Icon,
-  title,
-  children,
-}: {
-  id: string;
-  icon: typeof Leaf;
-  title: string;
-  children: React.ReactNode;
-}) {
+  const lines = text.split("\n");
+
   return (
-    <motion.section
-      id={id}
-      initial={{ opacity: 0, y: 12 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="scroll-mt-24"
-    >
-      <div className="mb-4 flex items-center gap-3">
-        <div className="rounded-2xl bg-primary/10 p-2 text-primary">
-          <Icon className="h-4 w-4" />
-        </div>
-        <h2 className="font-display text-2xl tracking-tight sm:text-3xl">{title}</h2>
-      </div>
-      <div className="glass rounded-3xl p-6 sm:p-8">{children}</div>
-    </motion.section>
+    <div className="space-y-3 text-[15px] leading-relaxed text-foreground/90">
+      {lines.map((line, i) => {
+        if (line.startsWith("# "))
+          return <h1 key={i} className="font-display text-3xl font-semibold tracking-tight text-foreground mt-6 first:mt-0">{line.slice(2)}</h1>;
+        if (line.startsWith("## "))
+          return <h2 key={i} className="font-display text-xl font-semibold tracking-tight text-foreground mt-5">{line.slice(3)}</h2>;
+        if (line.startsWith("### "))
+          return <h3 key={i} className="font-semibold text-base text-foreground mt-4">{line.slice(4)}</h3>;
+        if (line.startsWith("- ") || line.startsWith("* "))
+          return <li key={i} className="ml-4 list-disc text-muted-foreground">{line.slice(2)}</li>;
+        if (/^\d+\.\s/.test(line))
+          return <li key={i} className="ml-4 list-decimal text-muted-foreground">{line.replace(/^\d+\.\s/, "")}</li>;
+        if (line.startsWith("---") || line.startsWith("___"))
+          return <hr key={i} className="border-border/50 my-4" />;
+        if (line.trim() === "")
+          return <div key={i} className="h-1" />;
+        // Bold **text**
+        const formatted = line.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\*(.+?)\*/g, "<em>$1</em>");
+        return <p key={i} className="text-muted-foreground" dangerouslySetInnerHTML={{ __html: formatted }} />;
+      })}
+    </div>
   );
 }
 
-function ReportPage() {
+// ─── List View ───────────────────────────────────────────────────────────────
+
+function ReportCard({
+  report,
+  index,
+  onOpen,
+}: {
+  report: ReportHistoryItemEnhanced;
+  index: number;
+  onOpen: (id: string) => void;
+}) {
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-8">
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05, duration: 0.4 }}
+      className="glass group relative rounded-3xl p-6 transition-all hover:shadow-[0_20px_50px_-20px_oklch(0.42_0.22_285/0.3)]"
+    >
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <div className="rounded-xl bg-primary/10 p-1.5 text-primary">
+              <Sparkles className="h-3.5 w-3.5" />
+            </div>
+            <h3 className="font-display text-lg tracking-tight leading-snug">{report.title}</h3>
+          </div>
+          <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{report.summary}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              {new Date(report.created_at).toLocaleString()}
+            </span>
+            <span className="font-numeric opacity-60">ID {report.id.split("-")[0]}</span>
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <Badge className={cn("rounded-full text-xs", statusBadge(report.status))}>
+            <StatusIcon status={report.status} />
+            <span className="ml-1 capitalize">{report.status}</span>
+          </Badge>
+          <Button
+            size="sm"
+            className="rounded-full"
+            onClick={() => onOpen(report.id)}
+          >
+            View report
+          </Button>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function ReportListView() {
+  const navigate = useNavigate();
+  const [items, setItems] = useState<ReportHistoryItemEnhanced[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 400);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await reportService.getReports(0, 100, debouncedSearch);
+        setItems(res.items);
+        setTotal(res.total);
+      } catch (e: any) {
+        setError(e.message || "Failed to load reports");
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, [debouncedSearch]);
+
+  function openReport(id: string) {
+    navigate({ to: "/reports", search: { reportId: id } });
+  }
+
+  return (
+    <div className="mx-auto flex max-w-5xl flex-col gap-8">
       <PageHeader
-        eyebrow="Report · Rotterdam · Jul 2026"
-        title="Urban flooding resilience plan"
-        description="A multi-agent sustainability plan combining hydrological modelling, transit integration and citizen engagement, aligned with the UN SDGs."
+        eyebrow="AI Reports"
+        title="Reports"
+        description="Every sustainability plan generated by the multi-agent pipeline — searchable and ready to export."
         actions={
-          <>
-            <Button variant="outline" className="rounded-full"><Share2 className="mr-1.5 h-4 w-4" /> Share</Button>
-            <Button variant="outline" className="rounded-full"><Braces className="mr-1.5 h-4 w-4" /> JSON</Button>
-            <Button variant="outline" className="rounded-full"><FileDown className="mr-1.5 h-4 w-4" /> DOCX</Button>
-            <Button className="rounded-full bg-gradient-to-r from-[oklch(0.42_0.22_285)] to-[oklch(0.55_0.24_285)] text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.42_0.22_285/0.7)]">
-              <Download className="mr-1.5 h-4 w-4" /> Export PDF
-            </Button>
-          </>
+          <Button variant="outline" className="rounded-full">
+            <Download className="mr-1.5 h-4 w-4" /> Export all
+          </Button>
         }
       />
 
-      <div className="grid gap-8 lg:grid-cols-[220px_1fr]">
-        <aside className="hidden lg:block">
-          <div className="sticky top-24 rounded-3xl border border-border/50 bg-background/60 p-4 backdrop-blur">
-            <p className="mb-3 text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-              Contents
-            </p>
-            <nav className="space-y-1">
-              {sections.map((s, i) => (
-                <a
-                  key={s.id}
-                  href={`#${s.id}`}
-                  className={cn(
-                    "flex items-center gap-2 rounded-xl px-2.5 py-1.5 text-sm text-muted-foreground transition hover:bg-muted hover:text-foreground",
-                  )}
-                >
-                  <span className="font-numeric text-[10px] text-primary/60">{String(i + 1).padStart(2, "0")}</span>
-                  {s.label}
-                </a>
-              ))}
-            </nav>
-          </div>
-        </aside>
-
-        <div className="flex flex-col gap-10">
-          <Section id="summary" icon={FileText} title="Executive Summary">
-            <p className="text-base leading-relaxed text-muted-foreground">
-              Rotterdam faces a projected 34% increase in cloudburst intensity by 2035. This
-              plan combines <span className="text-foreground">blue-green infrastructure</span>, an
-              upgraded metro corridor, and neighbourhood-level microgrids to reduce flood exposure
-              by an estimated 58% while cutting transit emissions by 42%.
-            </p>
-            <div className="mt-6 grid gap-3 sm:grid-cols-4">
-              {[
-                { k: "Flood risk reduction", v: "58%" },
-                { k: "CO₂ avoided / yr", v: "84 kt" },
-                { k: "Estimated CAPEX", v: "€312M" },
-                { k: "Payback", v: "9.4 yr" },
-              ].map((s) => (
-                <div key={s.k} className="rounded-2xl border border-border/50 p-4">
-                  <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">{s.k}</p>
-                  <p className="mt-1 font-display text-2xl tracking-tight">{s.v}</p>
-                </div>
-              ))}
-            </div>
-          </Section>
-
-          <Section id="sdg" icon={Target} title="Recommended SDGs">
-            <div className="grid gap-6 md:grid-cols-[1.2fr_1fr]">
-              <div>
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  The plan primarily advances <span className="text-foreground">SDG 11 (Sustainable Cities)</span>,{" "}
-                  <span className="text-foreground">SDG 13 (Climate Action)</span> and{" "}
-                  <span className="text-foreground">SDG 6 (Clean Water)</span>, with meaningful co-benefits
-                  across SDG 9 and 15.
-                </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {["6", "9", "11", "13", "15"].map((n) => (
-                    <span key={n} className="inline-flex h-8 items-center rounded-full border border-primary/20 bg-primary/5 px-3 font-numeric text-xs text-primary">
-                      SDG {n}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <div className="h-56 w-full">
-                <ResponsiveContainer>
-                  <BarChart data={sdgBars} margin={{ left: -10, right: 8, top: 8, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.9 0 0)" vertical={false} />
-                    <XAxis dataKey="sdg" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <Tooltip cursor={{ fill: "oklch(0.55 0.24 285 / 0.06)" }} contentStyle={{ borderRadius: 12, border: "1px solid oklch(0.9 0 0)" }} />
-                    <Bar dataKey="score" fill="oklch(0.55 0.24 285)" radius={[8, 8, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </Section>
-
-          <Section id="env" icon={Leaf} title="Environmental Analysis">
-            <div className="grid gap-6 md:grid-cols-3">
-              {[
-                { k: "Impervious area removed", v: "42 ha", note: "Replaced by permeable surfaces" },
-                { k: "Urban canopy added", v: "+18%", note: "Cooling & carbon sequestration" },
-                { k: "Stormwater retained", v: "1.2M m³", note: "Peak-flow attenuation" },
-              ].map((s) => (
-                <div key={s.k} className="rounded-2xl border border-border/50 p-5">
-                  <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">{s.k}</p>
-                  <p className="mt-2 font-display text-3xl tracking-tight">{s.v}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{s.note}</p>
-                </div>
-              ))}
-            </div>
-          </Section>
-
-          <Section id="fin" icon={Wallet} title="Financial Analysis">
-            <div className="grid gap-6 md:grid-cols-[1fr_1.2fr]">
-              <div className="h-64">
-                <ResponsiveContainer>
-                  <PieChart>
-                    <Pie data={budgetPie} innerRadius={54} outerRadius={92} paddingAngle={4} dataKey="value">
-                      {budgetPie.map((e) => <Cell key={e.name} fill={e.color} />)}
-                    </Pie>
-                    <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid oklch(0.9 0 0)" }} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="space-y-3">
-                {budgetPie.map((e) => (
-                  <div key={e.name} className="flex items-center gap-3 rounded-2xl border border-border/50 p-3">
-                    <span className="h-3 w-3 rounded-full" style={{ background: e.color }} />
-                    <span className="flex-1 text-sm">{e.name}</span>
-                    <span className="font-numeric text-sm">{e.value}%</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Section>
-
-          <Section id="policy" icon={Scale} title="Policy Recommendations">
-            <ul className="space-y-3 text-sm">
-              {[
-                "Amend zoning code to mandate permeable surfaces in all new commercial developments.",
-                "Introduce a stormwater fee tied to impervious surface area, with rebates for green roofs.",
-                "Align procurement with EU Green Deal Article 6 and CSRD ESRS E1 reporting requirements.",
-                "Establish a citizen advisory board for neighbourhood-scale interventions.",
-              ].map((p, i) => (
-                <li key={i} className="flex gap-3 rounded-2xl border border-border/50 p-4">
-                  <span className="font-numeric text-xs text-primary">{String(i + 1).padStart(2, "0")}</span>
-                  <span className="text-muted-foreground">{p}</span>
-                </li>
-              ))}
-            </ul>
-          </Section>
-
-          <Section id="risk" icon={ShieldAlert} title="Risk Analysis">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[520px] text-sm">
-                <thead className="text-left text-xs uppercase tracking-widest text-muted-foreground">
-                  <tr><th className="pb-3 font-medium">Risk</th><th className="pb-3 font-medium">Likelihood</th><th className="pb-3 font-medium">Impact</th><th className="pb-3 font-medium">Mitigation</th></tr>
-                </thead>
-                <tbody className="divide-y divide-border/50">
-                  {[
-                    { r: "Cost overrun", l: "Medium", i: "High", m: "Phased procurement with independent oversight" },
-                    { r: "Public opposition", l: "Low", i: "Medium", m: "Early citizen engagement & co-design" },
-                    { r: "Supply chain delay", l: "Medium", i: "Medium", m: "Dual-source critical components" },
-                    { r: "Climate over-run", l: "High", i: "High", m: "Design to RCP 8.5 with adaptive margins" },
-                  ].map((r) => (
-                    <tr key={r.r}>
-                      <td className="py-3 font-medium">{r.r}</td>
-                      <td className="py-3"><Badge className="rounded-full bg-muted text-foreground/80">{r.l}</Badge></td>
-                      <td className="py-3"><Badge className="rounded-full bg-primary/10 text-primary">{r.i}</Badge></td>
-                      <td className="py-3 text-muted-foreground">{r.m}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Section>
-
-          <Section id="timeline" icon={CalendarClock} title="Timeline">
-            <div className="h-64">
-              <ResponsiveContainer>
-                <LineChart data={timelineLine} margin={{ left: -10, right: 8, top: 8, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.9 0 0)" vertical={false} />
-                  <XAxis dataKey="q" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid oklch(0.9 0 0)" }} />
-                  <Line type="monotone" dataKey="plan" stroke="oklch(0.55 0.24 285)" strokeWidth={2.5} dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="actual" stroke="oklch(0.62 0.18 275)" strokeWidth={2.5} strokeDasharray="6 4" dot={{ r: 3 }} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </Section>
-
-          <Section id="reco" icon={Sparkles} title="Recommendations">
-            <ol className="space-y-4">
-              {[
-                "Prioritise Phase 1 blue-green corridors along the Nieuwe Maas within 6 months.",
-                "Launch a resident co-design program before Phase 2 procurement to reduce opposition risk.",
-                "Bundle transit and stormwater investments to unlock EU Cohesion Fund co-financing.",
-              ].map((r, i) => (
-                <li key={i} className="rounded-2xl border border-primary/20 bg-primary/[0.03] p-5">
-                  <p className="text-[10px] font-medium uppercase tracking-widest text-primary">Recommendation {i + 1}</p>
-                  <p className="mt-2 text-sm text-foreground">{r}</p>
-                </li>
-              ))}
-            </ol>
-          </Section>
-
-          <Section id="refs" icon={ExternalLink} title="References">
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              {[
-                "IPCC AR7 Synthesis Report (2025)",
-                "EU Green Deal — Consolidated (2026)",
-                "Rotterdam Climate Adaptation Plan (2024)",
-                "UN SDG 11 Municipal Case Studies (2025)",
-              ].map((r) => (
-                <li key={r} className="flex items-center gap-2">
-                  <span className="h-1 w-1 rounded-full bg-primary" />
-                  {r}
-                </li>
-              ))}
-            </ul>
-          </Section>
+      <Panel>
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search reports by query…"
+            className="h-11 rounded-full border-border/60 bg-muted/40 pl-11"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
-      </div>
+      </Panel>
+
+      {loading && (
+        <div className="flex min-h-[300px] items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      )}
+
+      {error && !loading && (
+        <div className="flex min-h-[200px] flex-col items-center justify-center gap-3 text-destructive">
+          <AlertCircle className="h-8 w-8" />
+          <p className="text-sm">{error}</p>
+          <Button variant="outline" onClick={() => setDebouncedSearch(search)}>
+            Retry
+          </Button>
+        </div>
+      )}
+
+      {!loading && !error && items.length === 0 && (
+        <div className="flex min-h-[300px] flex-col items-center justify-center gap-3 text-muted-foreground">
+          <FileText className="h-10 w-10 opacity-40" />
+          <p className="text-sm">
+            {debouncedSearch
+              ? `No reports found for "${debouncedSearch}"`
+              : "No reports yet. Run a query from the New Plan page to generate one."}
+          </p>
+        </div>
+      )}
+
+      {!loading && !error && items.length > 0 && (
+        <>
+          <p className="text-xs text-muted-foreground">
+            Showing {items.length} of {total} report{total !== 1 ? "s" : ""}
+          </p>
+          <div className="flex flex-col gap-4">
+            {items.map((r, i) => (
+              <ReportCard key={r.id} report={r} index={i} onOpen={openReport} />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
+}
+
+// ─── Detail View ─────────────────────────────────────────────────────────────
+
+function ReportDetailView({ reportId }: { reportId: string }) {
+  const navigate = useNavigate();
+  const [report, setReport] = useState<ReportDetailResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await reportService.getReportById(reportId);
+        setReport(res);
+      } catch (e: any) {
+        setError(e.message || "Failed to load report");
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, [reportId]);
+
+  function goBack() {
+    navigate({ to: "/reports", search: {} });
+  }
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error || !report) {
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 text-destructive">
+        <AlertCircle className="h-8 w-8" />
+        <p className="text-sm">{error || "Report not found."}</p>
+        <Button variant="outline" onClick={goBack}>
+          <ArrowLeft className="mr-1.5 h-4 w-4" /> Back to reports
+        </Button>
+      </div>
+    );
+  }
+
+  // Derive title and subtitle from query
+  const title = report.original_query.length > 60
+    ? report.original_query.slice(0, 60) + "…"
+    : report.original_query;
+
+  const createdDate = new Date(report.created_at).toLocaleString("default", {
+    year: "numeric", month: "long", day: "numeric",
+  });
+
+  return (
+    <div className="mx-auto flex max-w-5xl flex-col gap-8">
+      {/* Header */}
+      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="mb-4 -ml-2 rounded-full text-muted-foreground"
+          onClick={goBack}
+        >
+          <ArrowLeft className="mr-1.5 h-4 w-4" /> All reports
+        </Button>
+
+        <PageHeader
+          eyebrow={`Report · ${createdDate}`}
+          title={title}
+          description={`Query ID: ${report.query_id.split("-")[0]} · Execution: ${report.execution_time.toFixed(2)}s${report.confidence != null ? ` · Confidence: ${(report.confidence * 100).toFixed(0)}%` : ""}`}
+          actions={
+            <>
+              <Badge className={cn("rounded-full", statusBadge(report.status))}>
+                <StatusIcon status={report.status} />
+                <span className="ml-1 capitalize">{report.status}</span>
+              </Badge>
+              <Button variant="outline" className="rounded-full">
+                <Share2 className="mr-1.5 h-4 w-4" /> Share
+              </Button>
+              <Button
+                className="rounded-full bg-gradient-to-r from-[oklch(0.42_0.22_285)] to-[oklch(0.55_0.24_285)] text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.42_0.22_285/0.7)]"
+                onClick={() => {
+                  const blob = new Blob([report.report], { type: "text/markdown" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `report-${report.id.split("-")[0]}.md`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+              >
+                <Download className="mr-1.5 h-4 w-4" /> Download MD
+              </Button>
+            </>
+          }
+        />
+      </motion.div>
+
+      {/* Meta cards */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        {[
+          { label: "Execution time", value: `${report.execution_time.toFixed(2)}s`, icon: Clock },
+          { label: "Confidence", value: report.confidence != null ? `${(report.confidence * 100).toFixed(0)}%` : "N/A", icon: Sparkles },
+          { label: "Status", value: report.status, icon: CheckCircle2 },
+        ].map(({ label, value, icon: Icon }) => (
+          <div key={label} className="glass rounded-3xl p-5">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+              <Icon className="h-3.5 w-3.5" /> {label}
+            </div>
+            <p className="font-display text-2xl tracking-tight capitalize">{value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Report content */}
+      <Panel title="Report" description="Full AI-generated sustainability plan">
+        <div className="prose-none max-w-none">
+          <MarkdownBody text={report.report} />
+        </div>
+      </Panel>
+
+      {/* Original query */}
+      <Panel title="Original query" description="The prompt that generated this report">
+        <p className="text-sm text-muted-foreground italic">"{report.original_query}"</p>
+      </Panel>
+    </div>
+  );
+}
+
+// ─── Root component ──────────────────────────────────────────────────────────
+
+function ReportsPage() {
+  const search = useSearch({ from: "/reports" });
+  const reportId = (search as { reportId?: string }).reportId;
+
+  if (reportId) {
+    return <ReportDetailView reportId={reportId} />;
+  }
+  return <ReportListView />;
 }

@@ -37,13 +37,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Build Sustainable Communities with AI — EarthMind AI unites multi-agent intelligence, watsonx.ai and the UN SDGs into a single sustainability operating system.",
+          "Build Sustainable Communities with AI — EarthMind AI unites multi-agent intelligence, Ollama and the UN SDGs into a single sustainability operating system.",
       },
       { property: "og:title", content: "EarthMind AI — Sustainability Intelligence" },
       {
         property: "og:description",
         content:
-          "Multi-agent orchestration, LangGraph, IBM watsonx.ai and RAG aligned to the UN SDGs.",
+          "Multi-agent orchestration, LangGraph, Ollama and RAG aligned to the UN SDGs.",
       },
     ],
   }),
@@ -164,7 +164,7 @@ function OverviewPage() {
 
         <p className="mt-6 max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-[17px]">
           EarthMind AI combines multi-agent intelligence, LangGraph orchestration,
-          IBM watsonx.ai, RAG and sustainability analytics to generate intelligent
+          Ollama, RAG and sustainability analytics to generate intelligent
           action plans aligned with the UN Sustainable Development Goals.
         </p>
 

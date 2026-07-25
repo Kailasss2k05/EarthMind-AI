@@ -76,13 +76,6 @@ function DataSourcesPage() {
       lastSync: status.services.chromadb.connected ? "connected" : "disconnected",
     },
     {
-      name: "IBM watsonx.ai",
-      kind: "Model Gateway",
-      records: "Model access",
-      health: status.services.watsonx.configured ? 100 : 0,
-      lastSync: status.services.watsonx.configured ? "configured" : "unconfigured",
-    },
-    {
       name: "Ollama",
       kind: "Local Models",
       records: `Embedding: ${status.embedding_model}`,
@@ -96,7 +89,7 @@ function DataSourcesPage() {
       <PageHeader
         eyebrow="Connected substrate"
         title="Where the intelligence gets its senses."
-        description="PostgreSQL, Redis, ChromaDB, watsonx.ai and Ollama — one graph, streaming into every agent."
+        description="PostgreSQL, Redis, ChromaDB and Ollama — one graph, streaming into every agent."
         actions={
           <Button variant="outline" className="rounded-full">
             <Plus className="mr-1.5 h-4 w-4" /> Add source

@@ -64,13 +64,14 @@ def _run_agent(state: dict, name: str, agent) -> dict:
     Broadcast started → run agent → update state → broadcast completed/failed.
     Returns the agent output dict.
     """
-    _run_async(broadcast_agent_started(name.title()))
+    display_name = "SDG" if name.lower() == "sdg" else name.title()
+    _run_async(broadcast_agent_started(display_name))
     try:
         output = agent.run(state)
-        _run_async(broadcast_agent_completed(name.title()))
+        _run_async(broadcast_agent_completed(display_name))
         return output
     except Exception as exc:
-        _run_async(broadcast_agent_failed(name.title(), str(exc)))
+        _run_async(broadcast_agent_failed(display_name, str(exc)))
         return {
             "status": "failed",
             "error": str(exc),

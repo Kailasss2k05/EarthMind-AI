@@ -103,7 +103,7 @@ export function CoverPage({ data }: Props) {
               letterSpacing: 1,
             }}
           >
-            Generated using EarthMind AI · IBM watsonx.ai · LangGraph · ChromaDB
+            Generated using EarthMind AI · Ollama · LangGraph · ChromaDB
           </Text>
         </View>
       </View>

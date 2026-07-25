@@ -357,8 +357,10 @@ export function buildReportData(props: RawProps, generatedAt: Date): ReportData 
       const live = agentStatuses.find((a) => a.name === name);
       if (!live) return { name, status: "Queued", duration: "-", order: "-" };
 
+      const backendStatus = queryResponse?.agent_status?.[name.toLowerCase()];
       let status = "Queued";
-      if (live.status === "running") status = "Running";
+      if (backendStatus === "skipped") status = "Skipped";
+      else if (live.status === "running") status = "Running";
       else if (live.status === "done") status = "Completed";
       else if (live.status === "error") status = "Failed";
 
@@ -411,7 +413,7 @@ export function buildReportData(props: RawProps, generatedAt: Date): ReportData 
       executionTime:    elapsedMs > 0 ? `${(elapsedMs / 1000).toFixed(1)} sec` : "64.8 sec",
       knowledgeSources: String(references.length),
       platform:         "LangGraph",
-      llm:              "IBM watsonx.ai",
+      llm:              "Ollama",
       kb:               "ChromaDB",
       standard:         "CSRD · ESRS · SDG",
     },

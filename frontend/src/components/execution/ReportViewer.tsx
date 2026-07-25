@@ -341,7 +341,7 @@ export function ReportViewer({
             <span className="text-muted-foreground/30">|</span>
             <span>Multi-Agent Sustainability Intelligence Platform</span>
           </div>
-          <span className="text-[6.5pt] text-muted-foreground/50">Generated using IBM watsonx.ai + LangGraph</span>
+          <span className="text-[6.5pt] text-muted-foreground/50">Generated using Ollama + LangGraph</span>
         </div>
         <div className="text-right flex flex-col gap-0">
           <span>Timestamp: {formattedDate} {formattedTime}</span>
@@ -411,7 +411,7 @@ export function ReportViewer({
           <p className="text-sm font-semibold tracking-wider text-white/95 print:text-white/95 mt-2">
             Generated using EarthMind AI
             <span className="block text-xs font-normal text-white/60 print:text-white/60 mt-0.5">
-              Powered by LangGraph + IBM watsonx.ai
+              Powered by LangGraph + Ollama
             </span>
           </p>
 
@@ -1097,7 +1097,7 @@ export function ReportViewer({
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="h-1 w-1 rounded-full bg-primary/60 shrink-0" />
-                  <span>IBM watsonx.ai Model Runtime</span>
+                  <span>Ollama Model Runtime</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="h-1 w-1 rounded-full bg-primary/60 shrink-0" />
@@ -1166,7 +1166,7 @@ export function ReportViewer({
           <span className="font-semibold text-foreground tracking-wider uppercase text-xs">EarthMind AI</span>
         </div>
         <p className="font-medium text-muted-foreground/80">Multi-Agent Sustainability Intelligence Platform</p>
-        <p className="text-[11px] text-muted-foreground/60">Generated using IBM watsonx.ai + LangGraph</p>
+        <p className="text-[11px] text-muted-foreground/60">Generated using Ollama + LangGraph</p>
         <p className="text-[11px] text-muted-foreground/60 mt-1 font-mono">
           Generated: {formattedDate} · {formattedTime} · Execution: {executionDuration}
         </p>
