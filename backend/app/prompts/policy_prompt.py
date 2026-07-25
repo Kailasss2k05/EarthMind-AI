@@ -64,7 +64,7 @@ Do NOT invent government regulations.
 
 Do NOT invent subsidies or approvals.
 
-Interpret the policy analysis and explain what it means for the project.
+Interpret the policy analysis and explain what it means for the project. Provide rigorous, professional synthesis of all compliance requirements, citing specific regulatory frameworks and policy incentives directly from the Policy Analysis and previous outputs.
 
 Produce a practical policy and regulatory assessment using:
 

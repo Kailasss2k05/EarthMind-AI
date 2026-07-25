@@ -20,8 +20,8 @@ interface RawProps {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function parseSection(plannerOutput: string | undefined, header: string, fallback: string): string {
-  if (!plannerOutput) return fallback;
+function parseSection(plannerOutput: any, header: string, fallback: string): string {
+  if (!plannerOutput || typeof plannerOutput !== "string") return fallback;
   const rx = new RegExp(
     `(?:^|\\n)\\s*#{1,3}\\s*${header}[:\\s]*\\n+([\\s\\S]*?)(?=\\n\\s*#{1,3}\\s|$)`,
     "i",
@@ -50,8 +50,8 @@ export function buildReportData(props: RawProps, generatedAt: Date): ReportData 
 
   // ── 1. Objectives & Stakeholders ──
   // Extract planner objective from backend planner output if available
-  const plannerObj = (queryResponse?.planner_output?.objective as string) || "";
-  const objectives = plannerObj.trim() || parseSection(
+  const plannerObj = queryResponse?.planner_output?.objective;
+  const objectives = (typeof plannerObj === "string" ? plannerObj.trim() : "") || parseSection(
     plannerOutput, "Objectives?",
     "Reduce flood exposure and urban carbon footprint by 40%, restore biodiversity corridors across the metropolitan district, and achieve CSRD ESRS E1 compliance by 2027.",
   );
@@ -66,8 +66,8 @@ export function buildReportData(props: RawProps, generatedAt: Date): ReportData 
   const sdgOutputs = queryResponse?.outputs?.sdg as Record<string, any> | undefined;
   if (sdgOutputs?.findings && Array.isArray(sdgOutputs.findings)) {
     sdgOutputs.findings.forEach((f: any) => {
-      const text = typeof f === "string" ? f : (f?.description ?? "");
-      const match = text.match(/SDG\s*(\d+)/i);
+      const text = typeof f === "string" ? f : (typeof f?.description === "string" ? f.description : JSON.stringify(f || ""));
+      const match = typeof text === "string" ? text.match(/SDG\s*(\d+)/i) : null;
       if (match && match[1]) {
         sdgNumbers.push(match[1]);
       }
@@ -80,9 +80,9 @@ export function buildReportData(props: RawProps, generatedAt: Date): ReportData 
   const policyOutputs = queryResponse?.outputs?.policy as Record<string, any> | undefined;
   if (policyOutputs?.findings && Array.isArray(policyOutputs.findings)) {
     policies = policyOutputs.findings.map((f: any) => {
-      const text = typeof f === "string" ? f : (f?.description ?? "");
+      const text = typeof f === "string" ? f : (typeof f?.description === "string" ? f.description : JSON.stringify(f || ""));
       const title = typeof f === "string" ? "" : (f?.type ?? "");
-      const parts = text.split(/[:–-]/);
+      const parts = typeof text === "string" ? text.split(/[:–-]/) : [String(text)];
       if (title) {
         return { title, description: text };
       }
@@ -124,11 +124,12 @@ export function buildReportData(props: RawProps, generatedAt: Date): ReportData 
       if (typeof f === "object" && f !== null) {
         return {
           label: f.type ?? "Impact Indicator " + (idx + 1),
-          value: f.description ?? "",
+          value: f.description ?? JSON.stringify(f),
           color: colors[idx % colors.length]
         };
       }
-      const parts = (f as string).split(/[:–-]/);
+      const str = typeof f === "string" ? f : String(f || "");
+      const parts = str.split(/[:–-]/);
       if (parts.length > 1) {
         return {
           label: parts[0].trim(),
@@ -138,7 +139,7 @@ export function buildReportData(props: RawProps, generatedAt: Date): ReportData 
       }
       return {
         label: "Impact Indicator " + (idx + 1),
-        value: f as string,
+        value: str,
         color: colors[idx % colors.length]
       };
     });
@@ -159,9 +160,9 @@ export function buildReportData(props: RawProps, generatedAt: Date): ReportData 
   if (financeOutputs?.findings && Array.isArray(financeOutputs.findings)) {
     const colors = ["#26BDE2", "#56C02B", "#FD9D24", "#FD6925", "#9b9b9b"];
     financeOutputs.findings.forEach((f: any, idx: number) => {
-      const text = typeof f === "string" ? f : (f?.description ?? "");
+      const text = typeof f === "string" ? f : (typeof f?.description === "string" ? f.description : JSON.stringify(f || ""));
       const label = typeof f === "object" ? (f?.type ?? "") : "";
-      const parts = text.split(/[:–-]/);
+      const parts = typeof text === "string" ? text.split(/[:–-]/) : [String(text)];
       if (label) {
         financialKpis.push({ label, value: text });
       } else if (parts.length > 1) {
@@ -198,9 +199,9 @@ export function buildReportData(props: RawProps, generatedAt: Date): ReportData 
   const riskOutputs = queryResponse?.outputs?.risk as Record<string, any> | undefined;
   if (riskOutputs?.findings && Array.isArray(riskOutputs.findings)) {
     risks = riskOutputs.findings.map((f: any) => {
-      const text = typeof f === "string" ? f : (f?.description ?? "");
+      const text = typeof f === "string" ? f : (typeof f?.description === "string" ? f.description : JSON.stringify(f || ""));
       const typeLabel = typeof f === "object" ? (f?.type ?? "") : "";
-      const match = text.match(/^(.*?)\s*\((Low|Medium|High|Critical)\)\s*[:–-]\s*(.*)$/i);
+      const match = typeof text === "string" ? text.match(/^(.*?)\s*\((Low|Medium|High|Critical)\)\s*[:–-]\s*(.*)$/i) : null;
       if (match) {
         return {
           factor: match[1].trim(),
@@ -208,7 +209,7 @@ export function buildReportData(props: RawProps, generatedAt: Date): ReportData 
           mitigation: match[3].trim()
         };
       }
-      const parts = text.split(/[:–-]/);
+      const parts = typeof text === "string" ? text.split(/[:–-]/) : [String(text)];
       if (parts.length > 1) {
         return {
           factor: typeLabel || parts[0].trim(),
@@ -238,11 +239,11 @@ export function buildReportData(props: RawProps, generatedAt: Date): ReportData 
   const timelineOutputs = queryResponse?.outputs?.timeline as Record<string, any> | undefined;
   if (timelineOutputs?.findings && Array.isArray(timelineOutputs.findings)) {
     timelinePhases = timelineOutputs.findings.map((f: any, idx: number) => {
-      const text = typeof f === "string" ? f : (f?.description ?? "");
-      const periodMatch = text.match(/\(([^)]+)\)\s*$/);
+      const text = typeof f === "string" ? f : (typeof f?.description === "string" ? f.description : JSON.stringify(f || ""));
+      const periodMatch = typeof text === "string" ? text.match(/\(([^)]+)\)\s*$/) : null;
       const period = periodMatch?.[1] ?? "";
-      const titleLine = text.replace(/\(([^)]+)\)\s*$/, "").trim();
-      const phaseMatch = titleLine.match(/^(?:Phase\s*\d+[:\s\u2013-]+)?(.+)$/i);
+      const titleLine = (typeof text === "string" ? text.replace(/\(([^)]+)\)\s*$/, "") : "").trim();
+      const phaseMatch = typeof titleLine === "string" ? titleLine.match(/^(?:Phase\s*\d+[:\s\u2013-]+)?(.+)$/i) : null;
       return {
         phase: `Phase ${idx + 1}`,
         title: phaseMatch?.[1]?.trim() ?? titleLine,
@@ -255,7 +256,7 @@ export function buildReportData(props: RawProps, generatedAt: Date): ReportData 
       plannerOutput, "Timeline?",
       "Phase 1: Feasibility & Baseline Assessment (Months 1–6)\nPhase 2: Infrastructure Procurement & Pilot Deployment (Months 7–18)\nPhase 3: Full-Scale Deployment & Continuous Monitoring (Months 19–36)",
     );
-    timelinePhases = timelineRaw
+    timelinePhases = (typeof timelineRaw === "string" ? timelineRaw : String(timelineRaw || ""))
       .split("\n")
       .map((l) => l.trim())
       .filter(Boolean)
@@ -277,15 +278,26 @@ export function buildReportData(props: RawProps, generatedAt: Date): ReportData 
   if (queryResponse?.outputs) {
     Object.entries(queryResponse.outputs).forEach(([agentName, agentOut]) => {
       if (agentOut && typeof agentOut === "object" && "references" in agentOut) {
-        const refs = (agentOut as any).references as string[];
+        const refs = (agentOut as any).references as any[];
         if (refs && Array.isArray(refs)) {
-          refs.forEach((r: string) => {
-            const urlMatch = r.match(/(https?:\/\/\S+)/i);
-            const url = urlMatch?.[1] ?? undefined;
-            const cleanRef = r.replace(/(https?:\/\/\S+)/i, "").replace(/[()\[\]\-–:]/g, " ").trim();
-            if (cleanRef) {
+          refs.forEach((r: any) => {
+            let refStr = "";
+            let url: string | undefined = undefined;
+            if (typeof r === "string") {
+              refStr = r;
+              const urlMatch = r.match(/(https?:\/\/\S+)/i);
+              url = urlMatch?.[1] ?? undefined;
+              refStr = r.replace(/(https?:\/\/\S+)/i, "").replace(/[()\[\]\-–:]/g, " ").trim();
+            } else if (r && typeof r === "object") {
+              url = typeof r.url === "string" ? r.url : undefined;
+              const title = r.title || r.source || r.name || r.description || JSON.stringify(r);
+              refStr = typeof title === "string" ? title.replace(/(https?:\/\/\S+)/i, "").replace(/[()\[\]\-–:]/g, " ").trim() : "Reference Item";
+            } else if (r) {
+              refStr = String(r);
+            }
+            if (refStr) {
               references.push({
-                title: cleanRef,
+                title: refStr,
                 publisher: agentName.toUpperCase() + " Knowledge Source",
                 year: "2026",
                 type: "Research Artifact",

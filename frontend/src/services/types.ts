@@ -322,6 +322,7 @@ export interface HistoryItem {
   created_at: string;
   title: string;
   summary: string;
+  tool_executions?: ToolExecutionRecord[];
 }
 
 export interface HistoryListResponse {

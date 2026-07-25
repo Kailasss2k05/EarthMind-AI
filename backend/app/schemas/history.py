@@ -78,6 +78,7 @@ class HistoryItem(BaseModel):
     created_at: datetime
     title: str
     summary: str
+    tool_executions: Optional[List[dict]] = Field(default=None, description="Recorded tool executions.")
 
 class HistoryListResponse(BaseModel):
     """

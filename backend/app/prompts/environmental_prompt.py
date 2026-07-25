@@ -81,6 +81,8 @@ Interpret only how the weather conditions may affect the project.
 OBJECTIVE
 ==================================================
 
+Provide comprehensive, quantitatively grounded environmental analysis. Explicitly synthesize Carbon Analysis, Location Analysis, and Weather Analysis metrics into clear environmental impacts and actionable mitigation strategies.
+
 Produce a practical environmental assessment using:
 
 1. User query

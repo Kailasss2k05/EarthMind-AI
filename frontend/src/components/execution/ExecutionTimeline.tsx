@@ -74,8 +74,8 @@ const AGENT_META: Record<
 };
 
 // Helper function to extract specific sections from the markdown-style planner output
-function extractSection(text: string, sectionName: string): string {
-  if (!text) return "";
+function extractSection(text: any, sectionName: string): string {
+  if (!text || typeof text !== "string") return "";
   
   // Try to find the section matching the name
   const regex = new RegExp(

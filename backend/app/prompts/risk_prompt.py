@@ -58,6 +58,8 @@ Previously Identified Missing Information
 OBJECTIVE
 ==================================================
 
+Provide comprehensive, cross-domain risk synthesis. Synthesize specific vulnerabilities from previous Research, Finance, and Environmental outputs into prioritized risk matrices and concrete mitigation plans.
+
 Evaluate the risks associated with the proposed project.
 
 Your goal is to provide a meaningful project risk assessment using:

@@ -132,6 +132,16 @@ function HistoryPage() {
                   <div className="mt-3 flex flex-wrap gap-1.5 text-sm text-muted-foreground">
                     {it.summary}
                   </div>
+                  {it.tool_executions && it.tool_executions.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1.5 pt-1">
+                      {it.tool_executions.map((t, idx) => (
+                        <Badge key={idx} variant="outline" className="text-[10px] bg-background/50 flex items-center gap-1 font-normal">
+                          <span className={cn("h-1.5 w-1.5 rounded-full", t.status === "Failed" || t.status === "failed" ? "bg-destructive" : "bg-[oklch(0.72_0.16_160)]")} />
+                          {t.tool_name} {t.execution_time_ms ? `(${Math.round(t.execution_time_ms)}ms)` : ""}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge className={cn("rounded-full", statusStyle[it.status] || "bg-muted text-foreground/80")}>{it.status}</Badge>

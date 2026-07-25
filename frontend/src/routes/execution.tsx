@@ -35,6 +35,7 @@ import {
   Radio,
   WifiOff,
   Wifi,
+  AlertTriangle,
 } from "lucide-react";
 
 import { PageHeader, Panel } from "@/components/ui-parts";
@@ -210,7 +211,7 @@ function ConnectionBadge({ connected }: { connected: boolean }) {
 
 function ExecutionPage() {
   // Real-time agent status from the WebSocket
-  const { events, agentStatuses, isConnected, reset } = useAgentWebSocket();
+  const { events, agentStatuses, toolExecutions, isConnected, reset } = useAgentWebSocket();
 
   // Derived metrics
   const doneCount = agentStatuses.filter((a) => a.status === "done").length;
@@ -377,6 +378,57 @@ function ExecutionPage() {
                         </>
                       )}
                     </div>
+
+                    {(() => {
+                      const tools = toolExecutions.filter((t) => t.agent_name === agent.name);
+                      if (!tools || tools.length === 0) return null;
+                      return (
+                        <div className="mt-3 pt-3 border-t border-border/40 space-y-2">
+                          <div className="text-[10px] font-semibold tracking-wider uppercase text-muted-foreground">
+                            Tools Executed
+                          </div>
+                          <div className="grid gap-1.5">
+                            {tools.map((t, idx) => {
+                              const isDone = t.status === "Completed" || t.status === "completed" || t.status === "success";
+                              const isErr = t.status === "Failed" || t.status === "failed" || t.status === "error";
+                              const isRun = t.status === "Running" || t.status === "running" || t.status === "Running...";
+                              return (
+                                <div key={idx} className="flex flex-col gap-0.5 rounded-xl bg-muted/30 border border-border/40 p-2 text-[11px]">
+                                  <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-1.5 font-medium">
+                                      {isDone && <CheckCircle2 className="h-3 w-3 text-[oklch(0.55_0.16_160)] shrink-0" />}
+                                      {isRun && <Loader2 className="h-3 w-3 text-primary animate-spin shrink-0" />}
+                                      {isErr && <AlertTriangle className="h-3 w-3 text-destructive shrink-0" />}
+                                      {!isDone && !isRun && !isErr && <Circle className="h-3 w-3 text-muted-foreground shrink-0" />}
+                                      <span>{t.tool_name}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                      <Badge variant="outline" className={cn("text-[9px] px-1 py-0 h-3.5 font-normal",
+                                        isDone ? "bg-[oklch(0.72_0.16_160)]/10 text-[oklch(0.55_0.16_160)] border-[oklch(0.72_0.16_160)]/20" :
+                                        isErr ? "bg-destructive/10 text-destructive border-destructive/20" :
+                                        "bg-primary/10 text-primary border-primary/20"
+                                      )}>
+                                        {t.status}
+                                      </Badge>
+                                      {t.execution_time_ms !== undefined && t.execution_time_ms > 0 && (
+                                        <span className="font-numeric text-[10px] text-muted-foreground">
+                                          {Math.round(t.execution_time_ms)} ms
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  {(t.summary || t.error) && (
+                                    <p className="text-[10px] text-muted-foreground pl-4 line-clamp-2">
+                                      {t.error ? `Error: ${t.error}` : t.summary}
+                                    </p>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               </motion.div>
