@@ -1,29 +1,14 @@
-def update_missing_information(state, agent_output):
-    """
-    Merge missing_information from an agent into the shared state.
-    Removes duplicates based on the description field.
-    """
+"""
+helpers.py
+----------
+Pure utility functions used by graph nodes.
 
-    shared = state.setdefault("missing_information", [])
+The ``update_*`` functions mutate state in-place (the new pattern used by
+nodes.py after the teammate's refactor).  The node functions call these
+helpers so state management logic stays out of individual node functions.
+"""
 
-    # Track descriptions already present
-    existing_descriptions = {
-        item.get("description")
-        for item in shared
-        if isinstance(item, dict)
-    }
-
-    for item in agent_output.get("missing_information", []):
-
-        # Ignore malformed entries
-        if not isinstance(item, dict):
-            continue
-
-        description = item.get("description")
-
-        if description and description not in existing_descriptions:
-            shared.append(item)
-            existing_descriptions.add(description)
+from typing import Dict, List, Any
 
 
 # ─── Agent registry ───────────────────────────────────────────────────────────
@@ -39,79 +24,53 @@ ALL_AGENTS: List[str] = [
 ]
 
 
-# ─── missing_information ──────────────────────────────────────────────────────
+# ─── missing_information ─────────────────────────────────────────────────────
 
-def merge_missing_information(
-    current: List[str],
-    agent_output: dict,
-) -> List[str]:
+def update_missing_information(state: dict, agent_output: dict) -> None:
     """
-    Return a deduplicated union of the current shared missing-information list
-    and whatever the agent reported as missing.
+    Merge missing_information from an agent into shared state.
 
-    Parameters
-    ----------
-    current      : The existing ``state["missing_information"]`` list.
-    agent_output : The dict returned by an agent's ``run()`` method.
-
-    Returns
-    -------
-    A new list (no mutation of the input).
+    Items are objects: {"type": "...", "description": "..."}.
+    Deduplicates on the ``description`` field.
+    Mutates state in-place.
     """
-    existing = set(current or [])
-    new = set(agent_output.get("missing_information", []) or [])
-    return sorted(existing | new)
+    shared = state.setdefault("missing_information", [])
+
+    existing_descriptions = {
+        item.get("description")
+        for item in shared
+        if isinstance(item, dict)
+    }
+
+    for item in agent_output.get("missing_information", []):
+        if not isinstance(item, dict):
+            continue
+        description = item.get("description")
+        if description and description not in existing_descriptions:
+            shared.append(item)
+            existing_descriptions.add(description)
 
 
 # ─── agent_status ─────────────────────────────────────────────────────────────
 
-def updated_agent_status(
-    current: Dict[str, str],
-    agent_name: str,
-    agent_output: dict,
-) -> Dict[str, str]:
+def update_agent_status(state: dict, agent_name: str, agent_output: dict) -> None:
     """
-    Return a new agent_status dict with ``agent_name`` set to the status
-    reported by the agent.
+    Set agent_name's status in state["agent_status"] from the agent output.
 
-    Valid statuses: success | incomplete | failed | skipped
-
-    Parameters
-    ----------
-    current      : The existing ``state["agent_status"]`` dict.
-    agent_name   : Canonical agent key (e.g. ``"research"``).
-    agent_output : The dict returned by an agent's ``run()`` method.
-
-    Returns
-    -------
-    A new dict (no mutation of the input).
+    Valid statuses: completed | incomplete | failed | skipped
+    Mutates state in-place.
     """
     status = agent_output.get("status", "failed")
-    return {**current, agent_name: status}
+    state.setdefault("agent_status", {})[agent_name] = status
 
 
-# ─── errors ───────────────────────────────────────────────────────────────────
+# ─── errors ──────────────────────────────────────────────────────────────────
 
-def updated_errors(
-    current: Dict[str, str],
-    agent_name: str,
-    agent_output: dict,
-) -> Dict[str, str]:
+def update_error(state: dict, agent_name: str, agent_output: dict) -> None:
     """
-    Return a new errors dict that includes ``agent_name``'s error if the
-    agent reported a ``"failed"`` status.
-
-    Parameters
-    ----------
-    current      : The existing ``state["errors"]`` dict.
-    agent_name   : Canonical agent key.
-    agent_output : The dict returned by an agent's ``run()`` method.
-
-    Returns
-    -------
-    A new dict (no mutation of the input).
+    Record an error for agent_name if it reported ``status == "failed"``.
+    Mutates state in-place.
     """
     if agent_output.get("status") == "failed":
         error_msg = agent_output.get("error", "Unknown error")
-        return {**current, agent_name: error_msg}
-    return dict(current)
+        state.setdefault("errors", {})[agent_name] = error_msg

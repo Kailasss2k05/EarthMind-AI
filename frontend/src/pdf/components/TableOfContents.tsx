@@ -78,7 +78,7 @@ export function TableOfContents({ data }: Props) {
         }}
       >
         This report was generated automatically by the EarthMind AI Multi-Agent
-        Sustainability Intelligence Platform using IBM watsonx.ai and LangGraph.
+        Sustainability Intelligence Platform using Ollama and LangGraph.
       </Text>
     </PageWrapper>
   );

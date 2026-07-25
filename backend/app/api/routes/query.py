@@ -68,7 +68,7 @@ async def run_query(
         "outputs":             {},
         "agent_status":        {},
         "errors":              {},
-        "missing_information": [],
+        "missing_information": [],  # List of {type, description} objects
         "retrieved_context":   [],
     }
 
@@ -89,6 +89,12 @@ async def run_query(
     # ── Step 4: Build and return the typed response ───────────────────────────
     outputs = result.get("outputs", {})
 
+    # Report is stored as a raw Markdown string in outputs["report"]
+    report = outputs.get("report", "")
+    if not isinstance(report, str):
+        # Safety: if report is somehow still a dict, try to extract text
+        report = report.get("summary", "") if isinstance(report, dict) else str(report)
+
     # Extract lightweight RAG metadata from state (not raw chunks)
     retrieved_context = result.get("retrieved_context", [])
     retrieved_chunks = len(retrieved_context)
@@ -98,11 +104,15 @@ async def run_query(
         if isinstance(chunk, dict)
     })
 
-    # ── Step 5: Persist history (fire-and-forget) ─────────────────────────────
-    # Persistence failures must never surface to the caller.  The user always
-    # receives their generated report regardless of database availability.
+    # ── Step 5: Determine actual execution status (H-8) ──────────────────────
+    # If any agent errors are present, the run is "partial" rather than
+    # "completed", even if agents handled their own fallback gracefully.
+    errors = result.get("errors", {})
+    execution_status = "partial" if errors else "completed"
+
+    # ── Step 6: Persist history (fire-and-forget) ─────────────────────────────
+    # Persistence failures must never surface to the caller.
     planner_output = result.get("planner_output", {})
-    report = outputs.get("report", "")
     confidence = planner_output.get("confidence") if isinstance(planner_output, dict) else None
 
     try:
@@ -111,7 +121,7 @@ async def run_query(
             query=request.query,
             planner_output=planner_output,
             execution_time=execution_time,
-            status="completed",
+            status=execution_status,
             confidence=confidence,
         )
         history_service.save_report(
@@ -128,13 +138,13 @@ async def run_query(
 
     return QueryResponse(
         request_id=request_id,
-        status="completed",
+        status=execution_status,
         query=request.query,
         planner_output=planner_output,
         report=report,
         outputs={k: v for k, v in outputs.items() if k != "report"},
         agent_status=result.get("agent_status", {}),
-        errors=result.get("errors", {}),
+        errors=errors,
         missing_information=result.get("missing_information", []),
         retrieved_chunks=retrieved_chunks,
         retrieved_domains=retrieved_domains,

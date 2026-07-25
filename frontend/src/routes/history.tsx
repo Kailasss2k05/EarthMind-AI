@@ -1,16 +1,3 @@
-/**
- * TODO: ENDPOINT MISSING
- * This page currently renders static mock data.
- * A real history endpoint does NOT yet exist in the backend.
- *
- * To connect this page to real data, the backend needs:
- *   GET /api/v1/history  →  { items: HistoryItem[] }
- *
- * Once that endpoint is added:
- *   1. Add a HistoryItem interface to services/types.ts
- *   2. Add getHistory() to services/history.service.ts
- *   3. Replace the `items` array below with a useQuery() call
- */
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -53,24 +40,33 @@ export const Route = createFileRoute("/history")({
 const statusStyle: Record<string, string> = {
   Completed: "bg-[oklch(0.72_0.16_160)]/12 text-[oklch(0.55_0.16_160)]",
   completed: "bg-[oklch(0.72_0.16_160)]/12 text-[oklch(0.55_0.16_160)]",
+  partial: "bg-[oklch(0.85_0.12_60)]/20 text-[oklch(0.55_0.15_60)]",
   Draft: "bg-[oklch(0.85_0.08_290)]/25 text-[oklch(0.55_0.15_290)]",
   Archived: "bg-muted text-muted-foreground",
 };
 
 function HistoryPage() {
   const [items, setItems] = useState<HistoryItem[]>([]);
-  
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+
+  // Debounce the search input so we don't hit the API on every keystroke
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(searchQuery), 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   useEffect(() => {
     async function load() {
       try {
-        const res = await historyService.getHistory();
+        const res = await historyService.getHistory(0, 100, debouncedQuery);
         setItems(res.items);
       } catch (err) {
         console.error(err);
       }
     }
     load();
-  }, []);
+  }, [debouncedQuery]);
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-8">
@@ -87,6 +83,8 @@ function HistoryPage() {
             <Input
               placeholder="Search by title, location, or SDG…"
               className="h-11 rounded-full border-border/60 bg-muted/40 pl-10"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
           <div className="flex gap-2">
@@ -106,6 +104,11 @@ function HistoryPage() {
       <div className="relative">
         <span className="absolute left-4 top-2 bottom-2 hidden w-px bg-border md:block" />
         <div className="space-y-4">
+          {items.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-12">
+              No history found{debouncedQuery ? ` for "${debouncedQuery}"` : "."} Run a query to see results here.
+            </p>
+          )}
           {items.map((it, i) => (
             <motion.div
               key={it.id}
@@ -132,8 +135,13 @@ function HistoryPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge className={cn("rounded-full", statusStyle[it.status] || "bg-muted text-foreground/80")}>{it.status}</Badge>
+                  {/* M-8: Link to specific report when type is "report", else to reports list */}
                   <Button asChild size="sm" className="rounded-full">
-                    <Link to="/reports">Open</Link>
+                    {it.type === "report" ? (
+                      <Link to="/reports" search={{ reportId: it.id }}>Open</Link>
+                    ) : (
+                      <Link to="/reports">Open</Link>
+                    )}
                   </Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>

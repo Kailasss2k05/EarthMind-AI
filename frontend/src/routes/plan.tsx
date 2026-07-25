@@ -241,7 +241,7 @@ function PlanPage() {
   const [priority, setPriority] = useState<string>("balanced");
   const [country, setCountry] = useState<string>("");
   const [city, setCity] = useState<string>("");
-  const [model, setModel] = useState<string>("watsonx-granite-3.1");
+  const [model, setModel] = useState<string>("ollama-llama-3.3");
   const [advancedOpen, setAdvancedOpen] = useState(false);
 
   // ── Unified Execution States ──────────────────────────────────────────────
@@ -405,7 +405,7 @@ function PlanPage() {
       >
         <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-white/70 px-3.5 py-1.5 text-xs font-medium text-primary shadow-sm backdrop-blur-sm dark:bg-white/5">
           <Wand2 className="h-3.5 w-3.5" />
-          Multi-agent runtime · LangGraph · watsonx.ai
+          Multi-agent runtime · LangGraph · Ollama
         </div>
         <h1 className="text-balance font-display text-4xl leading-[1.05] tracking-[-0.025em] sm:text-5xl md:text-[3.4rem]">
           Build{" "}
@@ -731,11 +731,8 @@ function PlanPage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="watsonx-granite-3.1">
-                            IBM watsonx · Granite 3.1
-                          </SelectItem>
-                          <SelectItem value="watsonx-llama-3.3">
-                            IBM watsonx · Llama 3.3 70B
+                          <SelectItem value="ollama-llama-3.3">
+                            Ollama · Llama 3.3 70B
                           </SelectItem>
                           <SelectItem value="ollama-mixtral">
                             Ollama · Mixtral 8x22B

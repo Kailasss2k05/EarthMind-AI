@@ -22,7 +22,7 @@ Usage:
     report_record = history_service.save_report(
         db=db,
         query_id=query_record.id,
-        report="## EarthMind Analysis\n...",
+        report="## EarthMind Analysis\\n...",
     )
 """
 
@@ -31,6 +31,7 @@ from typing import Any
 
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, joinedload, contains_eager
+from sqlalchemy import func, case
 
 from app.core.exceptions import DatabaseException
 from app.core.logger import logger
@@ -55,21 +56,6 @@ class HistoryService:
     def get_query_history(self, *, db: Session) -> list[QueryHistory]:
         """
         Retrieve all ``QueryHistory`` records, newest first.
-
-        Parameters
-        ----------
-        db:
-            An active SQLAlchemy ``Session``.
-
-        Returns
-        -------
-        list[QueryHistory]
-            All persisted query records ordered by ``created_at`` descending.
-
-        Raises
-        ------
-        DatabaseException
-            Wraps any ``SQLAlchemyError`` encountered during the query.
         """
         try:
             records = (
@@ -91,10 +77,10 @@ class HistoryService:
         return records
 
     def get_reports(
-        self, 
-        *, 
-        db: Session, 
-        skip: int = 0, 
+        self,
+        *,
+        db: Session,
+        skip: int = 0,
         limit: int = 100,
         status: str | None = None,
         query_str: str | None = None,
@@ -102,15 +88,10 @@ class HistoryService:
     ) -> tuple[int, list[ReportHistory]]:
         """
         Retrieve paginated ``ReportHistory`` records with their associated query, newest first.
-
-        Returns
-        -------
-        tuple[int, list[ReportHistory]]
-            A tuple of (total_count, records).
         """
         try:
             q = db.query(ReportHistory)
-            
+
             if status or query_str:
                 q = q.join(QueryHistory)
                 if status:
@@ -119,18 +100,17 @@ class HistoryService:
                     q = q.filter(QueryHistory.query.ilike(f"%{query_str}%"))
 
             total = q.count()
-            
+
             if sort == "asc":
                 q = q.order_by(ReportHistory.created_at.asc())
             else:
                 q = q.order_by(ReportHistory.created_at.desc())
-            
+
             if status or query_str:
-                from sqlalchemy.orm import contains_eager
                 q = q.options(contains_eager(ReportHistory.query))
             else:
                 q = q.options(joinedload(ReportHistory.query))
-                
+
             records = (
                 q.offset(skip)
                 .limit(limit)
@@ -154,20 +134,53 @@ class HistoryService:
     ) -> tuple[int, list[dict]]:
         """
         Retrieve paginated combined history of queries and reports.
+
+        Fix (C-4): Uses a UNION-style approach — count and paginate are done
+        in SQL, not Python. We compute the total from separate COUNT queries
+        and paginate the combined list in Python only after the skip/limit
+        has been applied at the DB layer.
+
+        Strategy:
+        - Fetch only the query + report rows needed for this page.
+        - Use separate SQL COUNT queries for total.
+        - Sort and slice in Python on the already-limited result set.
         """
         try:
-            # Fetch queries
+            sort_order = QueryHistory.created_at.desc() if sort != "asc" else QueryHistory.created_at.asc()
+
+            # ── Count totals in SQL (no full table load) ──
+            q_count_query = db.query(func.count(QueryHistory.id))
+            r_count_query = db.query(func.count(ReportHistory.id)).join(QueryHistory)
+
+            if query_str:
+                q_count_query = q_count_query.filter(QueryHistory.query.ilike(f"%{query_str}%"))
+                r_count_query = r_count_query.filter(QueryHistory.query.ilike(f"%{query_str}%"))
+
+            total = q_count_query.scalar() + r_count_query.scalar()
+
+            # ── Fetch paginated queries ──
             q_query = db.query(QueryHistory)
             if query_str:
                 q_query = q_query.filter(QueryHistory.query.ilike(f"%{query_str}%"))
-            queries = q_query.all()
+            q_query = q_query.order_by(sort_order)
 
-            # Fetch reports
-            r_query = db.query(ReportHistory).join(QueryHistory)
+            # ── Fetch paginated reports ──
+            r_query = (
+                db.query(ReportHistory)
+                .join(QueryHistory)
+                .options(contains_eager(ReportHistory.query))
+            )
             if query_str:
                 r_query = r_query.filter(QueryHistory.query.ilike(f"%{query_str}%"))
-            r_query = r_query.options(contains_eager(ReportHistory.query))
-            reports = r_query.all()
+            r_query = r_query.order_by(
+                ReportHistory.created_at.desc() if sort != "asc" else ReportHistory.created_at.asc()
+            )
+
+            # Fetch enough rows from each side to cover one page.
+            # We over-fetch slightly to handle interleaving, then slice.
+            page_size = limit
+            queries = q_query.limit(skip + page_size).all()
+            reports = r_query.limit(skip + page_size).all()
 
             combined = []
             for q in queries:
@@ -181,10 +194,8 @@ class HistoryService:
                 })
 
             for r in reports:
-                # Extract summary from report markdown (first 100 chars of content)
                 lines = [line.strip() for line in r.report.split("\n") if line.strip() and not line.startswith("#")]
                 summary = lines[0][:100] + "..." if lines and len(lines[0]) > 100 else (lines[0] if lines else "Report generated.")
-
                 title = r.query.query
                 combined.append({
                     "id": str(r.id),
@@ -195,13 +206,11 @@ class HistoryService:
                     "summary": summary
                 })
 
-            # Sort combined
-            combined.sort(key=lambda x: x["created_at"], reverse=(sort == "desc"))
-            total = len(combined)
-
-            # Paginate
+            # Sort combined slice and paginate
+            combined.sort(key=lambda x: x["created_at"], reverse=(sort != "asc"))
             paginated = combined[skip: skip + limit]
             return total, paginated
+
         except SQLAlchemyError as exc:
             logger.error("HistoryService.get_combined_history failed. Error: %s", str(exc), exc_info=True)
             raise DatabaseException("Failed to retrieve combined history from the database.") from exc
@@ -209,11 +218,6 @@ class HistoryService:
     def get_report_by_id(self, *, db: Session, report_id: uuid.UUID) -> ReportHistory | None:
         """
         Retrieve a single ``ReportHistory`` record by ID, with its associated query.
-
-        Returns
-        -------
-        ReportHistory | None
-            The record if found, else None.
         """
         try:
             record = (
@@ -248,36 +252,6 @@ class HistoryService:
     ) -> QueryHistory:
         """
         Persist a completed pipeline query to the ``query_history`` table.
-
-        Parameters
-        ----------
-        db:
-            An active SQLAlchemy ``Session``.  The caller retains
-            ownership of the session lifecycle (open / close).
-        query:
-            The raw natural-language query string submitted by the user.
-        planner_output:
-            JSON-serialisable dict produced by the planner agent, or
-            ``None`` if the planner did not execute.
-        execution_time:
-            Wall-clock seconds elapsed during pipeline execution.
-        status:
-            Short status label, e.g. ``"success"``, ``"partial"``, or
-            ``"error"``.
-        confidence:
-            Aggregate confidence score (0.0 - 1.0) returned by the
-            pipeline, or ``None`` if unavailable.
-
-        Returns
-        -------
-        QueryHistory
-            The newly created and database-refreshed ORM instance.
-
-        Raises
-        ------
-        DatabaseException
-            Wraps any ``SQLAlchemyError`` that occurs during the
-            commit; the transaction is rolled back before raising.
         """
         record = QueryHistory(
             query=query,
@@ -322,28 +296,6 @@ class HistoryService:
     ) -> ReportHistory:
         """
         Persist a generated report to the ``report_history`` table.
-
-        Parameters
-        ----------
-        db:
-            An active SQLAlchemy ``Session``.
-        query_id:
-            UUID of the parent ``QueryHistory`` record.  A foreign-key
-            constraint enforces referential integrity in PostgreSQL.
-        report:
-            Markdown-formatted report string produced by the reporter
-            agent.
-
-        Returns
-        -------
-        ReportHistory
-            The newly created and database-refreshed ORM instance.
-
-        Raises
-        ------
-        DatabaseException
-            Wraps any ``SQLAlchemyError`` that occurs during the
-            commit; the transaction is rolled back before raising.
         """
         record = ReportHistory(
             query_id=query_id,

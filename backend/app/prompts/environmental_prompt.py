@@ -171,43 +171,6 @@ If none exist:
 []
 
 ==================================================
-EXAMPLE OUTPUT
-==================================================
-
-{{
-    "agent":"Environmental Agent",
-    "status":"completed",
-    "summary":"Electric buses reduce operational greenhouse gas emissions compared to diesel buses, although battery production introduces environmental considerations.",
-
-    "findings":[
-        {{
-            "type":"benefit",
-            "description":"Electric buses reduce tailpipe emissions, improving urban air quality."
-        }},
-        {{
-            "type":"risk",
-            "description":"Battery manufacturing and disposal may have environmental impacts if recycling systems are inadequate."
-        }}
-    ],
-
-    "recommendations":[
-        {{
-            "action":"Develop a battery recycling strategy.",
-            "rationale":"Reduces long-term environmental impacts of battery disposal."
-        }}
-    ],
-
-    "missing_information":[
-        {{
-            "type":"energy source",
-            "description":"Electricity generation mix used to charge the buses."
-        }}
-    ],
-
-    "references":[]
-}}
-
-==================================================
 OUTPUT
 ==================================================
 

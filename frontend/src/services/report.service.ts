@@ -1,5 +1,5 @@
 import { get } from "./api";
-import { ReportHistoryListResponse } from "./types";
+import { ReportHistoryListResponse, ReportDetailResponse } from "./types";
 
 export const reportService = {
   getReports: (skip = 0, limit = 100, query = "", sort = "desc") => {
@@ -9,7 +9,9 @@ export const reportService = {
       sort,
     });
     if (query) params.append("query", query);
-    
     return get<ReportHistoryListResponse>(`/reports?${params.toString()}`);
   },
+
+  getReportById: (reportId: string) =>
+    get<ReportDetailResponse>(`/reports/${encodeURIComponent(reportId)}`),
 };

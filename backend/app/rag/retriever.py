@@ -8,11 +8,17 @@ Supports:
 - Multi-domain hybrid retrieval
 - Query normalization
 - Distance-based result filtering
+
+Performance (C-6): retrieve() accepts a pre-computed query_embedding so
+that callers doing multi-domain retrieval can embed the query once and
+reuse it across all domain searches instead of re-running the model N times.
 """
 
+import logging
 from .config import DEFAULT_TOP_K, DOMAINS, MAX_DISTANCE
 from .embedder import embed_texts
-from .vector_store import get_or_create_collection
+
+logger = logging.getLogger(__name__)
 
 
 def keyword_score(text: str, query: str) -> int:
@@ -31,11 +37,31 @@ def keyword_score(text: str, query: str) -> int:
     return score
 
 
-def retrieve(domain: str, query: str, top_k: int = DEFAULT_TOP_K) -> list[dict]:
+def retrieve(
+    domain: str,
+    query: str,
+    top_k: int = DEFAULT_TOP_K,
+    query_embedding: list[float] | None = None,
+) -> list[dict]:
     """
     Search a single domain collection using hybrid search
     (semantic similarity + keyword matching).
+
+    Parameters
+    ----------
+    domain:
+        ChromaDB collection name to search.
+    query:
+        The raw query string (used for keyword scoring and normalization).
+    top_k:
+        Maximum number of results to return.
+    query_embedding:
+        Optional pre-computed embedding vector. If provided, the embedding
+        model is NOT called — this is the key to fixing C-6 (N×embedding calls).
+        If None, the embedding is computed here.
     """
+    # Lazily import here to avoid circular imports
+    from .vector_store import get_or_create_collection
 
     # Normalize query
     query = query.strip().lower()
@@ -43,14 +69,14 @@ def retrieve(domain: str, query: str, top_k: int = DEFAULT_TOP_K) -> list[dict]:
     collection = get_or_create_collection(domain)
 
     if collection.count() == 0:
-        print(
-            f"Warning: collection '{domain}' is empty. "
-            f"Run ingest.py first."
+        logger.warning(
+            "Collection '%s' is empty. Run ingest.py first.", domain
         )
         return []
 
-    # Generate embedding
-    query_embedding = embed_texts([query])[0]
+    # Generate embedding only if not provided by the caller
+    if query_embedding is None:
+        query_embedding = embed_texts([query])[0]
 
     # Semantic search
     results = collection.query(
@@ -92,18 +118,29 @@ def retrieve(domain: str, query: str, top_k: int = DEFAULT_TOP_K) -> list[dict]:
     return output
 
 
-def retrieve_all(query: str, top_k: int = DEFAULT_TOP_K) -> list[dict]:
+def retrieve_all(
+    query: str,
+    top_k: int = DEFAULT_TOP_K,
+    query_embedding: list[float] | None = None,
+) -> list[dict]:
     """
     Search all domain collections and return the best matches.
+
+    Performance (C-6): Computes the query embedding once and passes it
+    to each per-domain retrieve() call so the model runs only once.
     """
 
     query = query.strip().lower()
+
+    # Compute embedding once for all domains
+    if query_embedding is None:
+        query_embedding = embed_texts([query])[0]
 
     all_results = []
 
     for domain in DOMAINS:
 
-        results = retrieve(domain, query, top_k)
+        results = retrieve(domain, query, top_k, query_embedding=query_embedding)
 
         for r in results:
             if r.get("domain") is None:

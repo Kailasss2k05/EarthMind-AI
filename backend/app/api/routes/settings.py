@@ -5,6 +5,7 @@ from app.schemas.settings import SettingsResponse
 
 router = APIRouter(tags=["Settings"])
 
+
 @router.get(
     "/settings",
     response_model=SettingsResponse,
@@ -17,3 +18,17 @@ def get_settings():
     """
     logger.info("Fetching application settings")
     return settings_service.get_settings()
+
+
+@router.put(
+    "/settings",
+    response_model=SettingsResponse,
+    summary="Update application settings",
+    description="Update workspace settings such as organisation name and notification preferences."
+)
+def update_settings(body: SettingsResponse):
+    """
+    Update and persist public settings.
+    """
+    logger.info("Updating application settings")
+    return settings_service.update_settings(body.model_dump())
