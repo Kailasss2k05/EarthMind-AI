@@ -7,6 +7,7 @@ from app.prompts.environmental_prompt import ENVIRONMENTAL_PROMPT
 from app.tools.carbon import CarbonInput, CarbonTool
 from app.tools.maps import MapsTool, LocationInput
 from app.tools.weather import WeatherTool, WeatherInput
+from app.tools.executor import execute_tool_with_metadata
 
 
 class EnvironmentalAgent(BaseAgent):
@@ -27,7 +28,13 @@ class EnvironmentalAgent(BaseAgent):
             waste_kg=carbon_data.get("waste_kg", 0),
         )
 
-        carbon_analysis = CarbonTool.calculate(carbon)
+        carbon_analysis = execute_tool_with_metadata(
+            state,
+            "CarbonTool",
+            "Environmental",
+            CarbonTool.calculate,
+            carbon,
+        )
 
         # ----------------------------------------------------
         # Maps Tool
@@ -35,8 +42,12 @@ class EnvironmentalAgent(BaseAgent):
         location = state.get("location", "")
 
         if location:
-            location_analysis = MapsTool.geocode(
-                LocationInput(location=location)
+            location_analysis = execute_tool_with_metadata(
+                state,
+                "MapsTool",
+                "Environmental",
+                MapsTool.geocode,
+                LocationInput(location=location),
             )
         else:
             location_analysis = {
@@ -53,11 +64,15 @@ class EnvironmentalAgent(BaseAgent):
             and location_analysis.get("longitude") is not None
         ):
 
-            weather_analysis = WeatherTool.get_weather(
+            weather_analysis = execute_tool_with_metadata(
+                state,
+                "WeatherTool",
+                "Environmental",
+                WeatherTool.get_weather,
                 WeatherInput(
                     latitude=location_analysis["latitude"],
                     longitude=location_analysis["longitude"],
-                )
+                ),
             )
 
         else:

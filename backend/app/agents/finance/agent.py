@@ -4,6 +4,7 @@ from app.core.base_agent import BaseAgent
 from app.core.utils import build_references_from_chunks
 from app.prompts.finance_prompt import FINANCE_PROMPT
 from app.tools.budget import BudgetInput, BudgetTool
+from app.tools.executor import execute_tool_with_metadata
 
 
 class FinanceAgent(BaseAgent):
@@ -27,7 +28,13 @@ class FinanceAgent(BaseAgent):
             project_lifetime=budget_data.get("project_lifetime", 20),
         )
 
-        budget_analysis = BudgetTool.analyze(budget)
+        budget_analysis = execute_tool_with_metadata(
+            state,
+            "BudgetTool",
+            "Finance",
+            BudgetTool.analyze,
+            budget,
+        )
 
         # -----------------------------
         # Build Prompt

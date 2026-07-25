@@ -69,3 +69,56 @@ async def broadcast_agent_failed(agent_name: str, reason: str) -> None:
     }
     logger.error("[Event] agent_failed -> %s | reason: %s", agent_name, reason)
     await manager.broadcast(event)
+
+
+async def broadcast_tool_started(tool_name: str, agent_name: str) -> None:
+    """
+    Broadcast a 'tool_started' event when an agent begins executing a tool.
+    """
+    event = {
+        "type": "tool_started",
+        "tool_name": tool_name,
+        "agent_name": agent_name,
+        "status": "Running",
+        "execution_time_ms": 0.0,
+        "summary": f"{tool_name} Running",
+        "timestamp": _now(),
+    }
+    logger.info("[Event] tool_started -> %s (%s)", tool_name, agent_name)
+    await manager.broadcast(event)
+
+
+async def broadcast_tool_completed(tool_name: str, agent_name: str, summary: str, execution_time_ms: float) -> None:
+    """
+    Broadcast a 'tool_completed' event when a tool finishes successfully.
+    """
+    event = {
+        "type": "tool_completed",
+        "tool_name": tool_name,
+        "agent_name": agent_name,
+        "status": "Completed",
+        "execution_time_ms": execution_time_ms,
+        "summary": summary,
+        "timestamp": _now(),
+    }
+    logger.info("[Event] tool_completed -> %s (%s) in %.2fms", tool_name, agent_name, execution_time_ms)
+    await manager.broadcast(event)
+
+
+async def broadcast_tool_failed(tool_name: str, agent_name: str, error: str, execution_time_ms: float) -> None:
+    """
+    Broadcast a 'tool_failed' event when a tool raises an exception.
+    """
+    event = {
+        "type": "tool_failed",
+        "tool_name": tool_name,
+        "agent_name": agent_name,
+        "status": "Failed",
+        "execution_time_ms": execution_time_ms,
+        "summary": "Tool execution failed",
+        "error": error,
+        "timestamp": _now(),
+    }
+    logger.error("[Event] tool_failed -> %s (%s) | error: %s", tool_name, agent_name, error)
+    await manager.broadcast(event)
+

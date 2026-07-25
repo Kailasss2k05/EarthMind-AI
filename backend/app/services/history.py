@@ -190,7 +190,8 @@ class HistoryService:
                     "status": q.status,
                     "created_at": q.created_at,
                     "title": q.query[:50] + "..." if len(q.query) > 50 else q.query,
-                    "summary": f"Query execution completed in {q.execution_time:.2f}s"
+                    "summary": f"Query execution completed in {q.execution_time:.2f}s",
+                    "tool_executions": q.planner_output.get("tool_executions", []) if q.planner_output and isinstance(q.planner_output, dict) else []
                 })
 
             for r in reports:
@@ -203,7 +204,8 @@ class HistoryService:
                     "status": r.query.status,
                     "created_at": r.created_at,
                     "title": f"Report: {title[:40]}..." if len(title) > 40 else f"Report: {title}",
-                    "summary": summary
+                    "summary": summary,
+                    "tool_executions": r.query.planner_output.get("tool_executions", []) if r.query and r.query.planner_output and isinstance(r.query.planner_output, dict) else []
                 })
 
             # Sort combined slice and paginate

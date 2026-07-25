@@ -58,6 +58,8 @@ Previously Identified Missing Information.
 GROUNDING RULES
 ==================================================
 
+Ensure deep analytical synthesis when mapping SDGs to project features. Explicitly connect specific SDG targets and indicators to project metrics rather than giving generic statements.
+
 You MAY discuss any of the 17 Sustainable Development Goals.
 
 Examples include:

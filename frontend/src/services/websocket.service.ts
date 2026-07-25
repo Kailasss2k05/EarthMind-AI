@@ -29,7 +29,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { WS_BASE_URL } from "./api";
-import type { AgentEvent, AgentName, AgentState } from "./types";
+import type { AgentEvent, AgentName, AgentState, ToolExecutionRecord } from "./types";
 
 // ─── The 9 agents in pipeline order (matches orchestrator/nodes.py) ──────────
 
@@ -177,6 +177,8 @@ export interface UseAgentWebSocketResult {
   events: AgentEvent[];
   /** Per-agent status derived from events */
   agentStatuses: AgentState[];
+  /** Per-agent tool executions derived from events */
+  toolExecutions: ToolExecutionRecord[];
   /** Whether the WebSocket is currently connected */
   isConnected: boolean;
   /** Clear accumulated events and reset agent states */
@@ -197,6 +199,7 @@ export function useAgentWebSocket(): UseAgentWebSocketResult {
   const [agentStatuses, setAgentStatuses] = useState<AgentState[]>(
     buildInitialAgentStates,
   );
+  const [toolExecutions, setToolExecutions] = useState<ToolExecutionRecord[]>([]);
   const [isConnected, setIsConnected] = useState(false);
 
   // Stable WS instance across re-renders
@@ -205,6 +208,7 @@ export function useAgentWebSocket(): UseAgentWebSocketResult {
   const reset = useCallback(() => {
     setEvents([]);
     setAgentStatuses(buildInitialAgentStates());
+    setToolExecutions([]);
   }, []);
 
   useEffect(() => {
@@ -247,6 +251,53 @@ export function useAgentWebSocket(): UseAgentWebSocketResult {
           }),
         );
       }
+
+      if (
+        event.type === "tool_started" ||
+        event.type === "tool_completed" ||
+        event.type === "tool_failed"
+      ) {
+        const tName = event.tool_name;
+        const aName = event.agent_name;
+        setToolExecutions((prev) => {
+          if (event.type === "tool_started") {
+            const existingIdx = prev.findIndex((t) => t.tool_name === tName && t.agent_name === aName && t.status === "Running");
+            if (existingIdx !== -1) return prev;
+            return [
+              ...prev,
+              {
+                tool_name: tName,
+                agent_name: aName,
+                status: "Running",
+                execution_time_ms: 0,
+                summary: event.summary,
+              },
+            ];
+          }
+          return prev.map((t) => {
+            if (t.tool_name === tName && t.agent_name === aName && t.status === "Running") {
+              if (event.type === "tool_completed") {
+                return {
+                  ...t,
+                  status: "Completed",
+                  execution_time_ms: event.execution_time_ms || 0,
+                  summary: event.summary || t.summary,
+                };
+              }
+              if (event.type === "tool_failed") {
+                return {
+                  ...t,
+                  status: "Failed",
+                  execution_time_ms: event.execution_time_ms || 0,
+                  summary: event.summary || t.summary,
+                  error: event.error || event.summary,
+                };
+              }
+            }
+            return t;
+          });
+        });
+      }
     });
 
     ws.connect();
@@ -259,5 +310,5 @@ export function useAgentWebSocket(): UseAgentWebSocketResult {
     };
   }, []);
 
-  return { events, agentStatuses, isConnected, reset };
+  return { events, agentStatuses, toolExecutions, isConnected, reset };
 }

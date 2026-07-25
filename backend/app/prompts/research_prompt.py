@@ -64,6 +64,7 @@ Prefer the Knowledge Base when the two sources overlap.
 Use Web Search Results to include recent information that may not yet exist in the knowledge base.
 
 Do not invent facts beyond the provided sources.
+Provide deep synthesis and technical depth rather than generic bullet points. Integrate data points, numbers, and cite sources from the Knowledge Base and Web Search Results directly in your analysis.
 
 TASKS
 ==================================================

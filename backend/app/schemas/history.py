@@ -78,6 +78,7 @@ class HistoryItem(BaseModel):
     created_at: datetime
     title: str
     summary: str
+    tool_executions: Optional[List[dict]] = Field(default=None, description="Recorded tool executions.")
 
 class HistoryListResponse(BaseModel):
     """
@@ -113,5 +114,9 @@ class ReportDetailResponse(BaseModel):
     )
     status: str = Field(description="Execution status, e.g. 'completed'.")
     created_at: datetime = Field(description="UTC timestamp when the report was generated.")
+    tool_executions: Optional[List[dict]] = Field(
+        default=None,
+        description="Recorded tool executions.",
+    )
 
     model_config = {"from_attributes": True}

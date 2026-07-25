@@ -53,6 +53,8 @@ Previously Identified Missing Information
 OBJECTIVE
 ==================================================
 
+Provide rigorous project management roadmap synthesis. Align project phases directly with financial constraints, regulatory approvals, and risk mitigation timelines identified by previous agents.
+
 Develop a practical implementation roadmap for the project.
 
 Your goal is to produce a useful project timeline using:

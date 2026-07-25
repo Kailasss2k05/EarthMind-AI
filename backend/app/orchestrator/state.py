@@ -35,3 +35,6 @@ class GraphState(TypedDict):
     budget_analysis: Dict[str, Any]
     location_analysis: Dict[str, Any]
     policy_analysis: Dict[str, Any]
+
+    # ── Tool Executions Metadata (optional) ──────────────────────────────────
+    tool_executions: List[Dict[str, Any]]

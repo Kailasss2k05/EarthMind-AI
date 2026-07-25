@@ -12,6 +12,19 @@
 
 // ─── REST: Query ─────────────────────────────────────────────────────────────
 
+export interface ToolExecutionRecord {
+  tool_name: string;
+  agent_name: string;
+  status: "Running" | "Completed" | "Failed" | string;
+  started_at?: string;
+  completed_at?: string;
+  execution_time_ms: number;
+  input_summary?: string;
+  output_summary?: string;
+  summary?: string;
+  error?: string | null;
+}
+
 /** POST /api/v1/query — request body */
 export interface QueryRequest {
   /** The sustainability question or idea to process (min length: 1) */
@@ -42,6 +55,8 @@ export interface QueryResponse {
   retrieved_chunks?: number;
   /** Unique ChromaDB domain names searched during retrieval (optional) */
   retrieved_domains?: string[];
+  /** Recorded tool executions during pipeline run */
+  tool_executions?: ToolExecutionRecord[];
 }
 
 // ─── REST: Health ─────────────────────────────────────────────────────────────
@@ -114,13 +129,47 @@ export interface WsEchoEvent {
   message: unknown;
 }
 
+export interface WsToolStartedEvent {
+  type: "tool_started";
+  tool_name: string;
+  agent_name: string;
+  status: string;
+  execution_time_ms: number;
+  summary: string;
+  timestamp: string;
+}
+
+export interface WsToolCompletedEvent {
+  type: "tool_completed";
+  tool_name: string;
+  agent_name: string;
+  status: string;
+  execution_time_ms: number;
+  summary: string;
+  timestamp: string;
+}
+
+export interface WsToolFailedEvent {
+  type: "tool_failed";
+  tool_name: string;
+  agent_name: string;
+  status: string;
+  execution_time_ms: number;
+  summary: string;
+  error?: string;
+  timestamp: string;
+}
+
 /** Union of all possible server-side WebSocket events */
 export type AgentEvent =
   | WsConnectedEvent
   | WsAgentStartedEvent
   | WsAgentCompletedEvent
   | WsAgentFailedEvent
-  | WsEchoEvent;
+  | WsEchoEvent
+  | WsToolStartedEvent
+  | WsToolCompletedEvent
+  | WsToolFailedEvent;
 
 // ─── Agent names (matches LangGraph nodes in orchestrator/nodes.py) ───────────
 
@@ -260,6 +309,7 @@ export interface ReportDetailResponse {
   confidence: number | null;
   status: string;
   created_at: string;
+  tool_executions?: ToolExecutionRecord[];
 }
 
 
@@ -272,6 +322,7 @@ export interface HistoryItem {
   created_at: string;
   title: string;
   summary: string;
+  tool_executions?: ToolExecutionRecord[];
 }
 
 export interface HistoryListResponse {
@@ -317,6 +368,7 @@ export interface SettingsConfigured {
   chromadb: boolean;
   redis: boolean;
   watsonx: boolean;
+  ollama?: boolean;
 }
 
 export interface SettingsResponse {
