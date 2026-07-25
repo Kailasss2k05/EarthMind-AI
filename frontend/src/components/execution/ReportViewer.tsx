@@ -28,6 +28,7 @@ import {
   Cpu,
   Activity,
   Coins,
+  Wrench,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -237,6 +238,7 @@ export function ReportViewer({
   const risks = reportData.risks;
   const references = reportData.references;
   const agentLogData = reportData.agentLogRows;
+  const toolLogData = reportData.toolLogRows;
   const techInfo = reportData.techInfo;
 
   const timelinePhases = useMemo(() => {
@@ -1081,6 +1083,73 @@ export function ReportViewer({
               ))}
             </div>
           </div>
+
+          {/* Tool Executions Summary Table */}
+          {toolLogData && toolLogData.length > 0 && (
+            <div className="mt-8 space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">
+                <Wrench className="h-3.5 w-3.5 text-primary" />
+                Tool Executions Summary
+              </h4>
+              <div
+                className="rounded-2xl border border-border/40 overflow-hidden text-xs font-mono bg-muted/5 print:bg-white"
+                role="table"
+                aria-label="Tool executions table"
+              >
+                <div
+                  className="grid grid-cols-[1.5fr_1fr_1fr_2.5fr] bg-muted/40 px-4 py-3 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border/30"
+                  role="row"
+                >
+                  <span role="columnheader">Tool Name</span>
+                  <span role="columnheader">Status</span>
+                  <span role="columnheader">Timing</span>
+                  <span role="columnheader">Summary / Result</span>
+                </div>
+                <div className="divide-y divide-border/30" role="rowgroup">
+                  {toolLogData.map((tool, idx) => (
+                    <div
+                      key={`${tool.name}-${idx}`}
+                      role="row"
+                      className="grid grid-cols-[1.5fr_1fr_1fr_2.5fr] px-4 py-2.5 print:py-1 items-center hover:bg-muted/10 transition-colors gap-2"
+                    >
+                      <span role="cell" className="font-semibold text-foreground flex items-center gap-1.5">
+                        <span
+                          className={cn(
+                            "h-1.5 w-1.5 rounded-full shrink-0",
+                            tool.status === "Completed" ? "bg-emerald-500" :
+                            tool.status === "Running" ? "bg-amber-500 animate-pulse" :
+                            tool.status === "Failed" ? "bg-red-500" : "bg-muted-foreground/30"
+                          )}
+                        />
+                        {tool.name}
+                      </span>
+                      <span role="cell">
+                        <span
+                          className={cn(
+                            "inline-flex items-center gap-1 rounded px-2 py-0.5 text-[9px] font-semibold uppercase",
+                            tool.status === "Completed" ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" :
+                            tool.status === "Running" ? "bg-amber-500/10 text-amber-500 border border-amber-500/20" :
+                            tool.status === "Failed" ? "bg-red-500/10 text-red-500 border border-red-500/20" :
+                            "bg-muted/30 text-muted-foreground border border-border/40"
+                          )}
+                        >
+                          {tool.status}
+                        </span>
+                      </span>
+                      <span role="cell" className="text-muted-foreground font-numeric">{tool.duration}</span>
+                      <span role="cell" className="text-muted-foreground truncate" title={tool.error || tool.summary}>
+                        {tool.error ? (
+                          <span className="text-red-500 font-semibold">{tool.error}</span>
+                        ) : (
+                          tool.summary
+                        )}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Technology Stack & Summary Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 print:grid-cols-2 gap-6 mt-6 pt-6 border-t border-border/30">

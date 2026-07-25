@@ -143,3 +143,17 @@ def format_errors(errors: Dict) -> str:
         lines.append(f"- **{agent.title()}**: {error}")
 
     return "\n".join(lines)
+
+
+def format_tool_summary(tool_executions: List[Dict]) -> str:
+    if not tool_executions:
+        return "No tool executions recorded."
+
+    lines = []
+    for t in tool_executions:
+        tool_name = t.get("tool_name", "Tool")
+        status = t.get("status", "Completed")
+        summary = t.get("error") or t.get("output_summary") or t.get("summary") or "Completed"
+        lines.append(f"{tool_name}\n{status}\n{summary}")
+
+    return "\n\n".join(lines)

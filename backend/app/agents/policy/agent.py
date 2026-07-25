@@ -4,6 +4,7 @@ from app.core.base_agent import BaseAgent
 from app.core.utils import build_references_from_chunks
 from app.prompts.policy_prompt import POLICY_PROMPT
 from app.tools.policy import PolicyInput, PolicyTool
+from app.tools.executor import execute_tool_with_metadata
 
 
 class PolicyAgent(BaseAgent):
@@ -24,7 +25,13 @@ class PolicyAgent(BaseAgent):
             protected_area=policy_data.get("protected_area", False),
         )
 
-        policy_analysis = PolicyTool.analyze(policy)
+        policy_analysis = execute_tool_with_metadata(
+            state,
+            "PolicyTool",
+            "Policy",
+            PolicyTool.analyze,
+            policy,
+        )
 
         # -----------------------------
         # Build Prompt

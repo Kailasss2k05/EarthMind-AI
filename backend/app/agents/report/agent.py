@@ -54,6 +54,7 @@ class ReportAgent(BaseAgent):
                 timeline_section=context["timeline_section"],
                 recommendations_section=context["recommendations_section"],
                 missing_information_section=context["missing_information_section"],
+                tool_summary_section=context.get("tool_summary_section", "No tool executions recorded."),
                 execution_table=context["execution_table"],
                 errors_section=context["errors_section"],
             )

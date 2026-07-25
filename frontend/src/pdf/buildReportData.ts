@@ -381,6 +381,17 @@ export function buildReportData(props: RawProps, generatedAt: Date): ReportData 
     });
   }
 
+  // ── 9. Tool Log Rows ──
+  const rawTools = queryResponse?.tool_executions || [];
+  const toolLogRows = rawTools.map((t) => ({
+    name: t.tool_name || "Unknown Tool",
+    agent: t.agent_name || "Agent",
+    status: t.status || "Completed",
+    duration: t.execution_time_ms ? `${t.execution_time_ms} ms` : "0 ms",
+    summary: t.output_summary || t.summary || "Completed",
+    error: t.error || null,
+  }));
+
   // ── Return canonical object ──
   return {
     reportId,
@@ -407,6 +418,7 @@ export function buildReportData(props: RawProps, generatedAt: Date): ReportData 
     timelinePhases,
     references,
     agentLogRows,
+    toolLogRows,
 
     techInfo: {
       agents:           agentStatuses ? agentStatuses.length : 9,

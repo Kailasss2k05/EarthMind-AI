@@ -276,7 +276,7 @@ function ReportDetailView({ reportId }: { reportId: string }) {
   }, [reportId]);
 
   function goBack() {
-    navigate({ to: "/reports", search: {} });
+    navigate({ to: "/reports", search: { reportId: undefined } });
   }
 
   if (loading) {
@@ -375,6 +375,53 @@ function ReportDetailView({ reportId }: { reportId: string }) {
           <MarkdownBody text={report.report} />
         </div>
       </Panel>
+
+      {/* Tool Executions */}
+      {report.tool_executions && report.tool_executions.length > 0 && (
+        <Panel title="Tool Executions" description="Audit log of tools invoked during this query">
+          <div className="rounded-2xl border border-border/40 overflow-hidden text-xs font-mono bg-muted/5">
+            <div className="grid grid-cols-[1.5fr_1fr_1fr_2.5fr] bg-muted/40 px-4 py-3 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border/30">
+              <span>Tool Name</span>
+              <span>Status</span>
+              <span>Timing</span>
+              <span>Summary / Result</span>
+            </div>
+            <div className="divide-y divide-border/30">
+              {report.tool_executions.map((tool, idx) => (
+                <div key={`${tool.tool_name}-${idx}`} className="grid grid-cols-[1.5fr_1fr_1fr_2.5fr] px-4 py-2.5 items-center hover:bg-muted/10 transition-colors gap-2">
+                  <span className="font-semibold text-foreground flex items-center gap-1.5">
+                    <span className={cn(
+                      "h-1.5 w-1.5 rounded-full shrink-0",
+                      tool.status === "Completed" ? "bg-emerald-500" :
+                      tool.status === "Failed" ? "bg-red-500" : "bg-amber-500"
+                    )} />
+                    {tool.tool_name}
+                    <span className="text-[10px] text-muted-foreground font-normal">({tool.agent_name})</span>
+                  </span>
+                  <span>
+                    <span className={cn(
+                      "inline-flex items-center gap-1 rounded px-2 py-0.5 text-[9px] font-semibold uppercase",
+                      tool.status === "Completed" ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" :
+                      tool.status === "Failed" ? "bg-red-500/10 text-red-500 border border-red-500/20" :
+                      "bg-amber-500/10 text-amber-500 border border-amber-500/20"
+                    )}>
+                      {tool.status}
+                    </span>
+                  </span>
+                  <span className="text-muted-foreground font-numeric">{tool.execution_time_ms ? `${tool.execution_time_ms} ms` : "0 ms"}</span>
+                  <span className="text-muted-foreground truncate" title={tool.error || tool.output_summary}>
+                    {tool.error ? (
+                      <span className="text-red-500 font-semibold">{tool.error}</span>
+                    ) : (
+                      tool.output_summary
+                    )}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Panel>
+      )}
 
       {/* Original query */}
       <Panel title="Original query" description="The prompt that generated this report">

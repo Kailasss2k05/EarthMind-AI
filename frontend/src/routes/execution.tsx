@@ -447,7 +447,15 @@ function ExecutionPage() {
                       ? `${event.agent} agent completed`
                       : event.type === "agent_failed"
                       ? `${event.agent} failed — ${event.reason}`
-                      : `Echo: ${JSON.stringify(event.message)}`;
+                      : event.type === "tool_started"
+                      ? `[Tool] ${event.tool_name} started (${event.agent_name})`
+                      : event.type === "tool_completed"
+                      ? `[Tool] ${event.tool_name} completed (${event.execution_time_ms}ms)`
+                      : event.type === "tool_failed"
+                      ? `[Tool] ${event.tool_name} failed — ${event.error || event.summary}`
+                      : event.type === "echo"
+                      ? `Echo: ${JSON.stringify(event.message)}`
+                      : `Event: ${(event as any).type}`;
 
                   return (
                     <motion.div
@@ -457,18 +465,18 @@ function ExecutionPage() {
                       transition={{ duration: 0.2 }}
                       className={cn(
                         "flex items-start gap-3 rounded-2xl border border-border/50 p-3",
-                        event.type === "agent_failed" &&
+                        (event.type === "agent_failed" || event.type === "tool_failed") &&
                           "border-destructive/30 bg-destructive/5",
-                        event.type === "agent_completed" &&
+                        (event.type === "agent_completed" || event.type === "tool_completed") &&
                           "border-[oklch(0.72_0.16_160)]/20",
                       )}
                     >
                       <Activity
                         className={cn(
                           "mt-0.5 h-3.5 w-3.5 shrink-0",
-                          event.type === "agent_failed"
+                          (event.type === "agent_failed" || event.type === "tool_failed")
                             ? "text-destructive"
-                            : event.type === "agent_completed"
+                            : (event.type === "agent_completed" || event.type === "tool_completed")
                             ? "text-[oklch(0.55_0.16_160)]"
                             : "text-primary",
                         )}

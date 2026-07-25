@@ -140,7 +140,7 @@ function HistoryPage() {
                     {it.type === "report" ? (
                       <Link to="/reports" search={{ reportId: it.id }}>Open</Link>
                     ) : (
-                      <Link to="/reports">Open</Link>
+                      <Link to="/reports" search={{ reportId: undefined }}>Open</Link>
                     )}
                   </Button>
                   <DropdownMenu>

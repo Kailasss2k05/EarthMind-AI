@@ -70,6 +70,7 @@ async def run_query(
         "errors":              {},
         "missing_information": [],  # List of {type, description} objects
         "retrieved_context":   [],
+        "tool_executions":     [],
     }
 
     # ── Step 3: Run the graph in a worker thread ──────────────────────────────
@@ -116,10 +117,13 @@ async def run_query(
     confidence = planner_output.get("confidence") if isinstance(planner_output, dict) else None
 
     try:
+        planner_output_for_db = dict(planner_output) if isinstance(planner_output, dict) else {}
+        planner_output_for_db["tool_executions"] = result.get("tool_executions", [])
+
         query_record = history_service.save_query(
             db=db,
             query=request.query,
-            planner_output=planner_output,
+            planner_output=planner_output_for_db,
             execution_time=execution_time,
             status=execution_status,
             confidence=confidence,
@@ -148,4 +152,5 @@ async def run_query(
         missing_information=result.get("missing_information", []),
         retrieved_chunks=retrieved_chunks,
         retrieved_domains=retrieved_domains,
+        tool_executions=result.get("tool_executions", []),
     )

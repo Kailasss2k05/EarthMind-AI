@@ -31,6 +31,7 @@ from app.core.utils import (
 from app.prompts.research_prompt import RESEARCH_PROMPT
 from app.rag.domain_retriever import retrieve_domains
 from app.tools.search import SearchInput, SearchTool
+from app.tools.executor import execute_tool_with_metadata
 
 logger = logging.getLogger(__name__)
 
@@ -58,34 +59,43 @@ def _format_chunks(chunks: List[dict]) -> str:
     """
     Convert retrieved chunks into a numbered plain-text block for the prompt.
 
-    Each entry:
-        [1] Source: policy_report.pdf | Page: 4 | Domain: policy
-        <chunk text>
+    Each chunk is preceded by its index and domain metadata so the LLM
+    can cite them in its references section.
     """
     if not chunks:
-        return "No documents were retrieved from the knowledge base."
+        return "(No domain documents retrieved for this query.)"
 
     lines = []
     for idx, chunk in enumerate(chunks, start=1):
-        source = chunk.get("source") or "unknown"
-        page = chunk.get("page", "?")
-        domain = chunk.get("domain", "?")
-        text = (chunk.get("text") or "").strip()
-        lines.append(
-            f"[{idx}] Source: {source} | Page: {page} | Domain: {domain}\n{text}"
-        )
+        domain  = chunk.get("domain", "general").upper()
+        content = chunk.get("text", "").strip()
+        lines.append(f"[{idx}] [{domain}] {content}")
+
     return "\n\n".join(lines)
 
 
 class ResearchAgent(BaseAgent):
+    """
+    Domain-aware RAG retrieval + LLM synthesis.
+    """
 
     def build_prompt(
-    self,
-    state: dict,
-    rag_context: str = "",
-    web_context: str = "",
-) -> str:
-        """Build the research prompt with RAG context injected."""
+        self,
+        state: dict,
+        rag_context: str = "",
+        web_context: str = "",
+    ) -> str:
+        """
+        Build the research prompt with formatted context strings.
+
+        This method is separated from run() to allow easier testing and
+        inspection of the prompt before LLM invocation.
+        """
+        if not rag_context:
+            rag_context = _format_chunks(state.get("retrieved_context", []))
+        if not web_context:
+            web_context = _format_search_results(state.get("web_search_results", {}))
+
         return RESEARCH_PROMPT.format(
             query=state["query"],
             planner_output=json.dumps(state.get("planner_output", {}), indent=2),
@@ -116,7 +126,11 @@ class ResearchAgent(BaseAgent):
         try:
             chunks = retrieve_domains(agent_names, query)
             try:
-                search_results = SearchTool.search(
+                search_results = execute_tool_with_metadata(
+                    state,
+                    "SearchTool",
+                    "Research",
+                    SearchTool.search,
                     SearchInput(
                         query=query,
                         max_results=5,
