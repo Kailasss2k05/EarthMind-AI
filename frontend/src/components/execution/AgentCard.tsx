@@ -4,7 +4,7 @@ import { ChevronDown, CheckCircle2, Loader2, Circle, AlertTriangle, Clock } from
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { AgentStatus } from "@/services/types";
+import type { AgentStatus, ToolExecutionRecord } from "@/services/types";
 
 interface AgentCardProps {
   name: string;
@@ -15,6 +15,7 @@ interface AgentCardProps {
   completedAt?: string;
   errorReason?: string;
   output?: string;
+  tools?: ToolExecutionRecord[];
 }
 
 const statusStyles: Record<
@@ -61,6 +62,7 @@ export function AgentCard({
   completedAt,
   errorReason,
   output,
+  tools,
 }: AgentCardProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const s = statusStyles[status];
@@ -174,7 +176,7 @@ export function AgentCard({
                 <div className="space-y-2">
                   {output ? (
                     <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground text-xs leading-relaxed">
-                      {output.split("\n").map((line, idx) => {
+                      {(typeof output === "string" ? output : JSON.stringify(output || "")).split("\n").map((line, idx) => {
                         const trimmed = line.trim();
                         if (trimmed.startsWith("•") || trimmed.startsWith("-")) {
                           return (
@@ -199,6 +201,53 @@ export function AgentCard({
                     {completedAt && (
                       <span>Completed: {formatTime(completedAt)}</span>
                     )}
+                  </div>
+                </div>
+              )}
+
+              {tools && tools.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-border/40 space-y-2">
+                  <div className="text-[11px] font-semibold tracking-wider uppercase text-muted-foreground">
+                    Tools Executed
+                  </div>
+                  <div className="grid gap-2">
+                    {tools.map((t, idx) => {
+                      const isDone = t.status === "Completed" || t.status === "completed" || t.status === "success";
+                      const isErr = t.status === "Failed" || t.status === "failed" || t.status === "error";
+                      const isRun = t.status === "Running" || t.status === "running" || t.status === "Running...";
+                      return (
+                        <div key={idx} className="flex flex-col gap-1 rounded-2xl bg-muted/30 border border-border/40 p-2.5 text-xs">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-1.5 font-medium">
+                              {isDone && <CheckCircle2 className="h-3.5 w-3.5 text-[oklch(0.55_0.16_160)] shrink-0" />}
+                              {isRun && <Loader2 className="h-3.5 w-3.5 text-primary animate-spin shrink-0" />}
+                              {isErr && <AlertTriangle className="h-3.5 w-3.5 text-destructive shrink-0" />}
+                              {!isDone && !isRun && !isErr && <Circle className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
+                              <span>{t.tool_name}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4 font-normal",
+                                isDone ? "bg-[oklch(0.72_0.16_160)]/10 text-[oklch(0.55_0.16_160)] border-[oklch(0.72_0.16_160)]/20" :
+                                isErr ? "bg-destructive/10 text-destructive border-destructive/20" :
+                                "bg-primary/10 text-primary border-primary/20"
+                              )}>
+                                {t.status}
+                              </Badge>
+                              {t.execution_time_ms !== undefined && t.execution_time_ms > 0 && (
+                                <span className="font-numeric text-[10px] text-muted-foreground">
+                                  {Math.round(t.execution_time_ms)} ms
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          {(t.summary || t.error) && (
+                            <p className="text-[11px] text-muted-foreground pl-5 line-clamp-2">
+                              {t.error ? `Error: ${t.error}` : t.summary}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}

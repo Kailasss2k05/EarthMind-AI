@@ -30,37 +30,72 @@ from app.core.utils import (
 )
 from app.prompts.research_prompt import RESEARCH_PROMPT
 from app.rag.domain_retriever import retrieve_domains
+from app.tools.search import SearchInput, SearchTool
+from app.tools.executor import execute_tool_with_metadata
 
 logger = logging.getLogger(__name__)
 
+def _format_search_results(results: dict) -> str:
+    if not results.get("success"):
+        return "No web search results available."
+
+    search_results = results.get("results", [])
+
+    if not search_results:
+        return "No web search results available."
+
+    lines = []
+
+    for idx, item in enumerate(search_results, start=1):
+        lines.append(
+            f"[{idx}] {item.get('title','')}\n"
+            f"URL: {item.get('url','')}\n"
+            f"{item.get('snippet','')}"
+        )
+
+    return "\n\n".join(lines)
 
 def _format_chunks(chunks: List[dict]) -> str:
     """
     Convert retrieved chunks into a numbered plain-text block for the prompt.
 
-    Each entry:
-        [1] Source: policy_report.pdf | Page: 4 | Domain: policy
-        <chunk text>
+    Each chunk is preceded by its index and domain metadata so the LLM
+    can cite them in its references section.
     """
     if not chunks:
-        return "No documents were retrieved from the knowledge base."
+        return "(No domain documents retrieved for this query.)"
 
     lines = []
     for idx, chunk in enumerate(chunks, start=1):
-        source = chunk.get("source") or "unknown"
-        page = chunk.get("page", "?")
-        domain = chunk.get("domain", "?")
-        text = (chunk.get("text") or "").strip()
-        lines.append(
-            f"[{idx}] Source: {source} | Page: {page} | Domain: {domain}\n{text}"
-        )
+        domain  = chunk.get("domain", "general").upper()
+        content = chunk.get("text", "").strip()
+        lines.append(f"[{idx}] [{domain}] {content}")
+
     return "\n\n".join(lines)
 
 
 class ResearchAgent(BaseAgent):
+    """
+    Domain-aware RAG retrieval + LLM synthesis.
+    """
 
-    def build_prompt(self, state: dict, rag_context: str = "") -> str:
-        """Build the research prompt with RAG context injected."""
+    def build_prompt(
+        self,
+        state: dict,
+        rag_context: str = "",
+        web_context: str = "",
+    ) -> str:
+        """
+        Build the research prompt with formatted context strings.
+
+        This method is separated from run() to allow easier testing and
+        inspection of the prompt before LLM invocation.
+        """
+        if not rag_context:
+            rag_context = _format_chunks(state.get("retrieved_context", []))
+        if not web_context:
+            web_context = _format_search_results(state.get("web_search_results", {}))
+
         return RESEARCH_PROMPT.format(
             query=state["query"],
             planner_output=json.dumps(state.get("planner_output", {}), indent=2),
@@ -68,6 +103,7 @@ class ResearchAgent(BaseAgent):
                 state.get("missing_information", []), indent=2
             ),
             rag_context=rag_context,
+            web_context=web_context,
         )
 
     def run(self, state: dict) -> dict:
@@ -89,6 +125,26 @@ class ResearchAgent(BaseAgent):
         )
         try:
             chunks = retrieve_domains(agent_names, query)
+            try:
+                search_results = execute_tool_with_metadata(
+                    state,
+                    "SearchTool",
+                    "Research",
+                    SearchTool.search,
+                    SearchInput(
+                        query=query,
+                        max_results=5,
+                    )
+                )
+            except Exception as exc:
+                logger.warning(
+                    "[ResearchAgent] Web search failed: %s",
+                    exc,
+                )
+                search_results = {
+                    "success": False,
+                    "results": [],
+                }
         except Exception as exc:
             logger.warning(
                 "[ResearchAgent] Retrieval failed: %s. Continuing without context.", exc
@@ -97,9 +153,11 @@ class ResearchAgent(BaseAgent):
 
         # ── 2. Format for prompt ──────────────────────────────────────────────
         rag_context = _format_chunks(chunks)
-
+        web_context = _format_search_results(
+            search_results
+        )
         # ── 3. Build prompt and call LLM ──────────────────────────────────────
-        prompt = self.build_prompt(state, rag_context=rag_context)
+        prompt = self.build_prompt(state, rag_context=rag_context, web_context=web_context)
 
         try:
             response = self.invoke_llm(prompt)
@@ -146,4 +204,5 @@ class ResearchAgent(BaseAgent):
                 "research": result,
             },
             "retrieved_context": chunks,
+            "web_search_results": search_results,
         }

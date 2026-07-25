@@ -63,6 +63,10 @@ Then append the supplied sections exactly as provided.
 
 {missing_information_section}
 
+# Tool Execution Summary
+
+{tool_summary_section}
+
 # Agent Execution Summary
 
 {execution_table}

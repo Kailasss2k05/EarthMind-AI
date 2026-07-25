@@ -88,7 +88,11 @@ def get_report_detail(
     if not record:
         logger.warning("Report not found: id=%s", report_id)
         raise HTTPException(status_code=404, detail="Report not found")
-        
+
+    tool_execs = []
+    if record.query and isinstance(record.query.planner_output, dict):
+        tool_execs = record.query.planner_output.get("tool_executions", [])
+
     return ReportDetailResponse(
         id=record.id,
         query_id=record.query_id,
@@ -98,5 +102,6 @@ def get_report_detail(
         execution_time=record.query.execution_time,
         confidence=record.query.confidence,
         status=record.query.status,
-        created_at=record.created_at
+        created_at=record.created_at,
+        tool_executions=tool_execs,
     )

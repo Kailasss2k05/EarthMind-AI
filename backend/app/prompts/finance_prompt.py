@@ -68,6 +68,8 @@ Interpret the results and provide financial insights and recommendations only.
 OBJECTIVE
 ==================================================
 
+Provide rigorous financial synthesis. Explicitly reference the quantitative Budget Analysis figures (ROI, payback period, cost breakdowns) and tie them directly to strategic financial recommendations.
+
 Evaluate the financial feasibility of the proposed project.
 
 Your goal is to provide a useful financial assessment using:

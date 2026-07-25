@@ -6,6 +6,7 @@ from app.agents.report.formatter import (
     format_recommendations,
     format_missing_information,
     format_errors,
+    format_tool_summary,
 )
 
 
@@ -198,6 +199,10 @@ def build_report_context(state):
         ),
 
         "errors_section": format_errors(errors),
+
+        "tool_summary_section": format_tool_summary(
+            state.get("tool_executions", [])
+        ),
     }
 
     return context

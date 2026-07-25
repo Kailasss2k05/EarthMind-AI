@@ -17,6 +17,8 @@ export interface ReferenceItem {
   type: string;
   retrievedBy: string;
   url?: string;
+  confidence?: string;
+  chunk?: string;
 }
 
 // ─── Risk entry ────────────────────────────────────────────────────────────────
@@ -67,6 +69,17 @@ export interface AgentLogRow {
   order: string | number;
 }
 
+// ─── Tool log row ──────────────────────────────────────────────────────────────
+
+export interface ToolLogRow {
+  name: string;
+  agent: string;
+  status: string;
+  duration: string;
+  summary: string;
+  error?: string | null;
+}
+
 // ─── Top-level canonical report data ──────────────────────────────────────────
 
 export interface ReportData {
@@ -96,6 +109,7 @@ export interface ReportData {
   timelinePhases: TimelinePhase[];
   references: ReferenceItem[];
   agentLogRows: AgentLogRow[];
+  toolLogRows: ToolLogRow[];
 
   // Tech metadata
   techInfo: {
