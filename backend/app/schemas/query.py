@@ -40,7 +40,8 @@ class QueryResponse(BaseModel):
     outputs             : Per-agent structured outputs (excluding ``report``).
     agent_status        : Execution status for every agent that ran or was skipped.
     errors              : Error messages for any agent that failed.
-    missing_information : Deduplicated list of information gaps across all agents.
+    missing_information : Deduplicated list of information gaps across all agents,
+                          each as a dict with ``type`` and ``description`` keys.
     """
 
     request_id: UUID
@@ -52,7 +53,7 @@ class QueryResponse(BaseModel):
     outputs: Dict[str, Any] = Field(default_factory=dict)
     agent_status: Dict[str, str] = Field(default_factory=dict)
     errors: Dict[str, str] = Field(default_factory=dict)
-    missing_information: List[str] = Field(default_factory=list)
+    missing_information: List[Dict[str, str]] = Field(default_factory=list)
 
     # RAG metadata — lightweight summary (not raw chunks)
     retrieved_chunks: int = Field(

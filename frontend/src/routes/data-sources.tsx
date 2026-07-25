@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Database, Zap, Brain, Server, HardDrive, Plus } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Database, Zap, Brain, Server, HardDrive, Plus, Loader2 } from "lucide-react";
 
 import { PageHeader, Panel } from "@/components/ui-parts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { dataSources } from "@/lib/mock-data";
+import { systemService, SystemStatusResponse } from "@/services";
 
 export const Route = createFileRoute("/data-sources")({
   head: () => ({
@@ -25,6 +26,71 @@ const iconFor: Record<string, typeof Database> = {
 };
 
 function DataSourcesPage() {
+  const [status, setStatus] = useState<SystemStatusResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await systemService.getSystemStatus();
+        setStatus(res);
+      } catch (err) {
+        console.error("Failed to load system status", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!status) return null;
+
+  const dataSources = [
+    {
+      name: "PostgreSQL",
+      kind: "Database",
+      records: "Operational",
+      health: status.services.postgres.connected ? 100 : 0,
+      lastSync: status.services.postgres.connected ? "connected" : "disconnected",
+    },
+    {
+      name: "Redis",
+      kind: "Stream",
+      records: "Operational",
+      health: status.services.redis.connected ? 100 : 0,
+      lastSync: status.services.redis.connected ? "connected" : "disconnected",
+    },
+    {
+      name: "ChromaDB",
+      kind: "Vector Store",
+      records: `${status.documents} docs, ${status.chunks} chunks`,
+      health: status.services.chromadb.connected ? 100 : 0,
+      lastSync: status.services.chromadb.connected ? "connected" : "disconnected",
+    },
+    {
+      name: "IBM watsonx.ai",
+      kind: "Model Gateway",
+      records: "Model access",
+      health: status.services.watsonx.configured ? 100 : 0,
+      lastSync: status.services.watsonx.configured ? "configured" : "unconfigured",
+    },
+    {
+      name: "Ollama",
+      kind: "Local Models",
+      records: `Embedding: ${status.embedding_model}`,
+      health: 100, // Assuming available if backend is running
+      lastSync: "local",
+    },
+  ];
+
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-8">
       <PageHeader
@@ -57,32 +123,32 @@ function DataSourcesPage() {
                 <Badge
                   className={`rounded-full ${
                     healthy
-                      ? "bg-[oklch(0.65 0.22 290)]/15 text-[oklch(0.42 0.22 285)]"
-                      : "bg-[oklch(0.85 0.08 290)]/25 text-[oklch(0.55 0.15 290)]"
+                      ? "bg-[oklch(0.65_0.22_290)]/15 text-[oklch(0.42_0.22_285)]"
+                      : "bg-[oklch(0.85_0.08_290)]/25 text-[oklch(0.55_0.15_290)]"
                   } hover:opacity-90`}
                 >
-                  {s.health}% healthy
+                  {healthy ? "100% healthy" : "Offline"}
                 </Badge>
               </div>
 
               <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
                 <div className="rounded-xl border border-border/50 p-3">
                   <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                    Volume
+                    Status
                   </p>
-                  <p className="mt-1 font-medium">{s.records}</p>
+                  <p className="mt-1 font-medium text-xs">{s.records}</p>
                 </div>
                 <div className="rounded-xl border border-border/50 p-3">
                   <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                    Last sync
+                    State
                   </p>
-                  <p className="mt-1 font-medium">{s.lastSync}</p>
+                  <p className="mt-1 font-medium capitalize text-xs">{s.lastSync}</p>
                 </div>
               </div>
 
               <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-muted">
                 <div
-                  className="h-full bg-gradient-to-r from-[oklch(0.42 0.22 285)] to-[oklch(0.65 0.22 290)]"
+                  className={`h-full ${healthy ? 'bg-gradient-to-r from-[oklch(0.42_0.22_285)] to-[oklch(0.65_0.22_290)]' : 'bg-red-500/50'}`}
                   style={{ width: `${s.health}%` }}
                 />
               </div>

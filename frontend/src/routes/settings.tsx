@@ -23,6 +23,7 @@ export const Route = createFileRoute("/settings")({
 function SettingsPage() {
   const [settings, setSettings] = useState<SettingsResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true);
 
   useEffect(() => {
     async function load() {
@@ -31,6 +32,8 @@ function SettingsPage() {
         setSettings(res);
       } catch (err) {
         console.error("Failed to load settings", err);
+      } finally {
+        setInitialLoad(false);
       }
     }
     load();
@@ -58,12 +61,22 @@ function SettingsPage() {
     if (settings) {
       setSettings({
         ...settings,
-        notifications: { ...settings.notifications, [key]: value }
+        notification_defaults: { ...settings.notification_defaults, [key]: value }
       });
     }
   };
 
+  if (initialLoad) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   if (!settings) return null;
+
+  const notifications = settings.notification_defaults || {};
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-8">
@@ -80,24 +93,16 @@ function SettingsPage() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label htmlFor="org">Organisation name</Label>
-            <Input id="org" value={settings.organization_name} onChange={(e) => updateField('organization_name', e.target.value)} className="rounded-xl" />
+            <Input id="org" value={settings.organisation || ""} onChange={(e) => updateField('organisation', e.target.value)} className="rounded-xl" />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="region">Reporting region</Label>
-            <Input id="region" value={settings.reporting_region} onChange={(e) => updateField('reporting_region', e.target.value)} className="rounded-xl" />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="fy">Fiscal year start</Label>
-            <Input id="fy" value={settings.fiscal_year_start} onChange={(e) => updateField('fiscal_year_start', e.target.value)} className="rounded-xl" />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="baseline">Baseline year</Label>
-            <Input id="baseline" value={settings.baseline_year} onChange={(e) => updateField('baseline_year', e.target.value)} className="rounded-xl" />
+            <Input id="region" value={settings.region || ""} onChange={(e) => updateField('region', e.target.value)} className="rounded-xl" />
           </div>
         </div>
         <Separator className="my-6" />
         <div className="flex justify-end">
-          <Button onClick={handleSave} disabled={loading} className="rounded-full bg-gradient-to-r from-[oklch(0.42 0.22 285)] to-[oklch(0.55 0.24 285)] text-primary-foreground">
+          <Button onClick={handleSave} disabled={loading} className="rounded-full bg-gradient-to-r from-[oklch(0.42_0.22_285)] to-[oklch(0.55_0.24_285)] text-primary-foreground">
             {loading ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Save className="mr-1.5 h-4 w-4" />} Save changes
           </Button>
         </div>
@@ -106,9 +111,9 @@ function SettingsPage() {
       <div className="grid gap-4 md:grid-cols-2">
         <Panel title="Notifications" description="Signal, not noise">
           {[
-            { key: "anomaly_alerts", icon: Bell, label: "Anomaly alerts", hint: "When agents detect drift", on: settings.notifications.anomaly_alerts },
-            { key: "compliance_updates", icon: Shield, label: "Compliance updates", hint: "New CSRD/TCFD guidance", on: settings.notifications.compliance_updates },
-            { key: "weekly_digest", icon: Palette, label: "Weekly digest", hint: "Every Monday, 08:00", on: settings.notifications.weekly_digest },
+            { key: "anomaly_alerts", icon: Bell, label: "Anomaly alerts", hint: "When agents detect drift", on: !!notifications["anomaly_alerts"] },
+            { key: "compliance_updates", icon: Shield, label: "Compliance updates", hint: "New CSRD/TCFD guidance", on: !!notifications["compliance_updates"] },
+            { key: "weekly_digest", icon: Palette, label: "Weekly digest", hint: "Every Monday, 08:00", on: !!notifications["weekly_digest"] },
           ].map((n) => (
             <div
               key={n.key}
@@ -128,12 +133,13 @@ function SettingsPage() {
           ))}
         </Panel>
 
-        <Panel title="API credentials" description="Rotate keys regularly">
+        <Panel title="API credentials" description="Status of configured services">
           <div className="space-y-3">
             {[
-              { label: "watsonx.ai", value: "ibm_••••••••••••4a2f" },
-              { label: "PostgreSQL", value: "postgres://••••.eu-west" },
-              { label: "ChromaDB", value: "https://chroma.••••.io" },
+              { label: "watsonx.ai", configured: settings.configured?.watsonx },
+              { label: "PostgreSQL", configured: settings.configured?.postgres },
+              { label: "ChromaDB", configured: settings.configured?.chromadb },
+              { label: "Redis", configured: settings.configured?.redis },
             ].map((k) => (
               <div key={k.label} className="rounded-2xl border border-border/50 p-3">
                 <div className="flex items-center justify-between">
@@ -142,10 +148,9 @@ function SettingsPage() {
                     <span className="text-sm font-medium">{k.label}</span>
                   </div>
                   <Button size="sm" variant="ghost" className="h-7 rounded-full text-xs">
-                    Rotate
+                    {k.configured ? "Configured" : "Unconfigured"}
                   </Button>
                 </div>
-                <p className="mt-1.5 font-mono text-xs text-muted-foreground">{k.value}</p>
               </div>
             ))}
           </div>

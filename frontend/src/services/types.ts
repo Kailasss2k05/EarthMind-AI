@@ -22,8 +22,8 @@ export interface QueryRequest {
 export interface QueryResponse {
   /** Unique trace ID for this request (UUID string) */
   request_id: string;
-  /** Always "completed" on the happy path */
-  status: "completed" | string;
+  /** Always "completed" on the happy path, "partial" if some agents errored */
+  status: "completed" | "partial" | string;
   /** Echo of the original query */
   query: string;
   /** Structured plan dict produced by the Planner agent */
@@ -36,8 +36,8 @@ export interface QueryResponse {
   agent_status: Record<string, string>;
   /** Error messages for any failed agent */
   errors: Record<string, string>;
-  /** Deduplicated list of information gaps across all agents */
-  missing_information: string[];
+  /** Deduplicated list of information gaps across all agents, each with type and description */
+  missing_information: { type: string; description: string }[];
   /** Number of document chunks retrieved during RAG (optional) */
   retrieved_chunks?: number;
   /** Unique ChromaDB domain names searched during retrieval (optional) */
@@ -274,6 +274,8 @@ export interface AgentStats {
   executions: number;
   last_run: string | null;
   average_execution_time: number;
+  /** If true, these counts are heuristic estimates, not ground-truth per-agent logs */
+  estimated?: boolean;
 }
 
 export interface AnalyticsTimeBucket {
@@ -314,7 +316,7 @@ export interface ServiceConnection {
   connected: boolean;
 }
 
-export interface WatsonxConfig {
+export interface OllamaConfig {
   configured: boolean;
 }
 
@@ -322,7 +324,7 @@ export interface SystemServices {
   postgres: ServiceConnection;
   redis: ServiceConnection;
   chromadb: ServiceConnection;
-  watsonx: WatsonxConfig;
+  ollama: OllamaConfig;  // renamed from watsonx — actual LLM is Ollama
 }
 
 export interface SystemStatusResponse {
@@ -341,6 +343,8 @@ export interface AgentStatusDetail {
   executions: number;
   last_run: string | null;
   average_execution_time: number;
+  /** If true, counts are heuristic estimates — no per-agent DB log exists */
+  estimated?: boolean;
 }
 
 export interface AgentStatusResponse {
@@ -352,5 +356,6 @@ export interface AgentStatusResponse {
   risk: AgentStatusDetail;
   timeline: AgentStatusDetail;
   report: AgentStatusDetail;
+  sdg: AgentStatusDetail;
 }
 

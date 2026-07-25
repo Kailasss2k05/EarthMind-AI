@@ -1,22 +1,47 @@
+"""
+services/settings.py
+--------------------
+Settings service — reads and writes in-memory workspace settings.
+
+Note: Settings are stored in memory (no DB persistence). They reset on
+server restart. Add a settings table or file-backed store to persist.
+"""
+
+_settings_store: dict = {
+    "organisation": "EarthMind AI",
+    "region": "Global",
+    "notification_defaults": {
+        "anomaly_alerts": False,
+        "compliance_updates": True,
+        "weekly_digest": False,
+    },
+    "configured": {
+        "postgres": True,
+        "chromadb": True,
+        "redis": True,
+        "watsonx": False,   # L-4: watsonx is not configured; Ollama is the actual LLM
+    }
+}
+
+
 class SettingsService:
     def get_settings(self) -> dict:
         """
         Returns application settings safely without exposing API keys.
         """
-        return {
-            "organisation": "EarthMind AI",
-            "region": "Global",
-            "notification_defaults": {
-                "email_alerts": True,
-                "weekly_digest": False,
-                "slack_integration": True
-            },
-            "configured": {
-                "postgres": True,
-                "chromadb": True,
-                "redis": True,
-                "watsonx": True
-            }
-        }
+        return dict(_settings_store)
+
+    def update_settings(self, updates: dict) -> dict:
+        """
+        Update settings in memory (H-1: was missing, causing Save to always fail).
+        Only allowed top-level keys are updated to prevent injection of arbitrary config.
+        """
+        allowed_keys = {"organisation", "region", "notification_defaults"}
+        for key in allowed_keys:
+            if key in updates:
+                _settings_store[key] = updates[key]
+
+        return dict(_settings_store)
+
 
 settings_service = SettingsService()

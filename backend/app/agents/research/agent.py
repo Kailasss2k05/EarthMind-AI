@@ -105,9 +105,7 @@ class ResearchAgent(BaseAgent):
             response = self.invoke_llm(prompt)
             content = response.content.strip()
 
-            print(f"\n===== ResearchAgent RAW OUTPUT =====")
-            print(content)
-            print("====================================\n")
+            logger.debug("[ResearchAgent] RAW OUTPUT:\n%s", content)
 
             content = re.sub(r"^```json\s*", "", content, flags=re.IGNORECASE)
             content = re.sub(r"^```\s*", "", content)

@@ -112,7 +112,7 @@ Assess environmental impacts of electric buses
 
 Output:
 
-{
+{{
     "objective":"Assess environmental impacts of electric buses",
     "required_agents":[
         "research",
@@ -120,7 +120,7 @@ Output:
         "policy",
         "sdg"
     ]
-}
+}}
 
 ------------------------------------
 
@@ -129,14 +129,14 @@ Estimate the budget of a solar-powered irrigation system
 
 Output:
 
-{
+{{
     "objective":"Estimate the budget of a solar-powered irrigation system",
     "required_agents":[
         "research",
         "finance",
         "environmental"
     ]
-}
+}}
 
 ------------------------------------
 
@@ -145,13 +145,13 @@ Create a development timeline for an AI chatbot
 
 Output:
 
-{
+{{
     "objective":"Create a development timeline for an AI chatbot",
     "required_agents":[
         "research",
         "timeline"
     ]
-}
+}}
 
 ==============================
 USER QUERY
@@ -165,10 +165,10 @@ OUTPUT
 
 Return ONLY valid JSON.
 
-{
+{{
     "objective":"",
     "required_agents":[]
-}
+}}
 """
 
 PLANNER_PROMPT += "\n\n" + PLANNER_JSON_INSTRUCTIONS
