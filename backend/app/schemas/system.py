@@ -5,7 +5,7 @@ class ServiceConnection(BaseModel):
     connected: bool
 
 
-class OllamaConfig(BaseModel):
+class GroqConfig(BaseModel):
     configured: bool
 
 
@@ -13,7 +13,7 @@ class SystemServices(BaseModel):
     postgres: ServiceConnection
     redis: ServiceConnection
     chromadb: ServiceConnection
-    ollama: OllamaConfig   # L-4: renamed from watsonx; actual LLM is Ollama
+    groq: GroqConfig   # Groq is the LLM provider
 
 
 class SystemStatusResponse(BaseModel):
