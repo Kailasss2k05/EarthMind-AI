@@ -36,12 +36,11 @@ class Settings:
     PORT: int = int(os.getenv("PORT", 8000))
 
     # ===========================
-    # Ollama / LLM
+    # Groq / LLM
     # ===========================
-    MODEL_PROVIDER: str = os.getenv("MODEL_PROVIDER", "ollama")
-    MODEL_NAME: str = os.getenv("MODEL_NAME", "llama3.2:3b")
-    OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-    TEMPERATURE: float = float(os.getenv("TEMPERATURE", 0.3))
+    GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
+    MODEL_NAME: str = os.getenv("MODEL_NAME", "openai/gpt-oss-20b")
+    TEMPERATURE: float = float(os.getenv("TEMPERATURE", 0))
 
     # ===========================
     # PostgreSQL

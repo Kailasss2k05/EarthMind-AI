@@ -1,10 +1,16 @@
-from langchain_ollama import ChatOllama
+from dotenv import load_dotenv
+load_dotenv()  # Load GROQ_API_KEY and other vars from backend/.env
 
-llm = ChatOllama(
-    model="llama3.2:3b",
+import os
+from langchain_groq import ChatGroq
+
+llm = ChatGroq(
+    model="openai/gpt-oss-20b",
+    groq_api_key=os.environ["GROQ_API_KEY"],
     temperature=0,
-    format="json",
 )
+
+llm_json = llm.bind(response_format={"type": "json_object"})
 
 prompt = """
 Return ONLY this JSON:
@@ -15,6 +21,6 @@ Return ONLY this JSON:
 }
 """
 
-response = llm.invoke(prompt)
+response = llm_json.invoke(prompt)
 
 print(response.content)

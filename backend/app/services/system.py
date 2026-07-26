@@ -6,7 +6,6 @@ System status service — performs real connectivity probes against each service
 Fixes:
   H-2: Postgres and Redis are now actually probed, not hardcoded True.
   M-10: Embedding model name is read from RAG config, not hardcoded.
-  L-4: watsonx key removed; LLM is Ollama.
 """
 
 from app.rag.vector_store import get_dashboard_statistics
@@ -62,7 +61,7 @@ class SystemStatusService:
                 "postgres":  {"connected": _check_postgres()},
                 "redis":     {"connected": _check_redis()},
                 "chromadb":  {"connected": chroma_connected},
-                "ollama":    {"configured": True},   # L-4: actual LLM is Ollama, not watsonx
+                "groq":      {"configured": True},   # Groq is the LLM provider
             },
             "documents":        docs_count,
             "chunks":           chunks_count,

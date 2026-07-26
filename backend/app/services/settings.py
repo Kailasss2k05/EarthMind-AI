@@ -19,7 +19,7 @@ _settings_store: dict = {
         "postgres": True,
         "chromadb": True,
         "redis": True,
-        "watsonx": False,   # L-4: watsonx is not configured; Ollama is the actual LLM
+        "groq": True,   # Groq is the configured LLM provider
     }
 }
 

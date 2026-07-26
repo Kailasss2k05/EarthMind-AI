@@ -12,8 +12,8 @@ Each node function:
 
 The agents are module-level singletons so they are only instantiated once.
 Two separate LLM instances are used:
-  - ``llm_json``  : JSON-mode Ollama (Planner + all domain agents)
-  - ``llm_text``  : Text-mode Ollama (Report agent — returns Markdown)
+  - ``llm_json``  : JSON-mode Groq (Planner + all domain agents)
+  - ``llm_text``  : Text-mode Groq (Report agent — returns Markdown)
 """
 
 from app.agents.planner import PlannerAgent
