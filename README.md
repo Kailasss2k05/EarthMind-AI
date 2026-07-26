@@ -67,7 +67,7 @@ EarthMind AI is a Multi-Agent Sustainability Intelligence Platform developed as 
 | `GROQ_API_KEY`| Your Groq API key (required)        |
 | `MODEL_NAME`  | Groq model ID (default: `openai/gpt-oss-20b`) |
 | `TEMPERATURE` | LLM temperature (default: `0`)      |
-| `DATABASE_URL`| Neon PostgreSQL connection string   |
+| `DATABASE_URL`| Neon PostgreSQL connection string (`postgresql+psycopg://...`) |
 | `REDIS_URL`   | Upstash Redis connection string     |
 
 ## Project Status

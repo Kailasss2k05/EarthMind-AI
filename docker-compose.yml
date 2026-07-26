@@ -82,7 +82,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/earthmind
+      - DATABASE_URL=postgresql+psycopg://postgres:postgres@postgres:5432/earthmind
       - REDIS_URL=redis://redis:6379
       - GROQ_API_KEY=${GROQ_API_KEY}
       - MODEL_NAME=${MODEL_NAME:-openai/gpt-oss-20b}

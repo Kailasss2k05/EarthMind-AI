@@ -37,12 +37,9 @@ dist/
 # Logs
 *.log
 
-# ChromaDB
-data/vectorstore/
 
 # Database
 *.db
-*.sqlite3
 
 # Node
 node_modules/
@@ -56,9 +53,6 @@ dump.rdb
 
 test_llm.py
 test_graph.py
-
-# ChromaDB generated data
-backend/data/vector_store/
 
 
 # Logs
@@ -93,3 +87,5 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+backend/data/vector_store/

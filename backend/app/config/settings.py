@@ -55,7 +55,7 @@ class Settings:
     # on import when .env is absent (e.g. CI, fresh Docker container).
     DATABASE_URL: str = os.getenv(
         "DATABASE_URL",
-        "postgresql://postgres:postgres@localhost:5432/earthmind",
+        "postgresql+psycopg://postgres:postgres@localhost:5432/earthmind",
     )
 
     # ===========================
