@@ -60,7 +60,7 @@ class SystemStatusService:
             "services": {
                 "postgres":  {"connected": _check_postgres()},
                 "redis":     {"connected": _check_redis()},
-                "chromadb":  {"connected": chroma_connected},
+                "qdrant":    {"connected": chroma_connected},
                 "groq":      {"configured": True},   # Groq is the LLM provider
             },
             "documents":        docs_count,

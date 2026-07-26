@@ -12,6 +12,8 @@ Supports:
 Performance (C-6): retrieve() accepts a pre-computed query_embedding so
 that callers doing multi-domain retrieval can embed the query once and
 reuse it across all domain searches instead of re-running the model N times.
+
+Backend: Qdrant Cloud (via QdrantDomainCollection wrapper in vector_store.py).
 """
 
 import logging
@@ -50,7 +52,7 @@ def retrieve(
     Parameters
     ----------
     domain:
-        ChromaDB collection name to search.
+        Qdrant collection name to search (e.g. "sdg", "policy").
     query:
         The raw query string (used for keyword scoring and normalization).
     top_k:

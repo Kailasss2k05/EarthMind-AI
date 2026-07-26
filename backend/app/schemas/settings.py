@@ -4,9 +4,9 @@ from typing import Dict, Optional
 
 class SettingsConfigured(BaseModel):
     postgres: bool
-    chromadb: bool
+    qdrant: bool
     redis: bool
-    watsonx: bool = False   # L-4: not actually configured; here for UI compatibility
+    groq: bool = True   # Groq is the configured LLM provider
 
 
 class SettingsResponse(BaseModel):

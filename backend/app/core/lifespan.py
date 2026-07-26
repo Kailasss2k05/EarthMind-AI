@@ -8,7 +8,7 @@ Startup
 1. Capture the main event loop for thread-safe WebSocket broadcasting.
 2. Verify PostgreSQL connectivity.
 3. Verify Redis connectivity.
-4. Verify ChromaDB connectivity.
+4. Verify Qdrant Cloud connectivity.
 
 Shutdown
 --------
@@ -24,7 +24,7 @@ from sqlalchemy import text
 
 from app.services.postgres import engine
 from app.services.redis import redis_client
-from app.services.chromadb import chroma_health_check
+from app.services.qdrant import qdrant_health_check
 from app.core.logger import logger
 from app.database import init_database
 
@@ -59,17 +59,17 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error("Failed to connect to Redis on startup: %s", e)
 
-    # ── ChromaDB ───────────────────────────────────────────────────────────
+    # ── Qdrant Cloud ───────────────────────────────────────────────────────
     try:
-        if chroma_health_check():
-            logger.info("Successfully connected to ChromaDB.")
+        if qdrant_health_check():
+            logger.info("Successfully connected to Qdrant Cloud.")
         else:
             logger.warning(
-                "ChromaDB is reachable but returned an unexpected result. "
+                "Qdrant Cloud is reachable but returned an unexpected result. "
                 "Run ingest.py to populate the knowledge base."
             )
     except Exception as e:
-        logger.error("Failed to connect to ChromaDB on startup: %s", e)
+        logger.error("Failed to connect to Qdrant Cloud on startup: %s", e)
 
     yield  # Application runs here
 

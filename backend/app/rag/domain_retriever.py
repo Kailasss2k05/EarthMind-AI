@@ -5,7 +5,7 @@ Domain-aware retrieval wrapper for the EarthMind multi-agent pipeline.
 
 This module sits on top of the existing retriever.py and adds:
 
-1. Domain-scoped retrieval  — query only the ChromaDB collections that
+1. Domain-scoped retrieval  — query only the Qdrant collections that
    correspond to the planner-selected agents, not every domain.
 
 2. Source diversity filter  — prevent one PDF from dominating the results
@@ -35,7 +35,7 @@ from .retriever import retrieve, retrieve_all
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# Agent name → ChromaDB collection name mapping
+# Agent name → Qdrant collection name mapping
 # Risk and Timeline have no dedicated collection; they fall back to the
 # closest domain (research + policy for risk, research + finance for timeline).
 # ---------------------------------------------------------------------------
@@ -59,7 +59,7 @@ _DOMAIN_RELEVANCE_BOOST = 1.10
 
 def _agent_names_to_domains(agent_names: List[str]) -> List[str]:
     """
-    Map a list of planner-selected agent names to ChromaDB domain names.
+    Map a list of planner-selected agent names to Qdrant collection names.
 
     Returns a deduplicated list of valid domain names.
     Unmapped agents are silently skipped (they have no collection).
@@ -130,7 +130,7 @@ def retrieve_domains(
     top_k: int = DEFAULT_TOP_K,
 ) -> List[dict]:
     """
-    Retrieve chunks from the ChromaDB collections that correspond to
+    Retrieve chunks from the Qdrant collections that correspond to
     the planner-selected agents.
 
     Parameters

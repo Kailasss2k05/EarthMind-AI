@@ -62,7 +62,7 @@ class QueryResponse(BaseModel):
     )
     retrieved_domains: List[str] = Field(
         default_factory=list,
-        description="Unique ChromaDB domain names searched during retrieval.",
+        description="Unique Qdrant collection names searched during retrieval.",
     )
     tool_executions: List[Dict[str, Any]] = Field(
         default_factory=list,

@@ -70,9 +70,18 @@ class Settings:
     )
 
     # ===========================
-    # ChromaDB
+    # Qdrant Cloud
     # ===========================
-    CHROMA_DB_PATH: str = os.getenv("CHROMA_DB_PATH", "../data/vector_store")
+    QDRANT_URL: str = os.getenv("QDRANT_URL", "")
+    QDRANT_API_KEY: str = os.getenv("QDRANT_API_KEY", "")
+    # QDRANT_COLLECTION is used only as a convenience label in .env;
+    # collections are named after their domain (sdg, policy, etc.).
+    QDRANT_COLLECTION: str = os.getenv("QDRANT_COLLECTION", "earthmind")
+
+    # ===========================
+    # HuggingFace Inference API (Phase-2 embedder)
+    # ===========================
+    HF_API_TOKEN: str = os.getenv("HF_API_TOKEN", "")
 
     # ===========================
     # Agent Settings

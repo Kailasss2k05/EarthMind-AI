@@ -17,7 +17,7 @@ _settings_store: dict = {
     },
     "configured": {
         "postgres": True,
-        "chromadb": True,
+        "qdrant": True,
         "redis": True,
         "groq": True,   # Groq is the configured LLM provider
     }

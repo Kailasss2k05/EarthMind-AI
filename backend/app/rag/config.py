@@ -17,17 +17,15 @@ BASE_DIR = Path(__file__).resolve().parents[2]
 # Where your raw PDF/text files live, one sub-folder per domain
 RAW_DATA_DIR = BASE_DIR.parent / "data" / "raw"
 
-# Where ChromaDB will save its database files to disk
-# (this is what makes the data "persistent" - it survives you closing
-# your terminal or restarting your laptop)
+# Where ChromaDB (legacy) stored its database files — kept for the
+# one-time migration script (migrate_chroma_to_qdrant.py).
 VECTOR_STORE_DIR = BASE_DIR / "data" / "vector_store"
 
 # -----------------------------------------------------------------
 # DOMAINS
 # -----------------------------------------------------------------
-# These map 1:1 to the folders in data/raw/ AND to the agents that will
-# later query them (SRS Section 3.4: "each agent queries its own
-# domain-filtered collection in ChromaDB rather than a single shared index").
+# These map 1:1 to the folders in data/raw/ AND to Qdrant collection names
+# AND to the agents that will query them.
 DOMAINS = [
     "sdg",           # UN Sustainable Development Goals documents
     "environmental",  # climate/environmental reports

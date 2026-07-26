@@ -8,7 +8,7 @@ Pipeline:
 2. Load PDFs
 3. Split into chunks
 4. Generate embeddings
-5. Store in ChromaDB
+5. Store in Qdrant Cloud
 """
 
 from pathlib import Path
@@ -108,7 +108,7 @@ def ingest_domain(domain: str):
             
         print(f"Loaded {result['pages']} pages.")
         print(f"Generated {result['chunks']} chunks.")
-        print("Saved to ChromaDB.")
+        print("Saved to Qdrant.")
         processed += 1
 
     collection = get_or_create_collection(domain)

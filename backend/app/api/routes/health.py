@@ -1,7 +1,7 @@
 """
 GET /api/v1/health — Infrastructure connectivity status.
 
-Checks PostgreSQL, Redis, and ChromaDB.
+Checks PostgreSQL, Redis, and Qdrant Cloud.
 Returns a consistent JSON envelope with per-service status.
 """
 
@@ -10,7 +10,7 @@ from sqlalchemy import text
 
 from app.services.postgres import engine
 from app.services.redis import redis_client
-from app.services.chromadb import chroma_health_check
+from app.services.qdrant import qdrant_health_check
 
 router = APIRouter()
 
@@ -20,9 +20,9 @@ def health_check():
     health_status = {
         "status": "healthy",
         "services": {
-            "postgres":  "connected",
-            "redis":     "connected",
-            "chromadb":  "connected",
+            "postgres": "connected",
+            "redis":    "connected",
+            "qdrant":   "connected",
         },
     }
 
@@ -41,9 +41,9 @@ def health_check():
         health_status["services"]["redis"] = "disconnected"
         health_status["status"] = "unhealthy"
 
-    # ── ChromaDB ──────────────────────────────────────────────────────────────
-    if not chroma_health_check():
-        health_status["services"]["chromadb"] = "disconnected"
+    # ── Qdrant Cloud ──────────────────────────────────────────────────────────
+    if not qdrant_health_check():
+        health_status["services"]["qdrant"] = "disconnected"
         health_status["status"] = "unhealthy"
 
     return health_status

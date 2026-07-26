@@ -12,7 +12,7 @@ class GroqConfig(BaseModel):
 class SystemServices(BaseModel):
     postgres: ServiceConnection
     redis: ServiceConnection
-    chromadb: ServiceConnection
+    qdrant: ServiceConnection
     groq: GroqConfig   # Groq is the LLM provider
 
 

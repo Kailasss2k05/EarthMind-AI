@@ -32,7 +32,7 @@ class UploadDocumentResponse(BaseModel):
     )
     collection: str = Field(
         ..., 
-        description="The ChromaDB collection name"
+        description="The Qdrant collection name"
     )
     processing_time: float = Field(
         0.0, 

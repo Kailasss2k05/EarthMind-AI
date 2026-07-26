@@ -123,6 +123,9 @@ class ResearchAgent(BaseAgent):
             "[ResearchAgent] Planner selected: %s",
             ", ".join(agent_names) if agent_names else "(none)",
         )
+        
+        search_results = {}
+        
         try:
             chunks = retrieve_domains(agent_names, query)
             try:
