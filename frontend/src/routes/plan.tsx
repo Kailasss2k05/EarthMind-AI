@@ -379,7 +379,7 @@ function PlanPage() {
       } else if (err instanceof TypeError) {
         toast.error("Cannot reach the backend", {
           description:
-            "Make sure the FastAPI server is running on http://localhost:8000",
+            "Make sure the backend server is reachable at https://earthmind-ai.onrender.com",
         });
       } else {
         toast.error("Unexpected error", {
