@@ -80,10 +80,26 @@ def format_references(refs: List[str]) -> str:
     return "\n".join(f"- {r}" for r in refs)
 
 
+def _to_dict(output) -> Dict:
+    """
+    Ensure an agent output is always a dict.
+
+    If the LLM returned raw text (a str) instead of structured JSON,
+    wrap it so all downstream .get() calls are safe.
+    """
+    if isinstance(output, dict):
+        return output
+    if isinstance(output, str):
+        return {"summary": output, "findings": [], "recommendations": [],
+                "missing_information": [], "references": [], "confidence_score": None}
+    return {}
+
+
 def format_agent_section(title: str,
-                         output: Dict,
+                         output,
                          status: str) -> str:
 
+    output = _to_dict(output)  # guard: coerce str → dict
     confidence = output.get("confidence_score")
 
     return f"""

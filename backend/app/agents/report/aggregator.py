@@ -10,6 +10,21 @@ from app.agents.report.formatter import (
 )
 
 
+def _safe_dict(value) -> dict:
+    """Coerce any agent output value to a plain dict.
+
+    Some agents may return a raw string when the LLM fails to produce
+    structured JSON.  Calling .get() on a str raises AttributeError;
+    this guard prevents that.
+    """
+    if isinstance(value, dict):
+        return value
+    if isinstance(value, str):
+        return {"summary": value, "findings": [], "recommendations": [],
+                "missing_information": [], "references": [], "confidence_score": None}
+    return {}
+
+
 def merge_recommendations(outputs: Dict) -> List[dict]:
     recommendations = []
     seen = set()
@@ -150,43 +165,43 @@ def build_report_context(state):
 
         "research_section": format_agent_section(
             "Research Analysis",
-            outputs.get("research", {}),
+            _safe_dict(outputs.get("research", {})),
             agent_status.get("research", "skipped"),
         ),
 
         "sdg_section": format_agent_section(
             "SDG Analysis",
-            outputs.get("sdg", {}),
+            _safe_dict(outputs.get("sdg", {})),
             agent_status.get("sdg", "skipped"),
         ),
 
         "policy_section": format_agent_section(
             "Policy Analysis",
-            outputs.get("policy", {}),
+            _safe_dict(outputs.get("policy", {})),
             agent_status.get("policy", "skipped"),
         ),
 
         "environmental_section": format_agent_section(
             "Environmental Assessment",
-            outputs.get("environmental", {}),
+            _safe_dict(outputs.get("environmental", {})),
             agent_status.get("environmental", "skipped"),
         ),
 
         "finance_section": format_agent_section(
             "Financial Assessment",
-            outputs.get("finance", {}),
+            _safe_dict(outputs.get("finance", {})),
             agent_status.get("finance", "skipped"),
         ),
 
         "risk_section": format_agent_section(
             "Risk Assessment",
-            outputs.get("risk", {}),
+            _safe_dict(outputs.get("risk", {})),
             agent_status.get("risk", "skipped"),
         ),
 
         "timeline_section": format_agent_section(
             "Timeline Assessment",
-            outputs.get("timeline", {}),
+            _safe_dict(outputs.get("timeline", {})),
             agent_status.get("timeline", "skipped"),
         ),
 
