@@ -97,21 +97,25 @@ class Settings:
     # ===========================
     # CORS / Frontend
     # ===========================
-    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:3000")
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "https://earth-mind-ai.vercel.app")
 
+    # Raw comma-separated string from the environment variable.
+    # Strip surrounding quotes that some platforms (e.g. Render) may add.
     _raw_origins: str = os.getenv(
         "ALLOWED_ORIGINS",
         "https://earth-mind-ai.vercel.app,"
-        "https://earthmind-ai.onrender.com,"
         "http://localhost:3000,"
         "http://127.0.0.1:3000,"
         "http://localhost:5173,"
         "http://127.0.0.1:5173,"
         "http://localhost:8080,"
         "http://127.0.0.1:8080",
-    )
+    ).strip().strip('"').strip("'")
+
     ALLOWED_ORIGINS: list[str] = [
-        origin.strip() for origin in _raw_origins.split(",") if origin.strip()
+        origin.strip().strip('"').strip("'")
+        for origin in _raw_origins.split(",")
+        if origin.strip().strip('"').strip("'")
     ]
 
 

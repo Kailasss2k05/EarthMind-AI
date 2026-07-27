@@ -26,4 +26,6 @@ def configure_cors(app: FastAPI) -> None:
         # Allow all request headers
         allow_headers=["*"],
     )
-    logger.info("CORS middleware configured with origins: %s", settings.ALLOWED_ORIGINS)
+    logger.info("CORS middleware configured. Allowed origins (%d):", len(settings.ALLOWED_ORIGINS))
+    for origin in settings.ALLOWED_ORIGINS:
+        logger.info("  → %s", origin)
