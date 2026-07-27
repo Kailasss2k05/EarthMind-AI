@@ -101,6 +101,7 @@ class Settings:
 
     _raw_origins: str = os.getenv(
         "ALLOWED_ORIGINS",
+        "https://earth-mind-ai.vercel.app,"
         "https://earthmind-ai.onrender.com,"
         "http://localhost:3000,"
         "http://127.0.0.1:3000,"
