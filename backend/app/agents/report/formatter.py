@@ -21,7 +21,7 @@ def format_list(items: List[str]) -> str:
     return "\n".join(f"- {item}" for item in items)
 
 
-def format_findings(findings: List[Dict]) -> str:
+def format_findings(findings: List) -> str:
 
     if not findings:
         return "None"
@@ -29,16 +29,19 @@ def format_findings(findings: List[Dict]) -> str:
     lines = []
 
     for finding in findings:
-
-        lines.append(
-            f"- **{finding.get('type','Unknown').title()}**: "
-            f"{finding.get('description','')}"
-        )
+        # Guard: LLM sometimes returns strings instead of dicts
+        if isinstance(finding, str):
+            lines.append(f"- {finding}")
+        elif isinstance(finding, dict):
+            lines.append(
+                f"- **{finding.get('type', 'Unknown').title()}**: "
+                f"{finding.get('description', '')}"
+            )
 
     return "\n".join(lines)
 
 
-def format_recommendations(recommendations: List[Dict]) -> str:
+def format_recommendations(recommendations: List) -> str:
 
     if not recommendations:
         return "None"
@@ -46,16 +49,19 @@ def format_recommendations(recommendations: List[Dict]) -> str:
     lines = []
 
     for rec in recommendations:
-
-        lines.append(
-            f"- **{rec.get('action','')}**\n"
-            f"  - {rec.get('rationale','')}"
-        )
+        # Guard: LLM sometimes returns strings instead of dicts
+        if isinstance(rec, str):
+            lines.append(f"- {rec}")
+        elif isinstance(rec, dict):
+            lines.append(
+                f"- **{rec.get('action', '')}**\n"
+                f"  - {rec.get('rationale', '')}"
+            )
 
     return "\n\n".join(lines)
 
 
-def format_missing_information(items: List[Dict]) -> str:
+def format_missing_information(items: List) -> str:
 
     if not items:
         return "None"
@@ -63,11 +69,14 @@ def format_missing_information(items: List[Dict]) -> str:
     lines = []
 
     for item in items:
-
-        lines.append(
-            f"- **{item.get('type','Unknown').title()}**\n"
-            f"  - {item.get('description','')}"
-        )
+        # Guard: LLM sometimes returns strings instead of dicts
+        if isinstance(item, str):
+            lines.append(f"- {item}")
+        elif isinstance(item, dict):
+            lines.append(
+                f"- **{item.get('type', 'Unknown').title()}**\n"
+                f"  - {item.get('description', '')}"
+            )
 
     return "\n\n".join(lines)
 
@@ -161,15 +170,18 @@ def format_errors(errors: Dict) -> str:
     return "\n".join(lines)
 
 
-def format_tool_summary(tool_executions: List[Dict]) -> str:
+def format_tool_summary(tool_executions: List) -> str:
     if not tool_executions:
         return "No tool executions recorded."
 
     lines = []
     for t in tool_executions:
-        tool_name = t.get("tool_name", "Tool")
-        status = t.get("status", "Completed")
-        summary = t.get("error") or t.get("output_summary") or t.get("summary") or "Completed"
-        lines.append(f"{tool_name}\n{status}\n{summary}")
+        if isinstance(t, str):
+            lines.append(t)
+        elif isinstance(t, dict):
+            tool_name = t.get("tool_name", "Tool")
+            status = t.get("status", "Completed")
+            summary = t.get("error") or t.get("output_summary") or t.get("summary") or "Completed"
+            lines.append(f"{tool_name}\n{status}\n{summary}")
 
     return "\n\n".join(lines)
